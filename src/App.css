@@ -8,14 +8,9 @@
 html,
 body,
 #root {
-  height: 100%;
-}
-
-body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
+  padding: 0;
+  height: 100%;
 }
 
 /* ------- PALETA ZORIAPP ------- */
@@ -36,33 +31,31 @@ body {
   --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.55);
 }
 
-/* ------- FONDO GENERAL (APP MÓVIL) ------- */
+/* ------- FONDO GENERAL / TIPOGRAFÍA ------- */
 
 body {
-  background:
-    radial-gradient(circle at top, #1f2937 0, #020617 45%, #000 100%);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "SF Pro Text", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
   color: var(--text-main);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* Limitamos todo a un “teléfono” virtual */
+/* El root nunca puede medir menos que la pantalla */
 #root {
-  width: 100%;
-  max-width: 480px;         /* ancho típico móvil grande */
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  padding: 1.25rem 0.75rem;
+  min-height: 100vh;
 }
 
-/* Contenedor principal para cada pantalla */
+/* Contenedor principal tipo “tarjeta” para páginas simples
+   (home, registro, tacto…) */
 .login-container,
 .home-container,
 .page-container {
   width: 100%;
+  max-width: 480px;
+  margin: 24px auto;
   border-radius: 26px;
   padding: 1.5rem 1.25rem 2rem;
   background: linear-gradient(145deg, #020617 0%, #020617 45%, #020617 100%);
@@ -330,7 +323,7 @@ button:active {
   text-align: left;
 }
 
-/* Responsivo */
+/* Responsivo login */
 
 @media (max-width: 768px) {
   .login-card {
@@ -381,44 +374,6 @@ button:active {
 
 .danger-btn:hover {
   background: #b91c1c;
-}
-
-/* ------- LOGIN ------- */
-
-.login-container {
-  justify-content: center;
-}
-
-.login-title {
-  font-size: 1.6rem;
-  margin-bottom: 0.25rem;
-}
-
-.login-subtitle {
-  font-size: 0.9rem;
-  margin-bottom: 1.4rem;
-}
-
-.login-card form {
-  margin-top: 0.75rem;
-}
-
-.login-card label {
-  margin-top: 0.7rem;
-}
-
-.login-card input {
-  margin-bottom: 0.3rem;
-}
-
-.login-error {
-  margin-top: 0.35rem;
-  margin-bottom: 0.2rem;
-  font-size: 0.82rem;
-  color: #fecaca;
-  background: rgba(248, 113, 113, 0.08);
-  border-radius: 10px;
-  padding: 0.4rem 0.6rem;
 }
 
 /* ------- HOME (5 BOTONES) ------- */
@@ -549,6 +504,13 @@ button:active {
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
+/* scroll horizontal en móvil para evitar desbordes */
+.table-wrapper,
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .pacientes-table {
   width: 100%;
   border-collapse: collapse;
@@ -568,10 +530,6 @@ button:active {
 .pacientes-table th {
   font-weight: 600;
   color: #e5e7eb;
-}
-
-.pacientes-table tbody tr:nth-child(every) {
-  background: transparent;
 }
 
 .pacientes-table tbody tr:nth-child(odd) {
@@ -601,10 +559,6 @@ button:active {
 
 /* Tablets/escritorio: que no se vea gigante */
 @media (min-width: 768px) {
-  #root {
-    max-width: 520px;
-  }
-
   .home-buttons-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -621,9 +575,8 @@ button:active {
     font-size: 1.3rem;
   }
 }
-/* --- Banner Prosilod --- */
 
-/* --- Banner Prosilod, versión compacta y elegante --- */
+/* --- Banner Prosilod --- */
 
 .pros-banner {
   display: flex;
@@ -695,32 +648,9 @@ button:active {
     max-width: 240px;
   }
 }
-/* === FIX GLOBAL DE FONDO Y ALTO === */
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
+/* === PÁGINAS COMPLETAS (para que el fondo siempre llegue al final) === */
 
-/* Fondo oscuro siempre a pantalla completa */
-body {
-  background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000000 100%);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: cover;
-  color: #e5e7eb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    sans-serif;
-}
-
-/* El root nunca puede medir menos que la pantalla */
-#root {
-  min-height: 100vh;
-}
-
-/* Cualquier página principal ocupará al menos todo el alto de la pantalla */
 .page,
 .home-page,
 .pacientes-page,
@@ -732,7 +662,7 @@ body {
   padding-bottom: 80px; /* deja aire abajo para que no quede "cortada" */
 }
 
-/* Aseguramos que las tarjetas principales se adapten bien en móvil */
+/* Tarjetas principales de páginas “grandes” */
 .page-card,
 .app-card,
 .pacientes-card,
@@ -741,13 +671,6 @@ body {
   max-width: 480px;
   margin-left: auto;
   margin-right: auto;
-}
-
-/* Tablas y listados: scroll horizontal si se pasan de ancho en móviles */
-.table-wrapper,
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
 }
 
 /* Ajustes finos para pantallas pequeñas */
