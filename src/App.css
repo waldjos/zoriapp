@@ -695,3 +695,81 @@ button:active {
     max-width: 240px;
   }
 }
+/* === FIX GLOBAL DE FONDO Y ALTO === */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Fondo oscuro siempre a pantalla completa */
+body {
+  background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000000 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    sans-serif;
+}
+
+/* El root nunca puede medir menos que la pantalla */
+#root {
+  min-height: 100vh;
+}
+
+/* Cualquier página principal ocupará al menos todo el alto de la pantalla */
+.page,
+.home-page,
+.pacientes-page,
+.laboratorio-page,
+.tacto-page,
+.dashboard-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 80px; /* deja aire abajo para que no quede "cortada" */
+}
+
+/* Aseguramos que las tarjetas principales se adapten bien en móvil */
+.page-card,
+.app-card,
+.pacientes-card,
+.laboratorio-card {
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tablas y listados: scroll horizontal si se pasan de ancho en móviles */
+.table-wrapper,
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Ajustes finos para pantallas pequeñas */
+@media (max-width: 600px) {
+  .page,
+  .home-page,
+  .pacientes-page,
+  .laboratorio-page,
+  .tacto-page,
+  .dashboard-page {
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 16px;
+    padding-bottom: 90px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th,
+  td {
+    padding: 6px 8px;
+  }
+}
