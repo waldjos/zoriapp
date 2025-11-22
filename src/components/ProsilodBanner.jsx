@@ -1,8 +1,10 @@
 // src/components/ProsilodBanner.jsx
 import React from "react";
-import prosilodImg from "../assets/PROSILOD.jpg";
 
 export default function ProsilodBanner() {
+  // Como la imagen está en /public, solo usamos la ruta absoluta
+  const prosilodImg = "/PROSILOD.jpg";
+
   return (
     <div className="pros-banner">
       <div className="pros-banner__media">
@@ -15,7 +17,9 @@ export default function ProsilodBanner() {
 
         <ul className="pros-banner__list">
           <li>Alfabloqueante selectivo.</li>
-          <li>Manejo de los síntomas urinarios (LUTS) asociados a HBP.</li>
+          <li>
+            Manejo de los síntomas urinarios (LUTS) asociados a HBP.
+          </li>
         </ul>
 
         <p className="pros-banner__legal">
