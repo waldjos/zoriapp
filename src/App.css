@@ -40,6 +40,9 @@ body {
   background: radial-gradient(circle at top, #0f172a 0, #020617 55%, #000 100%);
   background-repeat: no-repeat;
   background-size: cover;
+  /* Fijar el fondo al viewport para que siempre cubra la pantalla */
+  background-attachment: fixed;
+  min-height: 100vh;
   color: var(--text-main);
 }
 
