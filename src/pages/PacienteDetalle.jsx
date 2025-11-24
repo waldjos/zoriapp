@@ -450,15 +450,8 @@ export default function PacienteDetalle() {
           ) : evaluaciones.length === 0 ? (
             <p>No hay evaluaciones registradas aún.</p>
           ) : (
-            <div className="pacientes-table-wrapper">
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  marginTop: "0.5rem",
-                  fontSize: "0.9rem",
-                }}
-              >
+            <div className="table-wrapper table-scroll">
+              <table className="pacientes-table">
                 <thead>
                   <tr>
                     <th

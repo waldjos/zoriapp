@@ -194,152 +194,104 @@ export default function Pacientes() {
   });
 
   return (
-    <div className="pacientes-layout">
+    <div className="page pacientes-page pacientes-card">
       {/* FORMULARIO DE REGISTRO / EDICIÓN */}
-      <section>
-        <h1>Pacientes</h1>
-        <p>Registra y administra los pacientes de la jornada.</p>
+      <section className="form-card">
+        <h1 className="page-header-title">Pacientes</h1>
+        <p className="page-header-subtitle">Registra y administra los pacientes de la jornada.</p>
 
-        <form onSubmit={handleSubmit} style={{ marginTop: "1.5rem" }}>
+        <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
           {/* Nombre */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Nombre completo *
-            </label>
+            <label>Nombre completo *</label>
             <input
               type="text"
               value={nombreCompleto}
               onChange={(e) => setNombreCompleto(e.target.value)}
               required
-              style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           {/* Cédula */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Cédula / Documento *
-            </label>
+            <label>Cédula / Documento *</label>
             <input
               type="text"
               value={cedula}
               onChange={(e) => setCedula(e.target.value)}
               required
-              style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           {/* Teléfono */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Teléfono
-            </label>
+            <label>Teléfono</label>
             <input
               type="tel"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
-              style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           {/* Email */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Correo electrónico
-            </label>
+            <label>Correo electrónico</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="paciente@correo.com"
-              style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           {/* Localidad */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Localidad
-            </label>
+            <label>Localidad</label>
             <input
               type="text"
               value={localidad}
               onChange={(e) => setLocalidad(e.target.value)}
               placeholder="Ciudad / Hospital / Estado"
-              style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           {/* Edad */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Edad
-            </label>
+            <label>Edad</label>
             <input
               type="number"
               min="0"
               max="120"
               value={edad}
               onChange={(e) => setEdad(e.target.value)}
-              style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           {/* Notas */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={{ display: "block", marginBottom: "0.25rem" }}>
-              Notas (motivo, hallazgos, etc.)
-            </label>
+            <label>Notas (motivo, hallazgos, etc.)</label>
             <textarea
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               rows={3}
-              style={{ width: "100%", padding: "0.5rem", resize: "vertical" }}
+              style={{ resize: "vertical" }}
             />
           </div>
 
-          {error && (
-            <p style={{ color: "red", marginBottom: "0.5rem" }}>{error}</p>
-          )}
-          {success && (
-            <p style={{ color: "green", marginBottom: "0.5rem" }}>{success}</p>
-          )}
+          {error && <p className="status-error">{error}</p>}
+          {success && <p className="status-ok">{success}</p>}
 
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
             <button
               type="submit"
               disabled={submitting}
-              style={{
-                padding: "0.6rem 1.2rem",
-                backgroundColor: "#5CC52E",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
+              style={{ backgroundColor: "var(--primary)", color: "#020617" }}
             >
-              {submitting
-                ? editingId
-                  ? "Guardando cambios..."
-                  : "Guardando..."
-                : editingId
-                ? "Actualizar paciente"
-                : "Registrar paciente"}
+              {submitting ? (editingId ? "Guardando cambios..." : "Guardando...") : (editingId ? "Actualizar paciente" : "Registrar paciente")}
             </button>
 
             {editingId && (
-              <button
-                type="button"
-                onClick={cancelarEdicion}
-                style={{
-                  padding: "0.6rem 1.2rem",
-                  backgroundColor: "#6b7280",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+              <button type="button" onClick={cancelarEdicion} style={{ backgroundColor: "#6b7280" }}>
                 Cancelar edición
               </button>
             )}
@@ -348,222 +300,60 @@ export default function Pacientes() {
       </section>
 
       {/* LISTADO DE PACIENTES */}
-      <section className="pacientes-list-section">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "1rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Lista de pacientes</h2>
+      <section className="list-card" style={{ marginTop: "1rem" }}>
+        <div className="list-header">
+          <div className="list-header-top">
+            <div>
+              <h2 className="list-title">Lista de pacientes</h2>
+              {!cargandoPacientes && (
+                <p className="page-header-subtitle" style={{ marginTop: "6px" }}>
+                  Total de pacientes registrados: <strong>{pacientes.length}</strong>
+                  {searchTerm && (<> | Coincidencias: <strong>{pacientesFiltrados.length}</strong></>)}
+                </p>
+              )}
+            </div>
 
-          <input
-            type="text"
-            placeholder="Buscar por nombre o cédula..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              flex: 1,
-              minWidth: "200px",
-              maxWidth: "320px",
-              padding: "0.4rem 0.6rem",
-              borderRadius: "4px",
-              border: "1px solid #d1d5db",
-            }}
-          />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o cédula..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
         </div>
-
-        {/* 🔢 CONTADOR DE PACIENTES */}
-        {!cargandoPacientes && (
-          <p
-            style={{
-              marginTop: "0.6rem",
-              marginBottom: "0.2rem",
-              color: "#4b5563",
-              fontSize: "0.9rem",
-            }}
-          >
-            Total de pacientes registrados:{" "}
-            <strong>{pacientes.length}</strong>
-            {searchTerm && (
-              <>
-                {" "}
-                | Coincidencias en la búsqueda:{" "}
-                <strong>{pacientesFiltrados.length}</strong>
-              </>
-            )}
-          </p>
-        )}
 
         {cargandoPacientes ? (
           <p style={{ marginTop: "1rem" }}>Cargando pacientes...</p>
         ) : pacientesFiltrados.length === 0 ? (
           <p style={{ marginTop: "1rem" }}>No hay pacientes registrados aún.</p>
         ) : (
-          <div className="pacientes-table-wrapper">
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginTop: "1rem",
-                fontSize: "0.95rem",
-              }}
-            >
+          <div className="table-wrapper table-scroll" style={{ marginTop: "0.6rem" }}>
+            <table className="pacientes-table" role="table">
               <thead>
                 <tr>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      padding: "0.5rem",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Nombre
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      padding: "0.5rem",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Cédula
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      padding: "0.5rem",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Localidad
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      padding: "0.5rem",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Edad
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      padding: "0.5rem",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Correo
-                  </th>
-                  <th
-                    style={{
-                      padding: "0.5rem",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Acciones
-                  </th>
+                  <th>Nombre</th>
+                  <th>Cédula</th>
+                  <th>Localidad</th>
+                  <th>Edad</th>
+                  <th>Correo</th>
+                  <th style={{ textAlign: "center" }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {pacientesFiltrados.map((p) => (
                   <tr key={p.id}>
-                    <td
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      {p.nombreCompleto}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      {p.cedula}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      {p.localidad || "-"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      {p.edad ?? "-"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      {p.email || "-"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.5rem",
-                        borderBottom: "1px solid #f3f4f6",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      <button
-                        onClick={() => irADetalle(p.id)}
-                        style={{
-                          padding: "0.3rem 0.6rem",
-                          marginRight: "0.3rem",
-                          backgroundColor: "#2563eb",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        Ver ficha
-                      </button>
-                      <button
-                        onClick={() => empezarEdicion(p)}
-                        style={{
-                          padding: "0.3rem 0.6rem",
-                          marginRight: "0.3rem",
-                          backgroundColor: "#10b981",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => eliminarPaciente(p.id)}
-                        style={{
-                          padding: "0.3rem 0.6rem",
-                          backgroundColor: "#ef4444",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        Eliminar
-                      </button>
+                    <td>{p.nombreCompleto}</td>
+                    <td>{p.cedula}</td>
+                    <td>{p.localidad || "-"}</td>
+                    <td>{p.edad ?? "-"}</td>
+                    <td>{p.email || "-"}</td>
+                    <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                      <div className="actions-cell">
+                        <button onClick={() => irADetalle(p.id)} style={{ backgroundColor: "#2563eb" }}>Ver ficha</button>
+                        <button onClick={() => empezarEdicion(p)} style={{ backgroundColor: "#10b981" }}>Editar</button>
+                        <button onClick={() => eliminarPaciente(p.id)} style={{ backgroundColor: "var(--danger)" }}>Eliminar</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -572,8 +362,8 @@ export default function Pacientes() {
           </div>
         )}
       </section>
-      {/* ...después de la tabla de pacientes */}
-<ProsilodBanner />
+
+      <ProsilodBanner />
     </div>
   );
 }
