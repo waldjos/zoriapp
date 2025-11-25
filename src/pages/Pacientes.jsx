@@ -44,6 +44,130 @@ export default function Pacientes() {
     };
   }, []);
 
+  // Ejecuta OCR con varios niveles de preprocesado y elige la mejor salida
+  const runOcrWithRetries = async (file) => {
+    const attempts = [
+      { contrast: 1.2, sharpen: false, maxWidth: 1200 }, // suave
+      { contrast: 1.4, sharpen: true, maxWidth: 1600 }, // medio
+      { contrast: 1.7, sharpen: true, maxWidth: 2000 }, // agresivo
+    ];
+
+    let best = { score: -1, text: '', cedula: null, nombre: null, fecha: null };
+
+    for (let i = 0; i < attempts.length; i++) {
+      const opts = attempts[i];
+      try {
+        setOcrProgress(Math.round((i / attempts.length) * 100));
+        const processed = await (async (f, o) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              const maxWidth = o.maxWidth || 1600;
+              const scale = Math.min(1, maxWidth / img.width);
+              const canvas = document.createElement('canvas');
+              canvas.width = Math.round(img.width * scale);
+              canvas.height = Math.round(img.height * scale);
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const data = imageData.data;
+              // grayscale
+              for (let k = 0; k < data.length; k += 4) {
+                const r = data[k], g = data[k+1], b = data[k+2];
+                const v = 0.299*r + 0.587*g + 0.114*b;
+                data[k] = data[k+1] = data[k+2] = v;
+              }
+              // contrast
+              const contrast = o.contrast || 1.2;
+              for (let k = 0; k < data.length; k += 4) {
+                let v = data[k];
+                let nv = (v - 128) * contrast + 128;
+                nv = Math.max(0, Math.min(255, nv));
+                data[k] = data[k+1] = data[k+2] = nv;
+              }
+              ctx.putImageData(imageData, 0, 0);
+
+              // optional sharpen
+              if (o.sharpen) {
+                const sctx = canvas.getContext('2d');
+                const sData = sctx.getImageData(0,0,canvas.width, canvas.height);
+                const sd = sData.data;
+                const copy = new Uint8ClampedArray(sd);
+                const w = canvas.width, h = canvas.height;
+                for (let y = 1; y < h-1; y++) {
+                  for (let x = 1; x < w-1; x++) {
+                    const idx = (y*w + x)*4;
+                    const center = copy[idx];
+                    const north = copy[idx - w*4];
+                    const south = copy[idx + w*4];
+                    const west = copy[idx - 4];
+                    const east = copy[idx + 4];
+                    let val = center*5 - north - south - west - east;
+                    val = Math.max(0, Math.min(255, val));
+                    sd[idx] = sd[idx+1] = sd[idx+2] = val;
+                  }
+                }
+                sctx.putImageData(sData, 0, 0);
+                sctx.canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.95);
+              } else {
+                canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+              }
+            };
+            img.onerror = reject;
+            const reader = new FileReader();
+            reader.onload = (ev) => (img.src = ev.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(f);
+          });
+        })(file, opts);
+
+        const worker = workerRef.current;
+        const { data: { text } } = await worker.recognize(processed);
+        const raw = (text || '').replace(/\t/g, ' ');
+        // parse
+        const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        let cedulaFound = null;
+        for (const line of lines) {
+          const m = line.match(/\b([VEJPG]\-?\s?\d{6,10}|\d{6,10})\b/i);
+          if (m) { cedulaFound = m[0].replace(/\s|\-/g, ''); break; }
+        }
+        let fechaFound = null;
+        for (const line of lines) {
+          const fm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})|(\d{4}[\/\-]\d{2}[\/\-]\d{2})/);
+          if (fm) { fechaFound = fm[0]; break; }
+        }
+        let nombreFound = null;
+        for (const line of lines) {
+          const clean = line.replace(/[\d\W_]+/g, ' ').trim();
+          if (clean.length >= 6 && /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(clean) && clean.split(' ').length >= 2) {
+            nombreFound = clean; break;
+          }
+        }
+
+        // scoring
+        let score = 0;
+        if (cedulaFound) score += 100;
+        if (nombreFound) score += 20;
+        if (fechaFound) score += 10;
+        // prefer longer OCR outputs a bit
+        score += Math.min(10, raw.length / 100);
+
+        if (score > best.score) {
+          best = { score, text: raw, cedula: cedulaFound, nombre: nombreFound, fecha: fechaFound };
+        }
+
+        // if we already have cedula, stop early
+        if (best.cedula) break;
+      } catch (err) {
+        console.error('attempt OCR error', err);
+      }
+    }
+
+    setOcrProgress(100);
+    return best;
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
