@@ -1,6 +1,6 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Páginas
 import Login from "./pages/Login";
@@ -17,101 +17,40 @@ import PrivateRoute from "./components/PrivateRoute";
 
 import "./App.css";
 
+function AppShell() {
+  const { user, logout } = useAuth();
+  return (
+    <div className="app-shell">
+      <header className="app-header" style={{ width: "100%", display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0.7rem 1.2rem", background: "rgba(15,23,42,0.85)" }}>
+        {user && (
+          <button onClick={logout} style={{ backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "999px", padding: "0.5rem 1.1rem", fontWeight: 600, cursor: "pointer" }}>
+            Cerrar sesión
+          </button>
+        )}
+      </header>
+      <main className="app-main">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/registro" element={<PrivateRoute><RegistroPaciente /></PrivateRoute>} />
+          <Route path="/tacto" element={<PrivateRoute><Tacto /></PrivateRoute>} />
+          <Route path="/pacientes" element={<PrivateRoute><Pacientes /></PrivateRoute>} />
+          <Route path="/pacientes/:id" element={<PrivateRoute><PacienteDetalle /></PrivateRoute>} />
+          <Route path="/laboratorio" element={<PrivateRoute><LabForm /></PrivateRoute>} />
+          <Route path="/validar-resultados" element={<PrivateRoute><Pacientes /></PrivateRoute>} />
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="app-shell">
-          <main className="app-main">
-            <Routes>
-              {/* Login */}
-              <Route path="/login" element={<Login />} />
-
-              {/* Home con los botones principales */}
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Home />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Registro: solo alta de paciente */}
-              <Route
-                path="/registro"
-                element={
-                  <PrivateRoute>
-                    <RegistroPaciente />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Tacto: búsqueda + evaluación médica */}
-              <Route
-                path="/tacto"
-                element={
-                  <PrivateRoute>
-                    <Tacto />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Pacientes: listado + buscador + acciones */}
-              <Route
-                path="/pacientes"
-                element={
-                  <PrivateRoute>
-                    <Pacientes />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Ficha individual de paciente */}
-              <Route
-                path="/pacientes/:id"
-                element={
-                  <PrivateRoute>
-                    <PacienteDetalle />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Laboratorio: subida de PDF */}
-              <Route
-                path="/laboratorio"
-                element={
-                  <PrivateRoute>
-                    <LabForm />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Validar resultados: reutiliza la lista de pacientes */}
-              <Route
-                path="/validar-resultados"
-                element={
-                  <PrivateRoute>
-                    <Pacientes />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Dashboard de estadísticas */}
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Cualquier otra ruta redirige al home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </div>
+        <AppShell />
       </Router>
     </AuthProvider>
   );

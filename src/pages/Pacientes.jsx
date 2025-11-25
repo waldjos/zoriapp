@@ -1,5 +1,6 @@
 // src/pages/Pacientes.jsx
 import { useEffect, useState } from "react";
+import Tesseract from "tesseract.js";
 import {
   collection,
   addDoc,
@@ -23,8 +24,11 @@ export default function Pacientes() {
   const [telefono, setTelefono] = useState("");
   const [localidad, setLocalidad] = useState("");
   const [edad, setEdad] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState("");
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -75,6 +79,7 @@ export default function Pacientes() {
     setTelefono("");
     setLocalidad("");
     setEdad("");
+    setFechaNacimiento("");
     setEmail("");
     setNotas("");
     setEditingId(null);
@@ -113,6 +118,7 @@ export default function Pacientes() {
         telefono: telefono.trim(),
         localidad: localidad.trim(),
         edad: isNaN(edadNumero) ? null : edadNumero,
+        fechaNacimiento: fechaNacimiento.trim(),
         email: email.trim(),
         notas: notas.trim(),
       };
@@ -201,6 +207,42 @@ export default function Pacientes() {
         <p className="page-header-subtitle">Registra y administra los pacientes de la jornada.</p>
 
         <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
+          {/* Captura de documento de identidad */}
+          <div style={{ marginBottom: "0.75rem" }}>
+            <label>Capturar foto de documento de identidad</label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={async (e) => {
+                setOcrError("");
+                setOcrLoading(true);
+                const file = e.target.files[0];
+                if (!file) {
+                  setOcrLoading(false);
+                  return;
+                }
+                try {
+                  const { data: { text } } = await Tesseract.recognize(file, "spa", { logger: m => {} });
+                  // Extraer datos usando regex simples
+                  // Número de cédula: busca secuencia de 6-10 dígitos
+                  const cedulaMatch = text.match(/\b\d{6,10}\b/);
+                  if (cedulaMatch) setCedula(cedulaMatch[0]);
+                  // Nombre: busca línea con letras y espacios, puede ajustar según formato del documento
+                  const nombreMatch = text.match(/([A-ZÁÉÍÓÚÑ ]{8,})/i);
+                  if (nombreMatch) setNombreCompleto(nombreMatch[0].trim());
+                  // Fecha de nacimiento: busca formato dd/mm/yyyy o similar
+                  const fechaMatch = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+                  if (fechaMatch) setFechaNacimiento(fechaMatch[0]);
+                } catch (err) {
+                  setOcrError("No se pudo extraer datos del documento. Intenta con una foto más clara.");
+                }
+                setOcrLoading(false);
+              }}
+            />
+            {ocrLoading && <p style={{ color: "#5CC52E" }}>Procesando imagen...</p>}
+            {ocrError && <p style={{ color: "red" }}>{ocrError}</p>}
+          </div>
           {/* Nombre */}
           <div style={{ marginBottom: "0.75rem" }}>
             <label>Nombre completo *</label>
@@ -264,6 +306,15 @@ export default function Pacientes() {
               max="120"
               value={edad}
               onChange={(e) => setEdad(e.target.value)}
+            />
+          </div>
+          {/* Fecha de nacimiento */}
+          <div style={{ marginBottom: "0.75rem" }}>
+            <label>Fecha de nacimiento</label>
+            <input
+              type="date"
+              value={fechaNacimiento}
+              onChange={(e) => setFechaNacimiento(e.target.value)}
             />
           </div>
 
