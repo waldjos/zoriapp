@@ -168,6 +168,49 @@ export default function Pacientes() {
     return best;
   };
 
+  // Llamar al endpoint serverless que reenvía a OCR.space
+  const callOcrSpaceServer = async (file) => {
+    const readAsDataURL = (f) => new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = reject;
+      r.readAsDataURL(f);
+    });
+
+    const dataUrl = await readAsDataURL(file);
+    // Enviar al endpoint local /api/ocr-space
+    const resp = await fetch('/api/ocr-space', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: dataUrl }),
+    });
+    if (!resp.ok) throw new Error('OCR.space proxy failed');
+    const json = await resp.json();
+    const parsed = json?.ParsedResults?.[0]?.ParsedText || '';
+    const raw = (parsed || '').replace(/\t/g, ' ');
+    // extraer campos iguales a la lógica local
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let cedulaFound = null;
+    for (const line of lines) {
+      const m = line.match(/\b([VEJPG]\-?\s?\d{6,10}|\d{6,10})\b/i);
+      if (m) { cedulaFound = m[0].replace(/\s|\-/g, ''); break; }
+    }
+    let fechaFound = null;
+    for (const line of lines) {
+      const fm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})|(\d{4}[\/\-]\d{2}[\/\-]\d{2})/);
+      if (fm) { fechaFound = fm[0]; break; }
+    }
+    let nombreFound = null;
+    for (const line of lines) {
+      const clean = line.replace(/[\d\W_]+/g, ' ').trim();
+      if (clean.length >= 6 && /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(clean) && clean.split(' ').length >= 2) {
+        nombreFound = clean; break;
+      }
+    }
+
+    return { text: raw, cedula: cedulaFound, fecha: fechaFound, nombre: nombreFound };
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -504,6 +547,19 @@ export default function Pacientes() {
                     }
                   }
                   if (nombreFound) setNombreCompleto(nombreFound);
+                  // Si no encontramos cédula con Tesseract, intentar fallback con OCR.space (serverless)
+                  if (!cedulaFound) {
+                    try {
+                      setOcrLoading(true);
+                      const serverRes = await callOcrSpaceServer(file);
+                      if (serverRes?.cedula) setCedula(serverRes.cedula);
+                      if (serverRes?.fecha) setFechaNacimiento(serverRes.fecha);
+                      if (serverRes?.nombre) setNombreCompleto(serverRes.nombre);
+                      if (serverRes?.text) setOcrRaw((prev) => (prev ? prev + '\n\n--- OCR.space ---\n' + serverRes.text : serverRes.text));
+                    } catch (srvErr) {
+                      console.error('OCR.space fallback error', srvErr);
+                    }
+                  }
                 } catch (err) {
                   console.error('OCR error:', err);
                   setOcrError('No se pudo extraer datos del documento. Intenta con una foto más clara y bien iluminada. Puedes ver el texto OCR detectado más abajo.');
