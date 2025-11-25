@@ -32,6 +32,7 @@ export default function Pacientes() {
   const [ocrError, setOcrError] = useState("");
   const [ocrProgress, setOcrProgress] = useState(0);
   const workerRef = useRef(null);
+  const [ocrRaw, setOcrRaw] = useState("");
 
   // Terminar worker al desmontar para liberar memoria
   useEffect(() => {
@@ -263,12 +264,12 @@ export default function Pacientes() {
                   }
                 }
 
-                // Preprocesar imagen: escalar, convertir a gris y aplicar contraste ligero
-                const preprocess = async (file) => {
+                // Preprocesar imagen: escalar, convertir a gris y aplicar contraste y sharpen
+                const preprocess = async (file, opts = {contrast: 1.1, sharpen: true, maxWidth: 1600}) => {
                   return new Promise((resolve, reject) => {
                     const img = new Image();
                     img.onload = () => {
-                      const maxWidth = 1600;
+                      const maxWidth = opts.maxWidth || 1600;
                       const scale = Math.min(1, maxWidth / img.width);
                       const canvas = document.createElement('canvas');
                       canvas.width = Math.round(img.width * scale);
@@ -276,24 +277,62 @@ export default function Pacientes() {
                       const ctx = canvas.getContext('2d');
                       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                      // grayscale + increase contrast
+                      // grayscale
                       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                       const data = imageData.data;
-                      // simple contrast/stretch
-                      const contrast = 1.1; // small boost
                       for (let i = 0; i < data.length; i += 4) {
                         const r = data[i];
                         const g = data[i + 1];
                         const b = data[i + 2];
                         const v = 0.299 * r + 0.587 * g + 0.114 * b;
+                        data[i] = data[i + 1] = data[i + 2] = v;
+                      }
+
+                      // contrast adjust
+                      const contrast = opts.contrast || 1.1;
+                      for (let i = 0; i < data.length; i += 4) {
+                        let v = data[i];
                         let nv = (v - 128) * contrast + 128;
                         nv = Math.max(0, Math.min(255, nv));
                         data[i] = data[i + 1] = data[i + 2] = nv;
                       }
+
                       ctx.putImageData(imageData, 0, 0);
-                      canvas.toBlob((blob) => {
-                        resolve(blob);
-                      }, 'image/jpeg', 0.9);
+
+                      // optional sharpen (unsharp mask simple)
+                      if (opts.sharpen) {
+                        const sharpenCanvas = document.createElement('canvas');
+                        sharpenCanvas.width = canvas.width;
+                        sharpenCanvas.height = canvas.height;
+                        const sctx = sharpenCanvas.getContext('2d');
+                        sctx.drawImage(canvas, 0, 0);
+                        const sData = sctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const sd = sData.data;
+                        // 3x3 kernel: [[0,-1,0],[-1,5,-1],[0,-1,0]]
+                        const w = canvas.width;
+                        const h = canvas.height;
+                        const copy = new Uint8ClampedArray(sd);
+                        for (let y = 1; y < h - 1; y++) {
+                          for (let x = 1; x < w - 1; x++) {
+                            const idx = (y * w + x) * 4;
+                            // center*5 - north - south - east - west
+                            const center = copy[idx];
+                            const north = copy[idx - w * 4];
+                            const south = copy[idx + w * 4];
+                            const west = copy[idx - 4];
+                            const east = copy[idx + 4];
+                            let val = center * 5 - north - south - west - east;
+                            val = Math.max(0, Math.min(255, val));
+                            sd[idx] = sd[idx + 1] = sd[idx + 2] = val;
+                          }
+                        }
+                        sctx.putImageData(sData, 0, 0);
+                        sctx.canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.95);
+                      } else {
+                        canvas.toBlob((blob) => {
+                          resolve(blob);
+                        }, 'image/jpeg', 0.9);
+                      }
                     };
                     img.onerror = reject;
                     const reader = new FileReader();
@@ -304,12 +343,15 @@ export default function Pacientes() {
                 };
 
                 try {
-                  const processed = await preprocess(file);
+                  // intentar con parámetros estándar
+                  const processed = await preprocess(file, {contrast:1.3, sharpen:true, maxWidth:1600});
                   const worker = workerRef.current;
                   const { data: { text } } = await worker.recognize(processed);
+                  setOcrRaw(text || '');
 
                   // Normalizar texto y dividir líneas
-                  const raw = text || '';
+                  const raw = (text || '').replace(/\t/g,' ');
+                  setOcrRaw(raw);
                   const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
                   // Buscar cédula: puede venir con letras delante (V, E, J) o solo números
@@ -340,7 +382,7 @@ export default function Pacientes() {
                   if (nombreFound) setNombreCompleto(nombreFound);
                 } catch (err) {
                   console.error('OCR error:', err);
-                  setOcrError('No se pudo extraer datos del documento. Intenta con una foto más clara y bien iluminada.');
+                  setOcrError('No se pudo extraer datos del documento. Intenta con una foto más clara y bien iluminada. Puedes ver el texto OCR detectado más abajo.');
                 }
 
                 setOcrLoading(false);
@@ -437,6 +479,14 @@ export default function Pacientes() {
 
           {error && <p className="status-error">{error}</p>}
           {success && <p className="status-ok">{success}</p>}
+
+          {/* Mostrar texto OCR bruto para depuración y permitir reintento */}
+          {ocrRaw && (
+            <div style={{ marginTop: '0.6rem' }}>
+              <label>Texto OCR detectado (revisa y corrige si hace falta)</label>
+              <textarea value={ocrRaw} readOnly rows={6} style={{ width: '100%', marginTop: '0.35rem' }} />
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
             <button
