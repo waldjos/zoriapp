@@ -74,6 +74,53 @@ export default function PacienteDetalle() {
     cargarPaciente();
   }, [id]);
 
+  // Si el documento del paciente incluye un objeto `tacto`, mapearlo
+  // a los estados locales del formulario para que al abrir la ficha
+  // se vean las características previamente guardadas.
+  useEffect(() => {
+    if (!paciente) return;
+    const t = paciente.tacto;
+    if (!t) return;
+
+    try {
+      // Tamaño puede venir como 'tamanio' (desde Tacto.jsx) o 'tamano'
+      setTamano(t.tamanio || t.tamano || "II");
+
+      setCarFibroelastica(!!t.fibroelastica);
+      setCarAumentadaConsistencia(!!t.aumentadaConsistencia);
+      setCarPetrea(!!t.petrea);
+
+      setBordes(t.bordes || "regulares");
+
+      // Nódulos: el formato puede ser string 'si'/'no' (t.nodulos)
+      // o un objeto { presencia:'si', derecho: true, izquierdo: false }
+      if (typeof t.nodulos === "string") {
+        setNodulosPresencia(t.nodulos);
+        setNoduloDerecho(t.ladoNodulo === "derecho");
+        setNoduloIzquierdo(t.ladoNodulo === "izquierdo");
+      } else if (typeof t.nodulos === "object" && t.nodulos !== null) {
+        setNodulosPresencia(t.nodulos.presencia || "no");
+        setNoduloDerecho(!!t.nodulos.derecho);
+        setNoduloIzquierdo(!!t.nodulos.izquierdo);
+      } else {
+        setNodulosPresencia("no");
+        setNoduloDerecho(false);
+        setNoduloIzquierdo(false);
+      }
+
+      // Si el guardado original usó 'ladoNodulo' (cadena), también respetarlo
+      if (!t.nodulos && t.ladoNodulo) {
+        setNodulosPresencia("si");
+        setNoduloDerecho(t.ladoNodulo === "derecho");
+        setNoduloIzquierdo(t.ladoNodulo === "izquierdo");
+      }
+
+      setPlanosClivaje(t.planosClivaje || "si");
+    } catch (err) {
+      console.warn("No se pudieron mapear los datos de tacto:", err);
+    }
+  }, [paciente]);
+
   // ---------------------------------------------------
   // 2) Escuchar las evaluaciones clínicas en tiempo real
   // ---------------------------------------------------

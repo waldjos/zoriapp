@@ -13,6 +13,21 @@ body,
   height: 100%;
 }
 
+/* Asegurar que la shell y el main ocupen toda la altura y hereden fondo
+   Evita que en mobile el fondo se 'corte' dejando áreas blancas */
+.app-shell,
+.app-main {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+/* Fallback sólido para evitar zonas blancas en navegadores/ WebViews
+   donde el fondo radial pueda no cubrir por algún cálculo de altura */
+html, body, #root {
+  background-color: var(--bg-main);
+}
+
 /* ------- PALETA ZORIAPP ------- */
 :root {
   --primary: #5cc52e;
@@ -663,6 +678,11 @@ button:active {
   min-height: 100vh;
   box-sizing: border-box;
   padding-bottom: 80px; /* deja aire abajo para que no quede "cortada" */
+}
+
+/* Añadir un pequeño padding para safe-area en mobile (iOS/Android) */
+.page-container, .form-card, .list-card {
+  margin-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 /* Tarjetas principales de páginas “grandes” */
