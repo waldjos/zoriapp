@@ -444,6 +444,67 @@ export default function Pacientes() {
     return nombre.includes(termino) || ced.includes(termino);
   });
 
+  // Exportar pacientes a CSV o JSON
+  const exportToCSV = () => {
+    if (!pacientes || pacientes.length === 0) {
+      alert("No hay pacientes para exportar.");
+      return;
+    }
+
+    // Obtener el conjunto de keys de todos los pacientes
+    const keys = new Set();
+    pacientes.forEach((p) => Object.keys(p || {}).forEach((k) => keys.add(k)));
+    const headers = Array.from(keys);
+
+    const rows = pacientes.map((p) =>
+      headers.map((h) => {
+        let v = p[h];
+        if (v === undefined || v === null) return "";
+        if (typeof v === "object") {
+          try {
+            return JSON.stringify(v);
+          } catch {
+            return String(v);
+          }
+        }
+        return String(v);
+      })
+    );
+
+    const csvLines = [headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(",")];
+    rows.forEach((r) => {
+      csvLines.push(r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","));
+    });
+
+    const csv = csvLines.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pacientes_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToJSON = () => {
+    if (!pacientes || pacientes.length === 0) {
+      alert("No hay pacientes para exportar.");
+      return;
+    }
+    const dataStr = JSON.stringify(pacientes, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pacientes_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="page pacientes-page pacientes-card">
       {/* FORMULARIO DE REGISTRO / EDICIÓN */}
@@ -596,13 +657,21 @@ export default function Pacientes() {
               )}
             </div>
 
-            <input
-              type="text"
-              placeholder="Buscar por nombre o cédula..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o cédula..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827' }}>
+                  Exportar CSV
+                </button>
+                <button type="button" onClick={exportToJSON} style={{ backgroundColor: '#111827' }}>
+                  Exportar JSON
+                </button>
+              </div>
           </div>
         </div>
 
