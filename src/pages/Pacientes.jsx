@@ -444,42 +444,40 @@ export default function Pacientes() {
     return nombre.includes(termino) || ced.includes(termino);
   });
 
-  // Exportar pacientes a CSV o JSON
+  // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
+  const getExportList = () => (searchTerm ? pacientesFiltrados : pacientes);
+
+  const exportFields = [
+    'nombreCompleto',
+    'cedula',
+    'telefono',
+    'localidad',
+    'edad',
+    'fechaNacimiento',
+    'email',
+    'notas',
+  ];
+
   const exportToCSV = () => {
-    if (!pacientes || pacientes.length === 0) {
-      alert("No hay pacientes para exportar.");
+    const list = getExportList();
+    if (!list || list.length === 0) {
+      alert('No hay pacientes para exportar.');
       return;
     }
 
-    // Obtener el conjunto de keys de todos los pacientes
-    const keys = new Set();
-    pacientes.forEach((p) => Object.keys(p || {}).forEach((k) => keys.add(k)));
-    const headers = Array.from(keys);
-
-    const rows = pacientes.map((p) =>
-      headers.map((h) => {
-        let v = p[h];
-        if (v === undefined || v === null) return "";
-        if (typeof v === "object") {
-          try {
-            return JSON.stringify(v);
-          } catch {
-            return String(v);
-          }
-        }
-        return String(v);
-      })
-    );
-
-    const csvLines = [headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(",")];
-    rows.forEach((r) => {
-      csvLines.push(r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","));
+    const csvLines = [exportFields.map((h) => `"${h}"`).join(',')];
+    list.forEach((p) => {
+      const row = exportFields.map((f) => {
+        const v = p[f] ?? '';
+        return `"${String(v).replace(/"/g, '""')}"`;
+      }).join(',');
+      csvLines.push(row);
     });
 
-    const csv = csvLines.join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const csv = csvLines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `pacientes_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
@@ -489,14 +487,23 @@ export default function Pacientes() {
   };
 
   const exportToJSON = () => {
-    if (!pacientes || pacientes.length === 0) {
-      alert("No hay pacientes para exportar.");
+    const list = getExportList();
+    if (!list || list.length === 0) {
+      alert('No hay pacientes para exportar.');
       return;
     }
-    const dataStr = JSON.stringify(pacientes, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json;charset=utf-8;" });
+
+    // Build a reduced list with only requested fields
+    const reduced = list.map((p) => {
+      const obj = {};
+      exportFields.forEach((f) => { obj[f] = p[f] ?? ''; });
+      return obj;
+    });
+
+    const dataStr = JSON.stringify(reduced, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `pacientes_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
