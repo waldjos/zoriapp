@@ -246,6 +246,16 @@ export default function PacienteDetalle() {
         <p style={{ margin: "0.25rem 0" }}>
           <strong>Cédula:</strong> {paciente.cedula}
         </p>
+        {/* Mostrar información del profesional que realizó el último tacto, si existe */}
+        {paciente.tacto && (paciente.tacto.medicoEmail || paciente.tacto.medicoId) && (
+          <p style={{ margin: "0.25rem 0", color: "#cbd5f5" }}>
+            <strong>Evaluación (tacto) realizada por:</strong>{' '}
+            {paciente.tacto.medicoEmail || paciente.tacto.medicoId}
+            {paciente.tacto.actualizadoEn && (
+              <span> • {formatFecha(paciente.tacto.actualizadoEn)}</span>
+            )}
+          </p>
+        )}
         <p style={{ margin: "0.25rem 0" }}>
           <strong>Edad:</strong> {paciente.edad ?? "-"} años
         </p>

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Tacto() {
   const [pacientes, setPacientes] = useState([]);
@@ -10,6 +11,7 @@ export default function Tacto() {
   const [seleccionado, setSeleccionado] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const { user } = useAuth();
 
   // Estado del formulario de evaluación
   const [evaluacion, setEvaluacion] = useState({
@@ -96,10 +98,13 @@ export default function Tacto() {
 
     try {
       const ref = doc(db, "pacientes", seleccionado.id);
+      // Añadir metadata del profesional que registra la evaluación
       await updateDoc(ref, {
         tacto: {
           ...evaluacion,
           actualizadoEn: new Date(),
+          medicoId: user?.uid || null,
+          medicoEmail: user?.email || null,
         },
       });
 
