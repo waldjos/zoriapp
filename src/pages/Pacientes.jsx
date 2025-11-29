@@ -447,16 +447,16 @@ export default function Pacientes() {
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
   const getExportList = () => (searchTerm ? pacientesFiltrados : pacientes);
 
-  const exportFields = [
-    'nombreCompleto',
-    'cedula',
-    'telefono',
-    'localidad',
-    'edad',
-    'fechaNacimiento',
-    'email',
-    'notas',
+  // Columnas a mostrar/exportar: clave y etiqueta en español
+  const exportColumns = [
+    { key: 'nombreCompleto', label: 'Nombre' },
+    { key: 'email', label: 'Correo' },
+    { key: 'telefono', label: 'Teléfono' },
+    { key: 'edad', label: 'Edad' },
+    { key: 'localidad', label: 'Localidad' },
   ];
+
+  const [showListBox, setShowListBox] = useState(false);
 
   const exportToCSV = () => {
     const list = getExportList();
@@ -465,16 +465,19 @@ export default function Pacientes() {
       return;
     }
 
-    const csvLines = [exportFields.map((h) => `"${h}"`).join(',')];
+    const headers = exportColumns.map((c) => c.label);
+    const keys = exportColumns.map((c) => c.key);
+    const csvLines = [headers.map((h) => `"${h}"`).join(',')];
     list.forEach((p) => {
-      const row = exportFields.map((f) => {
+      const row = keys.map((f) => {
         const v = p[f] ?? '';
         return `"${String(v).replace(/"/g, '""')}"`;
       }).join(',');
       csvLines.push(row);
     });
 
-    const csv = csvLines.join('\r\n');
+    // Añadir BOM para mejor compatibilidad con Excel y forzar nueva línea CRLF
+    const csv = '\uFEFF' + csvLines.join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -493,10 +496,11 @@ export default function Pacientes() {
       return;
     }
 
-    // Build a reduced list with only requested fields
+    // Build a reduced list with only requested fields (keys)
+    const keys = exportColumns.map((c) => c.key);
     const reduced = list.map((p) => {
       const obj = {};
-      exportFields.forEach((f) => { obj[f] = p[f] ?? ''; });
+      keys.forEach((f) => { obj[f] = p[f] ?? ''; });
       return obj;
     });
 
@@ -650,6 +654,42 @@ export default function Pacientes() {
         </form>
       </section>
 
+      {/* Cuadro / modal simple con la lista filtrada */}
+      {showListBox && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
+          <div style={{ width: '95%', maxWidth: 760, background: 'white', color: '#020617', borderRadius: 10, padding: 16, boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <h3 style={{ margin: 0 }}>Lista de pacientes</h3>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white' }}>Exportar CSV</button>
+                <button type="button" onClick={() => setShowListBox(false)} style={{ backgroundColor: '#6b7280', color: 'white' }}>Cerrar</button>
+              </div>
+            </div>
+
+            <div style={{ maxHeight: '60vh', overflow: 'auto', borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                <thead>
+                  <tr style={{ textAlign: 'left', background: '#f3f4f6' }}>
+                    {exportColumns.map((c) => (
+                      <th key={c.key} style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>{c.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(searchTerm ? pacientesFiltrados : pacientes).map((p) => (
+                    <tr key={p.id}>
+                      {exportColumns.map((c) => (
+                        <td key={c.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6' }}>{p[c.key] ?? ''}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* LISTADO DE PACIENTES */}
       <section className="list-card" style={{ marginTop: "1rem" }}>
         <div className="list-header">
@@ -672,6 +712,9 @@ export default function Pacientes() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="search-input"
                 />
+                <button type="button" onClick={() => setShowListBox(true)} style={{ backgroundColor: '#111827' }}>
+                  Ver lista
+                </button>
                 <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827' }}>
                   Exportar CSV
                 </button>
