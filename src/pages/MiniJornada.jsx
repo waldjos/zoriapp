@@ -31,26 +31,27 @@ export default function MiniJornada() {
 
   // Cargar pacientes una vez, solo los de la mini jornada (desde medianoche hoy)
   useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Medianoche del día actual
-
-    const q = collection(db, "pacientes");
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const cargarPacientes = async () => {
       try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Medianoche del día actual
+
+        const q = collection(db, "pacientes");
+        const snapshot = await getDocs(q);
         const allDatos = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
         // Filtrar en cliente por createdAt >= today
         const datos = allDatos.filter((p) => {
-          if (!p.createdAt) return false;
-          const createdAtDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+          if (!p.createdAt || !p.createdAt.toDate) return false;
+          const createdAtDate = p.createdAt.toDate();
           return createdAtDate >= today;
         });
         setPacientes(datos);
       } catch (error) {
         console.error("Error al cargar pacientes:", error);
       }
-    });
+    };
 
-    return () => unsubscribe(); // Limpiar listener al desmontar
+    cargarPacientes();
   }, []);
 
   // Filtrar por nombre o cédula
@@ -488,8 +489,7 @@ export default function MiniJornada() {
             <div>
               <label>PCA (ng/ml)</label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
                 value={evaluacion.pca}
                 onChange={(e) => handleChangeText("pca", e.target.value)}
                 placeholder="Valor en ng/ml"

@@ -480,8 +480,7 @@ export default function Tacto() {
             <div>
               <label>PCA (ng/ml)</label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
                 value={evaluacion.pca}
                 onChange={(e) => handleChangeText("pca", e.target.value)}
                 placeholder="Valor en ng/ml"
