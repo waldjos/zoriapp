@@ -1,6 +1,6 @@
 // src/pages/MiniJornada.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -31,21 +31,16 @@ export default function MiniJornada() {
 
   // Cargar pacientes una vez, solo los de la mini jornada (desde 7 AM hoy)
   useEffect(() => {
-    const cargarPacientes = async () => {
-      try {
-        const today = new Date();
-        today.setHours(7, 0, 0, 0); // 7 AM del día actual
+    const today = new Date();
+    today.setHours(7, 0, 0, 0); // 7 AM del día actual
 
-        const q = query(collection(db, "pacientes"), where("createdAt", ">=", today));
-        const snap = await getDocs(q);
-        const datos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setPacientes(datos);
-      } catch (err) {
-        console.error("Error cargando pacientes:", err);
-      }
-    };
+    const q = query(collection(db, "pacientes"), where("createdAt", ">=", Timestamp.fromDate(today)));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const datos = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setPacientes(datos);
+    });
 
-    cargarPacientes();
+    return () => unsubscribe(); // Limpiar listener al desmontar
   }, []);
 
   // Filtrar por nombre o cédula
@@ -136,13 +131,13 @@ export default function MiniJornada() {
     }
   };
 
-  const enviarMensajeWhatsApp = () => {
-    if (!seleccionado || !seleccionado.telefono) {
-      alert("No hay paciente seleccionado o no tiene teléfono.");
+  const enviarMensajeEmail = () => {
+    if (!seleccionado || !seleccionado.email) {
+      alert("No hay paciente seleccionado o no tiene correo electrónico.");
       return;
     }
 
-    // Construir el mensaje
+    // Construir el mensaje (igual que WhatsApp)
     let mensaje = `Buen Día, ${seleccionado.nombreCompleto}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
 
     // Grado
@@ -178,10 +173,28 @@ export default function MiniJornada() {
     mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo';
 
     // Codificar mensaje
+    const subject = encodeURIComponent("Resumen de Consulta Urológica 2025");
+    const body = encodeURIComponent(mensaje);
+
+    // Abrir email
+    const url = `mailto:${seleccionado.email}?subject=${subject}&body=${body}`;
+    window.open(url, '_blank');
+  };
+
+  const enviarMensajeSMS = () => {
+    if (!seleccionado || !seleccionado.telefono) {
+      alert("No hay paciente seleccionado o no tiene teléfono.");
+      return;
+    }
+
+    // Construir el mensaje (igual que WhatsApp, pero más corto para SMS)
+    let mensaje = `Buen Día ${seleccionado.nombreCompleto}. Resumen Consulta Urológica 2025. Tacto: Grado ${evaluacion.tamanio || 'N/A'}, Consistencia: ${evaluacion.fibroelastica ? 'Fibroelástica' : 'Normal'}, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}. IPSS: ${evaluacion.ipss || 'N/A'}. PCA: ${evaluacion.pca || 'N/A'} ng/ml. Tratamiento: ${evaluacion.tratamiento === 'control_anual' ? 'Control anual' : evaluacion.tratamiento === 'tratamiento_medico' ? 'Tratamiento médico' : 'N/A'}. ${evaluacion.indicacion === 'biopsia' ? '--consulte a su medico de confianza--' : ''} Dra. Milagro Tapia Cirujano Urologo`;
+
+    // Codificar mensaje
     const mensajeCodificado = encodeURIComponent(mensaje);
 
-    // Abrir WhatsApp
-    const url = `https://wa.me/${seleccionado.telefono}?text=${mensajeCodificado}`;
+    // Abrir SMS
+    const url = `sms:${seleccionado.telefono}?body=${mensajeCodificado}`;
     window.open(url, '_blank');
   };
 
@@ -502,7 +515,7 @@ export default function MiniJornada() {
               </p>
             )}
 
-            <div style={{ display: "flex", gap: "0.5rem" }}>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <button
                 type="submit"
                 className="primary-btn"
@@ -516,7 +529,21 @@ export default function MiniJornada() {
                 onClick={enviarMensajeWhatsApp}
                 style={{ backgroundColor: '#25d366', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', marginTop: '0.4rem' }}
               >
-                Enviar mensaje por WhatsApp
+                Enviar WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={enviarMensajeEmail}
+                style={{ backgroundColor: '#ea4335', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', marginTop: '0.4rem' }}
+              >
+                Enviar Email
+              </button>
+              <button
+                type="button"
+                onClick={enviarMensajeSMS}
+                style={{ backgroundColor: '#34b7f1', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', marginTop: '0.4rem' }}
+              >
+                Enviar SMS
               </button>
             </div>
           </form>
