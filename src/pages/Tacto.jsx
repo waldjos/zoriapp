@@ -40,16 +40,59 @@ export default function Tacto() {
     cargarPacientes();
   }, []);
 
-  // Filtrar por nombre o cédula
-  const pacientesFiltrados = useMemo(() => {
-    const term = busqueda.trim().toLowerCase();
-    if (!term) return pacientes;
-    return pacientes.filter((p) => {
-      const nombre = (p.nombreCompleto || "").toLowerCase();
-      const cedula = (p.cedula || "").toLowerCase();
-      return nombre.includes(term) || cedula.includes(term);
+  // Columnas a mostrar/exportar para tacto
+  const exportColumns = [
+    { key: 'nombreCompleto', label: 'Nombre' },
+    { key: 'cedula', label: 'Cédula' },
+    { key: 'tacto.tamanio', label: 'Tamaño' },
+    { key: 'tacto.fibroelastica', label: 'Fibroelástica' },
+    { key: 'tacto.aumentadaConsistencia', label: 'Aumentada de consistencia' },
+    { key: 'tacto.petrea', label: 'Pétrea' },
+    { key: 'tacto.bordes', label: 'Bordes' },
+    { key: 'tacto.nodulos', label: 'Nódulos' },
+    { key: 'tacto.ladoNodulo', label: 'Lado del nódulo' },
+    { key: 'tacto.planosClivaje', label: 'Planos de clivaje' },
+  ];
+
+  const exportToCSV = () => {
+    const list = pacientesFiltrados.filter((p) => p.tacto); // Solo pacientes con tacto
+    if (!list || list.length === 0) {
+      alert('No hay pacientes con evaluaciones de tacto para exportar.');
+      return;
+    }
+
+    const headers = exportColumns.map((c) => c.label);
+    const csvLines = [headers.map((h) => `"${h}"`).join(',')];
+    list.forEach((p) => {
+      const row = exportColumns.map((col) => {
+        let v = '';
+        if (col.key.includes('.')) {
+          const [obj, prop] = col.key.split('.');
+          v = p[obj]?.[prop] ?? '';
+        } else {
+          v = p[col.key] ?? '';
+        }
+        // Convertir booleanos a Sí/No
+        if (typeof v === 'boolean') {
+          v = v ? 'Sí' : 'No';
+        }
+        return `"${String(v).replace(/"/g, '""')}"`;
+      }).join(',');
+      csvLines.push(row);
     });
-  }, [pacientes, busqueda]);
+
+    // Añadir BOM para mejor compatibilidad con Excel y forzar nueva línea CRLF
+    const csv = '\uFEFF' + csvLines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tacto_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const seleccionarPaciente = (paciente) => {
     setSeleccionado(paciente);
@@ -131,6 +174,7 @@ export default function Tacto() {
         <div className="list-header">
           <div className="list-header-top">
             <div className="list-title">Buscar paciente</div>
+            <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>Exportar CSV</button>
           </div>
           <input
             className="search-input"
