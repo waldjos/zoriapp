@@ -278,7 +278,7 @@ export default function MiniJornada() {
       </div>
 
       {/* Formulario de evaluación */}
-      {seleccionado && (
+      {false && seleccionado && (
         <div className="form-card" style={{ marginTop: "1.2rem" }}>
           <h2 style={{ fontSize: "1rem", marginBottom: "0.4rem" }}>
             Evaluación de: {seleccionado.nombreCompleto}
