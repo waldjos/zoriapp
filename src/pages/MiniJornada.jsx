@@ -34,10 +34,20 @@ export default function MiniJornada() {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Medianoche del día actual
 
-    const q = query(collection(db, "pacientes"), where("createdAt", ">=", Timestamp.fromDate(today)));
+    const q = collection(db, "pacientes");
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const datos = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setPacientes(datos);
+      try {
+        const allDatos = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        // Filtrar en cliente por createdAt >= today
+        const datos = allDatos.filter((p) => {
+          if (!p.createdAt) return false;
+          const createdAtDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+          return createdAtDate >= today;
+        });
+        setPacientes(datos);
+      } catch (error) {
+        console.error("Error al cargar pacientes:", error);
+      }
     });
 
     return () => unsubscribe(); // Limpiar listener al desmontar
@@ -55,40 +65,45 @@ export default function MiniJornada() {
   }, [pacientes, busqueda]);
 
   const seleccionarPaciente = (paciente) => {
-    setSeleccionado(paciente);
-    setMensaje("");
+    try {
+      setSeleccionado(paciente);
+      setMensaje("");
 
-    // Si el paciente ya tiene una evaluación, la cargamos
-    if (paciente.tacto) {
-      setEvaluacion({
-        tamanio: paciente.tacto.tamanio || "",
-        fibroelastica: paciente.tacto.fibroelastica || false,
-        aumentadaConsistencia: paciente.tacto.aumentadaConsistencia || false,
-        petrea: paciente.tacto.petrea || false,
-        bordes: paciente.tacto.bordes || "",
-        nodulos: paciente.tacto.nodulos || "",
-        ladoNodulo: paciente.tacto.ladoNodulo || "",
-        planosClivaje: paciente.tacto.planosClivaje || "",
-        ipss: paciente.tacto.ipss || "",
-        tratamiento: paciente.tacto.tratamiento || "",
-        pca: paciente.tacto.pca || "",
-        indicacion: paciente.tacto.indicacion || "",
-      });
-    } else {
-      setEvaluacion({
-        tamanio: "",
-        fibroelastica: false,
-        aumentadaConsistencia: false,
-        petrea: false,
-        bordes: "",
-        nodulos: "",
-        ladoNodulo: "",
-        planosClivaje: "",
-        ipss: "",
-        tratamiento: "",
-        pca: "",
-        indicacion: "",
-      });
+      // Si el paciente ya tiene una evaluación, la cargamos
+      if (paciente.tacto) {
+        setEvaluacion({
+          tamanio: paciente.tacto.tamanio || "",
+          fibroelastica: paciente.tacto.fibroelastica || false,
+          aumentadaConsistencia: paciente.tacto.aumentadaConsistencia || false,
+          petrea: paciente.tacto.petrea || false,
+          bordes: paciente.tacto.bordes || "",
+          nodulos: paciente.tacto.nodulos || "",
+          ladoNodulo: paciente.tacto.ladoNodulo || "",
+          planosClivaje: paciente.tacto.planosClivaje || "",
+          ipss: paciente.tacto.ipss || "",
+          tratamiento: paciente.tacto.tratamiento || "",
+          pca: paciente.tacto.pca || "",
+          indicacion: paciente.tacto.indicacion || "",
+        });
+      } else {
+        setEvaluacion({
+          tamanio: "",
+          fibroelastica: false,
+          aumentadaConsistencia: false,
+          petrea: false,
+          bordes: "",
+          nodulos: "",
+          ladoNodulo: "",
+          planosClivaje: "",
+          ipss: "",
+          tratamiento: "",
+          pca: "",
+          indicacion: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error al seleccionar paciente:", error);
+      setMensaje("Error al cargar la evaluación del paciente.");
     }
   };
 
