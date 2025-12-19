@@ -11,6 +11,7 @@ import PacienteDetalle from "./pages/PacienteDetalle";
 import LabForm from "./pages/LabForm";
 import Tacto from "./pages/Tacto";
 import Dashboard from "./pages/Dashboard";
+import MiniJornada from "./pages/MiniJornada";
 
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
@@ -34,6 +35,7 @@ function AppShell() {
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
           <Route path="/registro" element={<PrivateRoute><RegistroPaciente /></PrivateRoute>} />
           <Route path="/tacto" element={<PrivateRoute><Tacto /></PrivateRoute>} />
+          <Route path="/mini-jornada" element={<PrivateRoute><MiniJornada /></PrivateRoute>} />
           <Route path="/pacientes" element={<PrivateRoute><Pacientes /></PrivateRoute>} />
           <Route path="/pacientes/:id" element={<PrivateRoute><PacienteDetalle /></PrivateRoute>} />
           <Route path="/laboratorio" element={<PrivateRoute><LabForm /></PrivateRoute>} />

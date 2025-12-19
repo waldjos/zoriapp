@@ -25,6 +25,10 @@ export default function Home() {
             Tacto
           </button>
 
+          <button className="home-button" onClick={() => navigate("/mini-jornada")}>
+            Mini Jornada
+          </button>
+
           <button className="home-button" onClick={() => navigate("/pacientes")}>
             Pacientes
           </button>

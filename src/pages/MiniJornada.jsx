@@ -1,12 +1,11 @@
-// src/pages/Tacto.jsx
+// src/pages/MiniJornada.jsx
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
-import * as XLSX from 'xlsx';
 
-export default function Tacto() {
+export default function MiniJornada() {
   const [pacientes, setPacientes] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [seleccionado, setSeleccionado] = useState(null);
@@ -24,8 +23,8 @@ export default function Tacto() {
     nodulos: "", // "si" / "no"
     ladoNodulo: "", // derecho / izquierdo
     planosClivaje: "", // si / no
-    ipss: "",
-    tratamiento: "",
+    ipss: "", // valor numérico
+    tratamiento: "", // "control_anual" / "tratamiento_medico"
   });
 
   // Cargar pacientes una vez
@@ -43,87 +42,16 @@ export default function Tacto() {
     cargarPacientes();
   }, []);
 
-  // Columnas a mostrar/exportar para tacto
-  const exportColumns = [
-    { key: 'nombreCompleto', label: 'Nombre' },
-    { key: 'cedula', label: 'Cédula' },
-    { key: 'tacto.tamanio', label: 'Tamaño' },
-    { key: 'tacto.fibroelastica', label: 'Fibroelástica' },
-    { key: 'tacto.aumentadaConsistencia', label: 'Aumentada de consistencia' },
-    { key: 'tacto.petrea', label: 'Pétrea' },
-    { key: 'tacto.bordes', label: 'Bordes' },
-    { key: 'tacto.nodulos', label: 'Nódulos' },
-    { key: 'tacto.ladoNodulo', label: 'Lado del nódulo' },
-    { key: 'tacto.planosClivaje', label: 'Planos de clivaje' },
-    { key: 'tacto.ipss', label: 'IPSS' },
-    { key: 'tacto.tratamiento', label: 'Tratamiento' },
-  ];
-
-  const exportToCSV = () => {
-    const list = pacientesFiltrados.filter((p) => p.tacto); // Solo pacientes con tacto
-    if (!list || list.length === 0) {
-      alert('No hay pacientes con evaluaciones de tacto para exportar.');
-      return;
-    }
-
-    // Preparar datos para Excel
-    const data = [];
-    // Headers
-    const headers = exportColumns.map((c) => c.label);
-    data.push(headers);
-
-    // Rows
-    list.forEach((p) => {
-      const row = exportColumns.map((col) => {
-        let v = '';
-        if (col.key.includes('.')) {
-          const [obj, prop] = col.key.split('.');
-          v = p[obj]?.[prop] ?? '';
-        } else {
-          v = p[col.key] ?? '';
-        }
-        // Convertir booleanos a Sí/No
-        if (typeof v === 'boolean') {
-          v = v ? 'Sí' : 'No';
-        }
-        return v;
-      });
-      data.push(row);
+  // Filtrar por nombre o cédula
+  const pacientesFiltrados = useMemo(() => {
+    const term = busqueda.trim().toLowerCase();
+    if (!term) return pacientes;
+    return pacientes.filter((p) => {
+      const nombre = (p.nombreCompleto || "").toLowerCase();
+      const cedula = (p.cedula || "").toLowerCase();
+      return nombre.includes(term) || cedula.includes(term);
     });
-
-    // Crear workbook y worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(data);
-
-    // Establecer anchos de columna
-    const colWidths = headers.map(() => ({ wch: 20 })); // Ancho aproximado
-    ws['!cols'] = colWidths;
-
-    // Estilo por defecto: Arial 12, bordes
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = { c: C, r: R };
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
-        if (!ws[cell_ref]) continue;
-        ws[cell_ref].s = {
-          font: { name: 'Arial', sz: 12 },
-          border: {
-            top: { style: 'thin' },
-            bottom: { style: 'thin' },
-            left: { style: 'thin' },
-            right: { style: 'thin' }
-          }
-        };
-      }
-    }
-
-    // Agregar worksheet al workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Tacto');
-
-    // Exportar
-    XLSX.writeFile(wb, `tacto_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  };
+  }, [pacientes, busqueda]);
 
   const seleccionarPaciente = (paciente) => {
     setSeleccionado(paciente);
@@ -163,6 +91,10 @@ export default function Tacto() {
     setEvaluacion((prev) => ({ ...prev, [campo]: valor }));
   };
 
+  const handleChangeCheck = (campo) => {
+    setEvaluacion((prev) => ({ ...prev, [campo]: !prev[campo] }));
+  };
+
   const handleChangeText = (campo, valor) => {
     setEvaluacion((prev) => ({ ...prev, [campo]: valor }));
   };
@@ -176,7 +108,6 @@ export default function Tacto() {
 
     try {
       const ref = doc(db, "pacientes", seleccionado.id);
-      // Añadir metadata del profesional que registra la evaluación
       await updateDoc(ref, {
         tacto: {
           ...evaluacion,
@@ -195,12 +126,55 @@ export default function Tacto() {
     }
   };
 
+  const enviarMensajeWhatsApp = () => {
+    if (!seleccionado || !seleccionado.telefono) {
+      alert("No hay paciente seleccionado o no tiene teléfono.");
+      return;
+    }
+
+    // Construir el mensaje
+    let mensaje = `Buen Día, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
+
+    // Grado
+    mensaje += `Grado ${evaluacion.tamanio || 'N/A'}`;
+
+    // Consistencia
+    const consistencias = [];
+    if (evaluacion.fibroelastica) consistencias.push("Fibroelástica");
+    if (evaluacion.aumentadaConsistencia) consistencias.push("Aumentada de consistencia");
+    if (evaluacion.petrea) consistencias.push("Pétrea");
+    mensaje += `, Consistencia: ${consistencias.length > 0 ? consistencias.join(", ") : 'Normal'}`;
+
+    // Nódulo
+    mensaje += `, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}`;
+    if (evaluacion.nodulos === 'si' && evaluacion.ladoNodulo) {
+      mensaje += ` (${evaluacion.ladoNodulo})`;
+    }
+
+    mensaje += `\n\nIPSS: ${evaluacion.ipss || 'N/A'}\n\nTratamiento: `;
+
+    if (evaluacion.tratamiento === 'control_anual') {
+      mensaje += 'Control anual';
+    } else if (evaluacion.tratamiento === 'tratamiento_medico') {
+      mensaje += `Tratamiento médico:\n- Sulixtra 0.4mg: 1 tab diaria 08:00pm por 3 meses\n• Todo el que lleva Tratamiento lleva consulta control a los 3 meses`;
+    } else {
+      mensaje += 'N/A';
+    }
+
+    // Codificar mensaje
+    const mensajeCodificado = encodeURIComponent(mensaje);
+
+    // Abrir WhatsApp
+    const url = `https://wa.me/${seleccionado.telefono}?text=${mensajeCodificado}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-header-title">Evaluación médica</h1>
+        <h1 className="page-header-title">Mini Jornada Urológica</h1>
         <p className="page-header-subtitle">
-          Busca al paciente por nombre o cédula y registra los hallazgos del tacto.
+          Busca al paciente por nombre o cédula y registra los hallazgos del tacto con IPSS y tratamiento.
         </p>
       </div>
 
@@ -209,7 +183,6 @@ export default function Tacto() {
         <div className="list-header">
           <div className="list-header-top">
             <div className="list-title">Buscar paciente</div>
-            <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>Exportar Excel</button>
           </div>
           <input
             className="search-input"
@@ -266,8 +239,7 @@ export default function Tacto() {
             Evaluación de: {seleccionado.nombreCompleto}
           </h2>
           <p style={{ fontSize: "0.8rem", marginBottom: "0.9rem", color: "#9ca3af" }}>
-            C.I.: {seleccionado.cedula} • Edad: {seleccionado.edad} • Tel:{" "}
-            {seleccionado.telefono}
+            C.I.: {seleccionado.cedula} • Edad: {seleccionado.edad} • Tel: {seleccionado.telefono}
           </p>
 
           <form onSubmit={handleGuardar} className="form-grid">
@@ -475,14 +447,23 @@ export default function Tacto() {
               </p>
             )}
 
-            <button
-              type="submit"
-              className="primary-btn"
-              disabled={guardando}
-              style={{ marginTop: "0.4rem" }}
-            >
-              {guardando ? "Guardando..." : "Guardar evaluación"}
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="submit"
+                className="primary-btn"
+                disabled={guardando}
+                style={{ marginTop: "0.4rem" }}
+              >
+                {guardando ? "Guardando..." : "Guardar evaluación"}
+              </button>
+              <button
+                type="button"
+                onClick={enviarMensajeWhatsApp}
+                style={{ backgroundColor: '#25d366', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', marginTop: '0.4rem' }}
+              >
+                Enviar mensaje por WhatsApp
+              </button>
+            </div>
           </form>
         </div>
       )}
