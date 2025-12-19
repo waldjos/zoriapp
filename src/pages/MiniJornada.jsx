@@ -250,10 +250,10 @@ export default function MiniJornada() {
     }
 
     if (evaluacion.indicacion === 'biopsia') {
-      mensaje += '\n\n--consulte a su medico de confianza--';
+      mensaje += '\n\nIndicación: Biopsia Prostatica\n\n--consulte a su medico de confianza--';
     }
 
-    mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo';
+    mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo 💙🩺';
 
     // Codificar mensaje
     const mensajeCodificado = encodeURIComponent(mensaje);
