@@ -36,6 +36,7 @@ export default function Tacto() {
       try {
         const snap = await getDocs(collection(db, "pacientes"));
         const datos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        console.log("Pacientes cargados:", datos);
         setPacientes(datos);
       } catch (err) {
         console.error("Error cargando pacientes:", err);
@@ -141,6 +142,7 @@ export default function Tacto() {
   };
 
   const seleccionarPaciente = (paciente) => {
+    console.log("Seleccionando paciente:", paciente);
     setSeleccionado(paciente);
     setMensaje("");
 
