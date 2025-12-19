@@ -45,6 +45,17 @@ export default function Tacto() {
     cargarPacientes();
   }, []);
 
+  // Filtrar por nombre o cédula
+  const pacientesFiltrados = useMemo(() => {
+    const term = busqueda.trim().toLowerCase();
+    if (!term) return pacientes;
+    return pacientes.filter((p) => {
+      const nombre = (p.nombreCompleto || "").toLowerCase();
+      const cedula = (p.cedula || "").toLowerCase();
+      return nombre.includes(term) || cedula.includes(term);
+    });
+  }, [pacientes, busqueda]);
+
   // Columnas a mostrar/exportar para tacto
   const exportColumns = [
     { key: 'nombreCompleto', label: 'Nombre' },
@@ -169,6 +180,10 @@ export default function Tacto() {
 
   const handleChangeRadio = (campo, valor) => {
     setEvaluacion((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const handleChangeCheck = (campo) => {
+    setEvaluacion((prev) => ({ ...prev, [campo]: !prev[campo] }));
   };
 
   const handleChangeText = (campo, valor) => {
