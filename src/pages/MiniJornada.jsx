@@ -244,7 +244,7 @@ export default function MiniJornada() {
     if (evaluacion.tratamiento === 'control_anual') {
       mensaje += 'Control anual';
     } else if (evaluacion.tratamiento === 'tratamiento_medico') {
-      mensaje += `Tratamiento médico:\n- Sulixtra 0.4mg: 1 tab diaria 08:00pm por 3 meses\n• Todo el que lleva Tratamiento lleva consulta control a los 3 meses`;
+      mensaje += `Tratamiento médico:\n- Sulixtra 0.4mg: 1 tab diaria 08:00pm por 3 meses`;
     } else {
       mensaje += 'N/A';
     }
