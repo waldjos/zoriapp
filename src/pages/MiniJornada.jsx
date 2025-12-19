@@ -29,10 +29,10 @@ export default function MiniJornada() {
     indicacion: "", // "normal" / "biopsia"
   });
 
-  // Cargar pacientes una vez, solo los de la mini jornada (desde 7 AM hoy)
+  // Cargar pacientes una vez, solo los de la mini jornada (desde medianoche hoy)
   useEffect(() => {
     const today = new Date();
-    today.setHours(7, 0, 0, 0); // 7 AM del día actual
+    today.setHours(0, 0, 0, 0); // Medianoche del día actual
 
     const q = query(collection(db, "pacientes"), where("createdAt", ">=", Timestamp.fromDate(today)));
     const unsubscribe = onSnapshot(q, (snapshot) => {
