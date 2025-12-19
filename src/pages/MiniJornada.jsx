@@ -214,6 +214,55 @@ export default function MiniJornada() {
     window.open(url, '_blank');
   };
 
+  const enviarMensajeWhatsApp = () => {
+    if (!seleccionado || !seleccionado.telefono) {
+      alert("No hay paciente seleccionado o no tiene teléfono.");
+      return;
+    }
+
+    // Construir el mensaje
+    let mensaje = `Buen Día, ${seleccionado.nombreCompleto}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
+
+    // Grado
+    mensaje += `Grado ${evaluacion.tamanio || 'N/A'}`;
+
+    // Consistencia
+    const consistencias = [];
+    if (evaluacion.fibroelastica) consistencias.push("Fibroelástica");
+    if (evaluacion.aumentadaConsistencia) consistencias.push("Aumentada de consistencia");
+    if (evaluacion.petrea) consistencias.push("Pétrea");
+    mensaje += `, Consistencia: ${consistencias.length > 0 ? consistencias.join(", ") : 'Normal'}`;
+
+    // Nódulo
+    mensaje += `, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}`;
+    if (evaluacion.nodulos === 'si' && evaluacion.ladoNodulo) {
+      mensaje += ` (${evaluacion.ladoNodulo})`;
+    }
+
+    mensaje += `\n\nIPSS: ${evaluacion.ipss || 'N/A'}\n\nPCA: ${evaluacion.pca || 'N/A'} ng/ml\n\nTratamiento: `;
+
+    if (evaluacion.tratamiento === 'control_anual') {
+      mensaje += 'Control anual';
+    } else if (evaluacion.tratamiento === 'tratamiento_medico') {
+      mensaje += `Tratamiento médico:\n- Sulixtra 0.4mg: 1 tab diaria 08:00pm por 3 meses\n• Todo el que lleva Tratamiento lleva consulta control a los 3 meses`;
+    } else {
+      mensaje += 'N/A';
+    }
+
+    if (evaluacion.indicacion === 'biopsia') {
+      mensaje += '\n\n--consulte a su medico de confianza--';
+    }
+
+    mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo';
+
+    // Codificar mensaje
+    const mensajeCodificado = encodeURIComponent(mensaje);
+
+    // Abrir WhatsApp
+    const url = `https://wa.me/${seleccionado.telefono}?text=${mensajeCodificado}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -278,7 +327,7 @@ export default function MiniJornada() {
       </div>
 
       {/* Formulario de evaluación */}
-      {false && seleccionado && (
+      {seleccionado && (
         <div className="form-card" style={{ marginTop: "1.2rem" }}>
           <h2 style={{ fontSize: "1rem", marginBottom: "0.4rem" }}>
             Evaluación de: {seleccionado.nombreCompleto}
