@@ -4,6 +4,7 @@ import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
+import * as XLSX from 'xlsx';
 
 export default function Tacto() {
   const [pacientes, setPacientes] = useState([]);
@@ -61,8 +62,13 @@ export default function Tacto() {
       return;
     }
 
+    // Preparar datos para Excel
+    const data = [];
+    // Headers
     const headers = exportColumns.map((c) => c.label);
-    const csvLines = [headers.map((h) => `"${h}"`).join(',')];
+    data.push(headers);
+
+    // Rows
     list.forEach((p) => {
       const row = exportColumns.map((col) => {
         let v = '';
@@ -76,22 +82,43 @@ export default function Tacto() {
         if (typeof v === 'boolean') {
           v = v ? 'Sí' : 'No';
         }
-        return `"${String(v).replace(/"/g, '""')}"`;
-      }).join(',');
-      csvLines.push(row);
+        return v;
+      });
+      data.push(row);
     });
 
-    // Añadir BOM para mejor compatibilidad con Excel y forzar nueva línea CRLF
-    const csv = '\uFEFF' + csvLines.join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tacto_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    // Crear workbook y worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Establecer anchos de columna
+    const colWidths = headers.map(() => ({ wch: 20 })); // Ancho aproximado
+    ws['!cols'] = colWidths;
+
+    // Estilo por defecto: Arial 12, bordes
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        if (!ws[cell_ref]) continue;
+        ws[cell_ref].s = {
+          font: { name: 'Arial', sz: 12 },
+          border: {
+            top: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' }
+          }
+        };
+      }
+    }
+
+    // Agregar worksheet al workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Tacto');
+
+    // Exportar
+    XLSX.writeFile(wb, `tacto_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const seleccionarPaciente = (paciente) => {
@@ -174,7 +201,7 @@ export default function Tacto() {
         <div className="list-header">
           <div className="list-header-top">
             <div className="list-title">Buscar paciente</div>
-            <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>Exportar CSV</button>
+            <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>Exportar Excel</button>
           </div>
           <input
             className="search-input"
