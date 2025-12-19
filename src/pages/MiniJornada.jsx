@@ -1,6 +1,6 @@
 // src/pages/MiniJornada.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -25,13 +25,19 @@ export default function MiniJornada() {
     planosClivaje: "", // si / no
     ipss: "", // valor numérico
     tratamiento: "", // "control_anual" / "tratamiento_medico"
+    pca: "", // valor numérico ng/ml
+    indicacion: "", // "normal" / "biopsia"
   });
 
-  // Cargar pacientes una vez
+  // Cargar pacientes una vez, solo los de la mini jornada (desde 7 AM hoy)
   useEffect(() => {
     const cargarPacientes = async () => {
       try {
-        const snap = await getDocs(collection(db, "pacientes"));
+        const today = new Date();
+        today.setHours(7, 0, 0, 0); // 7 AM del día actual
+
+        const q = query(collection(db, "pacientes"), where("createdAt", ">=", today));
+        const snap = await getDocs(q);
         const datos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setPacientes(datos);
       } catch (err) {
@@ -70,6 +76,8 @@ export default function MiniJornada() {
         planosClivaje: paciente.tacto.planosClivaje || "",
         ipss: paciente.tacto.ipss || "",
         tratamiento: paciente.tacto.tratamiento || "",
+        pca: paciente.tacto.pca || "",
+        indicacion: paciente.tacto.indicacion || "",
       });
     } else {
       setEvaluacion({
@@ -83,6 +91,8 @@ export default function MiniJornada() {
         planosClivaje: "",
         ipss: "",
         tratamiento: "",
+        pca: "",
+        indicacion: "",
       });
     }
   };
@@ -133,7 +143,7 @@ export default function MiniJornada() {
     }
 
     // Construir el mensaje
-    let mensaje = `Buen Día, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
+    let mensaje = `Buen Día, ${seleccionado.nombreCompleto}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
 
     // Grado
     mensaje += `Grado ${evaluacion.tamanio || 'N/A'}`;
@@ -151,7 +161,7 @@ export default function MiniJornada() {
       mensaje += ` (${evaluacion.ladoNodulo})`;
     }
 
-    mensaje += `\n\nIPSS: ${evaluacion.ipss || 'N/A'}\n\nTratamiento: `;
+    mensaje += `\n\nIPSS: ${evaluacion.ipss || 'N/A'}\n\nPCA: ${evaluacion.pca || 'N/A'} ng/ml\n\nTratamiento: `;
 
     if (evaluacion.tratamiento === 'control_anual') {
       mensaje += 'Control anual';
@@ -160,6 +170,12 @@ export default function MiniJornada() {
     } else {
       mensaje += 'N/A';
     }
+
+    if (evaluacion.indicacion === 'biopsia') {
+      mensaje += '\n\n--consulte a su medico de confianza--';
+    }
+
+    mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo';
 
     // Codificar mensaje
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -436,6 +452,45 @@ export default function MiniJornada() {
                     onChange={() => handleChangeRadio("tratamiento", "tratamiento_medico")}
                   />
                   <span>Tratamiento médico</span>
+                </label>
+              </div>
+            </div>
+
+            {/* PCA */}
+            <div>
+              <label>PCA (ng/ml)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={evaluacion.pca}
+                onChange={(e) => handleChangeText("pca", e.target.value)}
+                placeholder="Valor en ng/ml"
+              />
+            </div>
+
+            {/* Indicación */}
+            <div>
+              <label>Indicación</label>
+              <div className="form-row-inline">
+                <label style={{ display: "flex", gap: "0.25rem" }}>
+                  <input
+                    type="radio"
+                    name="indicacion"
+                    value="normal"
+                    checked={evaluacion.indicacion === "normal"}
+                    onChange={() => handleChangeRadio("indicacion", "normal")}
+                  />
+                  <span>Normal</span>
+                </label>
+                <label style={{ display: "flex", gap: "0.25rem" }}>
+                  <input
+                    type="radio"
+                    name="indicacion"
+                    value="biopsia"
+                    checked={evaluacion.indicacion === "biopsia"}
+                    onChange={() => handleChangeRadio("indicacion", "biopsia")}
+                  />
+                  <span>Indicación biopsia prostática</span>
                 </label>
               </div>
             </div>

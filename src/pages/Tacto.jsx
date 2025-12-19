@@ -26,6 +26,8 @@ export default function Tacto() {
     planosClivaje: "", // si / no
     ipss: "",
     tratamiento: "",
+    pca: "",
+    indicacion: "",
   });
 
   // Cargar pacientes una vez
@@ -57,6 +59,8 @@ export default function Tacto() {
     { key: 'tacto.planosClivaje', label: 'Planos de clivaje' },
     { key: 'tacto.ipss', label: 'IPSS' },
     { key: 'tacto.tratamiento', label: 'Tratamiento' },
+    { key: 'tacto.pca', label: 'PCA (ng/ml)' },
+    { key: 'tacto.indicacion', label: 'Indicación' },
   ];
 
   const exportToCSV = () => {
@@ -142,6 +146,8 @@ export default function Tacto() {
         planosClivaje: paciente.tacto.planosClivaje || "",
         ipss: paciente.tacto.ipss || "",
         tratamiento: paciente.tacto.tratamiento || "",
+        pca: paciente.tacto.pca || "",
+        indicacion: paciente.tacto.indicacion || "",
       });
     } else {
       setEvaluacion({
@@ -155,6 +161,8 @@ export default function Tacto() {
         planosClivaje: "",
         ipss: "",
         tratamiento: "",
+        pca: "",
+        indicacion: "",
       });
     }
   };
@@ -464,6 +472,45 @@ export default function Tacto() {
                     onChange={() => handleChangeRadio("tratamiento", "tratamiento_medico")}
                   />
                   <span>Tratamiento médico</span>
+                </label>
+              </div>
+            </div>
+
+            {/* PCA */}
+            <div>
+              <label>PCA (ng/ml)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={evaluacion.pca}
+                onChange={(e) => handleChangeText("pca", e.target.value)}
+                placeholder="Valor en ng/ml"
+              />
+            </div>
+
+            {/* Indicación */}
+            <div>
+              <label>Indicación</label>
+              <div className="form-row-inline">
+                <label style={{ display: "flex", gap: "0.25rem" }}>
+                  <input
+                    type="radio"
+                    name="indicacion"
+                    value="normal"
+                    checked={evaluacion.indicacion === "normal"}
+                    onChange={() => handleChangeRadio("indicacion", "normal")}
+                  />
+                  <span>Normal</span>
+                </label>
+                <label style={{ display: "flex", gap: "0.25rem" }}>
+                  <input
+                    type="radio"
+                    name="indicacion"
+                    value="biopsia"
+                    checked={evaluacion.indicacion === "biopsia"}
+                    onChange={() => handleChangeRadio("indicacion", "biopsia")}
+                  />
+                  <span>Indicación biopsia prostática</span>
                 </label>
               </div>
             </div>
