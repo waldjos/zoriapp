@@ -28,6 +28,7 @@ export default function Pacientes() {
   const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState("");
+  const [estadoResultado, setEstadoResultado] = useState("pendiente");
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -289,6 +290,10 @@ export default function Pacientes() {
   // Edición
   const [editingId, setEditingId] = useState(null);
 
+  // Envío de SMS
+  const [enviandoSMS, setEnviandoSMS] = useState(false);
+  const [mensajeSMS, setMensajeSMS] = useState("");
+
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -407,6 +412,7 @@ export default function Pacientes() {
     setEdad(paciente.edad != null ? String(paciente.edad) : "");
     setEmail(paciente.email || "");
     setNotas(paciente.notas || "");
+    setEstadoResultado(paciente.estadoResultado || "pendiente");
     setEditingId(paciente.id);
     setError("");
     setSuccess("");
@@ -516,6 +522,35 @@ export default function Pacientes() {
     URL.revokeObjectURL(url);
   };
 
+  const enviarSMSLote = async () => {
+    const confirmar = window.confirm('¿Estás seguro de enviar SMS al lote del día? Esta acción no se puede deshacer.');
+    if (!confirmar) return;
+
+    setEnviandoSMS(true);
+    setMensajeSMS("");
+
+    try {
+      const resp = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pacientes }),
+      });
+
+      const result = await resp.json();
+
+      if (resp.ok) {
+        setMensajeSMS(`Éxito: ${result.mensaje}`);
+      } else {
+        setMensajeSMS(`Error: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error enviando SMS:', err);
+      setMensajeSMS('Error al enviar SMS. Revisa la consola para más detalles.');
+    } finally {
+      setEnviandoSMS(false);
+    }
+  };
+
   return (
     <div className="page pacientes-page pacientes-card">
       {/* FORMULARIO DE REGISTRO / EDICIÓN */}
@@ -612,6 +647,18 @@ export default function Pacientes() {
               value={fechaNacimiento}
               onChange={(e) => setFechaNacimiento(e.target.value)}
             />
+          </div>
+
+          {/* Estado del resultado */}
+          <div style={{ marginBottom: "0.75rem" }}>
+            <label>Estado del resultado</label>
+            <select
+              value={estadoResultado}
+              onChange={(e) => setEstadoResultado(e.target.value)}
+            >
+              <option value="pendiente">Pendiente</option>
+              <option value="disponible">Disponible</option>
+            </select>
           </div>
 
           {/* Notas */}
@@ -721,9 +768,23 @@ export default function Pacientes() {
                 <button type="button" onClick={exportToJSON} style={{ backgroundColor: '#111827' }}>
                   Exportar JSON
                 </button>
+                <button
+                  type="button"
+                  onClick={enviarSMSLote}
+                  disabled={enviandoSMS}
+                  style={{ backgroundColor: '#059669' }}
+                >
+                  {enviandoSMS ? 'Enviando SMS...' : 'Enviar SMS – Lote del día'}
+                </button>
               </div>
           </div>
         </div>
+
+        {mensajeSMS && (
+          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: mensajeSMS.startsWith('Éxito') ? '#d1fae5' : '#fee2e2', borderRadius: '0.375rem' }}>
+            <p style={{ margin: 0, color: mensajeSMS.startsWith('Éxito') ? '#065f46' : '#991b1b' }}>{mensajeSMS}</p>
+          </div>
+        )}
 
         {cargandoPacientes ? (
           <p style={{ marginTop: "1rem" }}>Cargando pacientes...</p>
@@ -739,6 +800,7 @@ export default function Pacientes() {
                   <th>Localidad</th>
                   <th>Edad</th>
                   <th>Correo</th>
+                  <th>Estado</th>
                   <th style={{ textAlign: "center" }}>Acciones</th>
                 </tr>
               </thead>
