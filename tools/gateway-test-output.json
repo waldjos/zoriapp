@@ -1,0 +1,9 @@
+{
+  "gateway": "http://192.168.31.171:8082",
+  "results": [
+    {
+      "attempt": "header-bearer",
+      "error": "FetchError: request to http://192.168.31.171:8082/ failed, reason: connect ETIMEDOUT 192.168.31.171:8082"
+    }
+  ]
+}
