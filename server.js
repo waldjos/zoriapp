@@ -381,12 +381,17 @@ app.get('/export-vcf', (req, res) => {
     // build vcf content
     const lines = [];
     batch.forEach((p, i) => {
-      const fn = p.nombre || `Contacto ${batchIndex * batchSize + i + 1}`;
+      const overallIndex = batchIndex * batchSize + i + 1;
+      const code = String(overallIndex).padStart(4, '0');
+      const baseName = p.nombre || `Contacto ${overallIndex}`;
+      const fn = `${code} ${baseName}`;
       const tel = p.telefono.replace(/\s+/g, '');
       lines.push('BEGIN:VCARD');
       lines.push('VERSION:3.0');
       lines.push(`FN:${fn}`);
+      lines.push(`N:${baseName};;;;`);
       lines.push(`TEL;TYPE=CELL:${tel}`);
+      lines.push(`NOTE:Codigo:${code}`);
       lines.push('END:VCARD');
     });
     const vcf = lines.join('\r\n');
