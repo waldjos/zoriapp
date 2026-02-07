@@ -172,10 +172,36 @@ app.post('/api/send-sms', async (req, res) => {
   }
 });
 
-// Fallback to index.html for SPA routing
+// Fallback to index.html for SPA routing. If dist/index.html is missing,
+// return a simple informative page listing useful endpoints instead of
+// throwing ENOENT.
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.headers && req.headers.accept && req.headers.accept.indexOf('text/html') !== -1) {
-    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    const html = `<!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <title>Zoriapp - Server</title>
+          <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px;color:#222}a{color:#007bff}</style>
+        </head>
+        <body>
+          <h2>Zoriapp - Server running</h2>
+          <p><strong>Note:</strong> Static build not found at <code>dist/index.html</code>. The API is available below.</p>
+          <ul>
+            <li><a href="/api/health">/api/health</a> - server health</li>
+            <li><a href="/api/today-batch">/api/today-batch</a> - items scheduled to send today</li>
+            <li><a href="/broadcast-link">/broadcast-link</a> - abrir SMS en lotes desde el teléfono</li>
+            <li><a href="/api/export-broadcast">/api/export-broadcast</a> - exportar mensaje + números (texto plano)</li>
+          </ul>
+          <p>If you expect a web UI, run <code>npm run build</code> to generate the <code>dist</code> folder.</p>
+        </body>
+      </html>`;
+    return res.type('html').status(200).send(html);
   }
   return next();
 });
@@ -334,6 +360,81 @@ app.get('/broadcast-link', (req, res) => {
     res.type('html').send(html);
   } catch (err) {
     console.error('broadcast-link error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// GET /export-vcf?date=YYYY-MM-DD&batch=0
+// returns a vCard (.vcf) file containing the numbers in the requested batch
+app.get('/export-vcf', (req, res) => {
+  try {
+    const date = req.query.date || formatDate(new Date(Date.now() + 24*60*60*1000));
+    const limit = parseInt(req.query.limit || '90', 10);
+    const batchIndex = parseInt(req.query.batch || '0', 10);
+    const batchSize = 30;
+    const schedule = readSchedule();
+    const targets = schedule.filter(s => s.scheduledDate === date).map(s => ({ nombre: s.nombreCompleto || '', telefono: s.telefono })).filter(t => t.telefono).slice(0, limit);
+    const batches = [];
+    for (let i = 0; i < targets.length; i += batchSize) batches.push(targets.slice(i, i + batchSize));
+    if (batchIndex < 0 || batchIndex >= batches.length) return res.status(404).send('Batch not found');
+    const batch = batches[batchIndex];
+    // build vcf content
+    const lines = [];
+    batch.forEach((p, i) => {
+      const fn = p.nombre || `Contacto ${batchIndex * batchSize + i + 1}`;
+      const tel = p.telefono.replace(/\s+/g, '');
+      lines.push('BEGIN:VCARD');
+      lines.push('VERSION:3.0');
+      lines.push(`FN:${fn}`);
+      lines.push(`TEL;TYPE=CELL:${tel}`);
+      lines.push('END:VCARD');
+    });
+    const vcf = lines.join('\r\n');
+    const filename = `zoriapp-batch-${date}-${batchIndex+1}.vcf`;
+    res.setHeader('Content-Type', 'text/vcard; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(vcf);
+  } catch (err) {
+    console.error('export-vcf error', err);
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
+// GET /whatsapp-link -> similar to broadcast-link but with vCard download and whatsapp buttons
+app.get('/whatsapp-link', (req, res) => {
+  try {
+    const date = req.query.date || formatDate(new Date(Date.now() + 24*60*60*1000)); // default: tomorrow
+    const limit = parseInt(req.query.limit || '90', 10);
+    const schedule = readSchedule();
+    const targets = schedule.filter(s => s.scheduledDate === date).map(s => s.telefono).filter(Boolean).slice(0, limit);
+    const batchSize = 30;
+    const batches = [];
+    for (let i = 0; i < targets.length; i += batchSize) batches.push(targets.slice(i, i + batchSize));
+    const defaultMsg = `Hospital Domingo Luciani - Proyecto Zoriak. Su resultado ya está disponible. Puede retirarlo el Lunes ${date}. Traer cédula.`;
+
+    let html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhatsApp Broadcast</title></head><body style="font-family:Arial,sans-serif;padding:20px;">';
+    html += `<h2>Enviar broadcast por WhatsApp</h2><p>Fecha objetivo: <strong>${date}</strong></p><p>Números totales: <strong>${targets.length}</strong> (máx ${limit})</p>`;
+    if (targets.length === 0) {
+      html += `<p>No se encontraron números para ${date}.</p>`;
+    } else {
+      html += `<p>Genera vCards para importar como contactos y luego crea una lista de difusión en WhatsApp. También puedes abrir WhatsApp para pegar el mensaje.</p>`;
+      batches.forEach((batch, idx) => {
+        const start = idx * batchSize + 1;
+        const end = idx * batchSize + batch.length;
+        html += `<div style="margin-bottom:14px;">
+          <a href="/export-vcf?date=${encodeURIComponent(date)}&batch=${idx}" style="display:inline-block;padding:10px 14px;background:#17a2b8;color:white;border-radius:6px;text-decoration:none;margin-right:8px;">Descargar vCard lote ${idx+1} (${start}-${end})</a>
+          <a href="https://wa.me/?text=${encodeURIComponent(defaultMsg)}" style="display:inline-block;padding:10px 14px;background:#25D366;color:white;border-radius:6px;text-decoration:none;">Abrir WhatsApp con mensaje</a>
+          <div style="margin-top:6px"><small>${start} - ${end} (${batch.length} números)</small></div>
+          <textarea id="nums-${idx}" style="width:100%;height:80px;margin-top:6px">${batch.join('\n')}</textarea>
+          <p><button onclick="copyNums(${idx})" style="padding:6px 10px">Copiar lote ${idx+1}</button></p>
+        </div>`;
+      });
+      html += `<script>function copyNums(i){const t=document.getElementById('nums-'+i).value;navigator.clipboard.writeText(t).then(()=>alert('Números copiados del lote '+(i+1))).catch(()=>alert('No se pudo copiar automáticamente. Seleccione y copie manualmente.'))}</script>`;
+    }
+    html += '</body></html>';
+    res.type('html').send(html);
+  } catch (err) {
+    console.error('whatsapp-link error', err);
     res.status(500).json({ error: String(err) });
   }
 });
