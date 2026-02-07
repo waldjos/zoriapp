@@ -776,6 +776,21 @@ export default function Pacientes() {
                 >
                   {enviandoSMS ? 'Enviando SMS...' : 'Enviar SMS – Lote del día'}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // calcular próximo lunes
+                    const now = new Date();
+                    const daysToAdd = ((8 - now.getDay()) % 7) || 7;
+                    const nextMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToAdd);
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const dateStr = `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth()+1)}-${pad(nextMonday.getDate())}`;
+                    window.open(`/whatsapp-link?date=${encodeURIComponent(dateStr)}`, '_blank');
+                  }}
+                  style={{ backgroundColor: '#128C7E', marginLeft: '0.5rem' }}
+                >
+                  WhatsApp Broadcast
+                </button>
               </div>
           </div>
         </div>
