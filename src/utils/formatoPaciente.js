@@ -18,12 +18,14 @@ export function formatoCedula(valor) {
 /**
  * Normaliza texto para comparación en búsqueda (sin acentos, mayúsculas).
  * Así "jose" encuentra "JOSÉ" y "maria" encuentra "MARÍA".
+ * Usa NFD + rango de marcas combinadas para compatibilidad en todos los entornos.
  */
 export function normalizarParaBusqueda(valor) {
   if (valor == null || typeof valor !== "string") return "";
-  return valor
-    .trim()
-    .toUpperCase()
+  const s = String(valor).trim();
+  if (!s) return "";
+  return s
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
 }
