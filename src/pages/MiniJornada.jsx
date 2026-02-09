@@ -23,10 +23,6 @@ export default function MiniJornada() {
     nodulos: "", // "si" / "no"
     ladoNodulo: "", // derecho / izquierdo
     planosClivaje: "", // si / no
-    ipss: "", // valor numérico
-    tratamiento: "", // "control_anual" / "tratamiento_medico"
-    pca: "", // valor numérico ng/ml
-    indicacion: "", // "normal" / "biopsia"
   });
 
   // Cargar pacientes una vez, solo los de la mini jornada (desde medianoche hoy)
@@ -81,10 +77,6 @@ export default function MiniJornada() {
           nodulos: paciente.tacto.nodulos || "",
           ladoNodulo: paciente.tacto.ladoNodulo || "",
           planosClivaje: paciente.tacto.planosClivaje || "",
-          ipss: paciente.tacto.ipss || "",
-          tratamiento: paciente.tacto.tratamiento || "",
-          pca: paciente.tacto.pca || "",
-          indicacion: paciente.tacto.indicacion || "",
         });
       } else {
         setEvaluacion({
@@ -96,10 +88,6 @@ export default function MiniJornada() {
           nodulos: "",
           ladoNodulo: "",
           planosClivaje: "",
-          ipss: "",
-          tratamiento: "",
-          pca: "",
-          indicacion: "",
         });
       }
     } catch (error) {
@@ -172,20 +160,6 @@ export default function MiniJornada() {
       mensaje += ` (${evaluacion.ladoNodulo})`;
     }
 
-    mensaje += `\n\nIPSS: ${evaluacion.ipss || 'N/A'}\n\nPCA: ${evaluacion.pca || 'N/A'} ng/ml\n\nTratamiento: `;
-
-    if (evaluacion.tratamiento === 'control_anual') {
-      mensaje += 'Control anual';
-    } else if (evaluacion.tratamiento === 'tratamiento_medico') {
-      mensaje += `Tratamiento médico:\n- Sulixtra 0.4mg: 1 tab diaria 08:00pm por 3 meses\n• Todo el que lleva Tratamiento lleva consulta control a los 3 meses`;
-    } else {
-      mensaje += 'N/A';
-    }
-
-    if (evaluacion.indicacion === 'biopsia') {
-      mensaje += '\n\n--consulte a su medico de confianza--';
-    }
-
     mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo';
 
     // Codificar mensaje
@@ -204,7 +178,7 @@ export default function MiniJornada() {
     }
 
     // Construir el mensaje (igual que WhatsApp, pero más corto para SMS)
-    let mensaje = `Buen Día ${seleccionado.nombreCompleto}. Resumen Consulta Urológica 2025. Tacto: Grado ${evaluacion.tamanio || 'N/A'}, Consistencia: ${evaluacion.fibroelastica ? 'Fibroelástica' : 'Normal'}, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}. IPSS: ${evaluacion.ipss || 'N/A'}. PCA: ${evaluacion.pca || 'N/A'} ng/ml. Tratamiento: ${evaluacion.tratamiento === 'control_anual' ? 'Control anual' : evaluacion.tratamiento === 'tratamiento_medico' ? 'Tratamiento médico' : 'N/A'}. ${evaluacion.indicacion === 'biopsia' ? '--consulte a su medico de confianza--' : ''} Dra. Milagro Tapia Cirujano Urologo`;
+    let mensaje = `Buen Día ${seleccionado.nombreCompleto}. Resumen Consulta Urológica 2025. Tacto: Grado ${evaluacion.tamanio || 'N/A'}, Consistencia: ${evaluacion.fibroelastica ? 'Fibroelástica' : 'Normal'}, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}. Dra. Milagro Tapia Cirujano Urologo`;
 
     // Codificar mensaje
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -239,20 +213,6 @@ export default function MiniJornada() {
       mensaje += ` (${evaluacion.ladoNodulo})`;
     }
 
-    mensaje += `\n\nIPSS: ${evaluacion.ipss || 'N/A'}\n\nPCA: ${evaluacion.pca || 'N/A'} ng/ml\n\nTratamiento: `;
-
-    if (evaluacion.tratamiento === 'control_anual') {
-      mensaje += 'Control anual';
-    } else if (evaluacion.tratamiento === 'tratamiento_medico') {
-      mensaje += `Tratamiento médico:\n- Sulixtra 0.4mg: 1 tab diaria 08:00pm por 3 meses`;
-    } else {
-      mensaje += 'N/A';
-    }
-
-    if (evaluacion.indicacion === 'biopsia') {
-      mensaje += '\n\nIndicación: Biopsia Prostatica\n\n--consulte a su medico de confianza--';
-    }
-
     mensaje += '\n\nDra. Milagro Tapia Cirujano Urologo 💙🩺';
 
     // Codificar mensaje
@@ -268,7 +228,7 @@ export default function MiniJornada() {
       <div className="page-header">
         <h1 className="page-header-title">Mini Jornada Urológica</h1>
         <p className="page-header-subtitle">
-          Busca al paciente por nombre o cédula y registra los hallazgos del tacto con IPSS y tratamiento.
+          Busca al paciente por nombre o cédula y registra los hallazgos del tacto.
         </p>
       </div>
 
@@ -492,82 +452,6 @@ export default function MiniJornada() {
                     onChange={() => handleChangeRadio("planosClivaje", "no")}
                   />
                   <span>No</span>
-                </label>
-              </div>
-            </div>
-
-            {/* IPSS */}
-            <div>
-              <label>IPSS</label>
-              <input
-                type="number"
-                value={evaluacion.ipss}
-                onChange={(e) => handleChangeText("ipss", e.target.value)}
-                placeholder="Valor numérico"
-              />
-            </div>
-
-            {/* Tratamiento */}
-            <div>
-              <label>Tratamiento</label>
-              <div className="form-row-inline">
-                <label style={{ display: "flex", gap: "0.25rem" }}>
-                  <input
-                    type="radio"
-                    name="tratamiento"
-                    value="control_anual"
-                    checked={evaluacion.tratamiento === "control_anual"}
-                    onChange={() => handleChangeRadio("tratamiento", "control_anual")}
-                  />
-                  <span>Control anual</span>
-                </label>
-                <label style={{ display: "flex", gap: "0.25rem" }}>
-                  <input
-                    type="radio"
-                    name="tratamiento"
-                    value="tratamiento_medico"
-                    checked={evaluacion.tratamiento === "tratamiento_medico"}
-                    onChange={() => handleChangeRadio("tratamiento", "tratamiento_medico")}
-                  />
-                  <span>Tratamiento médico</span>
-                </label>
-              </div>
-            </div>
-
-            {/* PCA */}
-            <div>
-              <label>PCA (ng/ml)</label>
-              <input
-                type="text"
-                value={evaluacion.pca}
-                onChange={(e) => handleChangeText("pca", e.target.value)}
-                placeholder="Valor en ng/ml"
-              />
-            </div>
-
-            {/* Indicación */}
-            <div>
-              <label>Indicación</label>
-              <div className="form-row-inline">
-                <label style={{ display: "flex", gap: "0.25rem" }}>
-                  <input
-                    type="radio"
-                    name="indicacion"
-                    value="normal"
-                    checked={evaluacion.indicacion === "normal"}
-                    onChange={() => handleChangeRadio("indicacion", "normal")}
-                  />
-                  <span>Normal</span>
-                </label>
-                <label style={{ display: "flex", gap: "0.25rem" }}>
-                  <input
-                    type="radio"
-                    name="indicacion"
-                    value="biopsia"
-                    checked={evaluacion.indicacion === "biopsia"}
-                    onChange={() => handleChangeRadio("indicacion", "biopsia")}
-                  />
-                  <span>Indicación biopsia prostática</span>
                 </label>
               </div>
             </div>

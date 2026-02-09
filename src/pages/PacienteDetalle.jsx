@@ -263,10 +263,6 @@ export default function PacienteDetalle() {
           <tr><td><strong>Bordes</strong></td><td>{tacto?.bordes || "-"}</td></tr>
           <tr><td><strong>Nódulos</strong></td><td>{tacto?.nodulos === "si" ? `Sí${tacto?.ladoNodulo ? ` (${tacto.ladoNodulo})` : ""}` : "No"}</td></tr>
           <tr><td><strong>Planos de clivaje</strong></td><td>{tacto?.planosClivaje === "si" ? "Sí" : tacto?.planosClivaje ? "No" : "-"}</td></tr>
-          <tr><td><strong>IPSS</strong></td><td>{tacto?.ipss ?? "-"}</td></tr>
-          <tr><td><strong>PCA (ng/ml)</strong></td><td>{tacto?.pca ?? "-"}</td></tr>
-          <tr><td><strong>Tratamiento</strong></td><td>{tacto?.tratamiento === "control_anual" ? "Control anual" : tacto?.tratamiento === "tratamiento_medico" ? "Tratamiento médico" : tacto?.tratamiento || "-"}</td></tr>
-          <tr><td><strong>Indicación</strong></td><td>{tacto?.indicacion === "biopsia" ? "Indicación biopsia prostática" : tacto?.indicacion || "-"}</td></tr>
         </tbody>
       </table>
       <h2 style={{ fontSize: "1.1rem", marginTop: "1.25rem" }}>PSA (laboratorio)</h2>
