@@ -275,7 +275,7 @@ export default function PacienteDetalle() {
               const total = psaTotal.trim() || paciente.psaTotal;
               const libre = psaLibre.trim() || paciente.psaLibre;
               if (getPSALibrePercent(total, libre) == null || !shouldShowPSALibreRelation(total)) return "-";
-              return `${getPSALibrePercent(total, libre)}%${getPSALibreInterpretation(total, libre)}`;
+              return `${getPSALibrePercent(total, libre)}%`;
             })()}
           </td></tr>
         </tbody>
