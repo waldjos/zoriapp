@@ -4,7 +4,7 @@ import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
-import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
 import * as XLSX from 'xlsx';
 
 export default function Tacto() {
@@ -47,12 +47,12 @@ export default function Tacto() {
   const pacientesFiltrados = useMemo(() => {
     const term = busqueda.trim();
     if (!term) return pacientes;
-    const termUpper = term.toUpperCase();
-    const termDigitos = term.replace(/\D/g, "");
+    const termNombre = normalizarParaBusqueda(term);
+    const termDigitos = formatoCedula(term);
     return pacientes.filter((p) => {
-      const nombre = formatoNombre(p.nombreCompleto);
+      const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
       const cedula = formatoCedula(p.cedula);
-      return nombre.includes(termUpper) || cedula.includes(termDigitos);
+      return nombreBusqueda.includes(termNombre) || cedula.includes(termDigitos);
     });
   }, [pacientes, busqueda]);
 

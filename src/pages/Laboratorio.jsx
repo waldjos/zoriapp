@@ -11,7 +11,7 @@ import {
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../context/AuthContext.jsx";
-import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
 
 export default function Laboratorio() {
   const [pacientes, setPacientes] = useState([]);
@@ -53,11 +53,11 @@ export default function Laboratorio() {
   const pacientesFiltrados = pacientes.filter((p) => {
     const t = searchTerm.trim();
     if (!t) return true;
-    const nombre = formatoNombre(p.nombreCompleto);
+    const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
     const ced = formatoCedula(p.cedula);
-    const tUpper = t.toUpperCase();
-    const tDigitos = t.replace(/\D/g, "");
-    return nombre.includes(tUpper) || ced.includes(tDigitos);
+    const termNombre = normalizarParaBusqueda(t);
+    const termDigitos = formatoCedula(t);
+    return nombreBusqueda.includes(termNombre) || ced.includes(termDigitos);
   });
 
   const handleUpload = async (e) => {
@@ -146,7 +146,7 @@ export default function Laboratorio() {
       {cargando ? (
         <p>Cargando pacientes...</p>
       ) : pacientesFiltrados.length === 0 ? (
-        <p>No hay pacientes registrados.</p>
+        <p>{searchTerm.trim() ? 'Ninguna coincidencia para la búsqueda.' : 'No hay pacientes registrados.'}</p>
       ) : (
         <div
           style={{

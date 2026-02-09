@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
 import ProsilodBanner from "../components/ProsilodBanner";
 
 export default function Home() {
@@ -47,11 +47,11 @@ export default function Home() {
   const pacientesEntregadosFiltrados = busquedaEntregados.trim()
     ? pacientesEntregados.filter((p) => {
         const term = busquedaEntregados.trim();
-        const nombre = formatoNombre(p.nombreCompleto);
+        const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
         const cedula = formatoCedula(p.cedula);
-        const termUpper = term.toUpperCase();
+        const termNombre = normalizarParaBusqueda(term);
         const termDigitos = formatoCedula(term);
-        return nombre.includes(termUpper) || cedula.includes(termDigitos);
+        return nombreBusqueda.includes(termNombre) || cedula.includes(termDigitos);
       })
     : pacientesEntregados;
 

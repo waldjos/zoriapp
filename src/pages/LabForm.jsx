@@ -11,7 +11,7 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
-import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
 
 export default function LabForm() {
   const [pacientes, setPacientes] = useState([]);
@@ -42,11 +42,11 @@ export default function LabForm() {
   const pacientesFiltrados = pacientes.filter((p) => {
     const term = busqueda.trim();
     if (!term) return true;
-    const nombre = formatoNombre(p.nombreCompleto);
+    const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
     const cedula = formatoCedula(p.cedula);
-    const termUpper = term.toUpperCase();
-    const termDigitos = term.replace(/\D/g, "");
-    return nombre.includes(termUpper) || cedula.includes(termDigitos);
+    const termNombre = normalizarParaBusqueda(term);
+    const termDigitos = formatoCedula(term);
+    return nombreBusqueda.includes(termNombre) || cedula.includes(termDigitos);
   });
 
   const handleSeleccionPaciente = (paciente) => {

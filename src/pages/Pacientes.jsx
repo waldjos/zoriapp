@@ -17,7 +17,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
-import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
 
 export default function Pacientes() {
   // Campos del formulario
@@ -433,17 +433,17 @@ export default function Pacientes() {
     setSuccess("");
   };
 
-  // Filtrado por búsqueda (nombre o cédula) — comparación normalizada
+  // Filtrado por búsqueda (nombre o cédula) — comparación normalizada y sin acentos
   const pacientesFiltrados = pacientes.filter((p) => {
     const termino = searchTerm.trim();
     if (!termino) return true;
 
-    const nombre = formatoNombre(p.nombreCompleto);
+    const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
     const ced = formatoCedula(p.cedula);
-    const terminoUpper = termino.toUpperCase();
-    const terminoDigitos = termino.replace(/\D/g, "");
+    const terminoNombre = normalizarParaBusqueda(termino);
+    const terminoDigitos = formatoCedula(termino);
 
-    return nombre.includes(terminoUpper) || ced.includes(terminoDigitos);
+    return nombreBusqueda.includes(terminoNombre) || ced.includes(terminoDigitos);
   });
 
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
@@ -827,7 +827,9 @@ export default function Pacientes() {
         {cargandoPacientes ? (
           <p style={{ marginTop: "1rem" }}>Cargando pacientes...</p>
         ) : pacientesFiltrados.length === 0 ? (
-          <p style={{ marginTop: "1rem" }}>No hay pacientes registrados aún.</p>
+          <p style={{ marginTop: "1rem" }}>
+            {searchTerm.trim() ? `Ninguna coincidencia para "${searchTerm.trim()}".` : "No hay pacientes registrados aún."}
+          </p>
         ) : (
           <div className="table-wrapper table-scroll" style={{ marginTop: "0.6rem" }}>
             <table className="pacientes-table" role="table">
