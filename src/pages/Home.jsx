@@ -17,6 +17,7 @@ export default function Home() {
   const [pacientesList, setPacientesList] = useState([]);
   const [cargandoStats, setCargandoStats] = useState(true);
   const [showModalEntregados, setShowModalEntregados] = useState(false);
+  const [busquedaEntregados, setBusquedaEntregados] = useState("");
 
   useEffect(() => {
     const cargar = async () => {
@@ -38,6 +39,14 @@ export default function Home() {
   }, [user]);
 
   const pacientesEntregados = pacientesList.filter((p) => p.entregaResultados === "entregado");
+  const pacientesEntregadosFiltrados = busquedaEntregados.trim()
+    ? pacientesEntregados.filter((p) => {
+        const term = busquedaEntregados.trim().toLowerCase();
+        const nombre = (p.nombreCompleto || "").toLowerCase();
+        const cedula = (p.cedula || "").toString().toLowerCase();
+        return nombre.includes(term) || cedula.includes(term);
+      })
+    : pacientesEntregados;
 
   if (!user) return null; // protección básica
 
@@ -92,7 +101,7 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowModalEntregados(true)}
+                onClick={() => { setShowModalEntregados(true); setBusquedaEntregados(""); }}
                 style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center", cursor: "pointer", width: "100%", color: "inherit", font: "inherit" }}
               >
                 <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981" }}>{stats.entregados}</div>
@@ -124,11 +133,21 @@ export default function Home() {
                 <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Resultados entregados</h3>
                 <button type="button" onClick={() => setShowModalEntregados(false)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)" }} aria-label="Cerrar">×</button>
               </div>
+              <input
+                type="text"
+                placeholder="Buscar por nombre o cédula..."
+                value={busquedaEntregados}
+                onChange={(e) => setBusquedaEntregados(e.target.value)}
+                style={{ width: "100%", padding: "0.5rem 0.75rem", marginBottom: "1rem", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.3)", background: "var(--bg-soft)", color: "var(--text)", fontSize: "0.9rem" }}
+                aria-label="Buscar paciente"
+              />
               {pacientesEntregados.length === 0 ? (
                 <p style={{ color: "var(--text-muted)", margin: 0 }}>Ningún paciente con resultados entregados.</p>
+              ) : pacientesEntregadosFiltrados.length === 0 ? (
+                <p style={{ color: "var(--text-muted)", margin: 0 }}>Ningún resultado para &quot;{busquedaEntregados.trim()}&quot;</p>
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {pacientesEntregados.map((p) => (
+                  {pacientesEntregadosFiltrados.map((p) => (
                     <li key={p.id} style={{ padding: "0.5rem 0", borderBottom: "1px solid rgba(148,163,184,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
                       <span><strong>{p.nombreCompleto || "-"}</strong> · Cédula: {p.cedula || "-"}</span>
                       <button type="button" onClick={() => { navigate(`/pacientes/${p.id}`); setShowModalEntregados(false); }} style={{ padding: "0.35rem 0.75rem", background: "#2563eb", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", whiteSpace: "nowrap" }}>Ver ficha</button>
