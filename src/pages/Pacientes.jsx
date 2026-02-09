@@ -17,6 +17,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import ProsilodBanner from "../components/ProsilodBanner";
+import { getPSALibrePercent, getPSALibreInterpretation } from "../utils/psaUtils";
 
 export default function Pacientes() {
   // Campos del formulario
@@ -690,6 +691,12 @@ export default function Pacientes() {
               />
             </div>
           </div>
+          {getPSALibrePercent(psaTotal, psaLibre) != null && (
+            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "-0.25rem", marginBottom: "0.5rem" }}>
+              <strong>PSA libre/total:</strong> {getPSALibrePercent(psaTotal, psaLibre)}%
+              {getPSALibreInterpretation(psaTotal, psaLibre)}
+            </p>
+          )}
 
           {/* Notas */}
           <div style={{ marginBottom: "0.75rem" }}>
@@ -845,6 +852,7 @@ export default function Pacientes() {
                   <th>Edad</th>
                   <th>Correo</th>
                   <th>PSA total / libre</th>
+                  <th>PSA libre %</th>
                   <th>Estado</th>
                   <th style={{ textAlign: "center" }}>Acciones</th>
                 </tr>
@@ -858,6 +866,7 @@ export default function Pacientes() {
                     <td>{p.edad ?? "-"}</td>
                     <td>{p.email || "-"}</td>
                     <td>{(p.psaTotal != null || p.psaLibre != null) ? `${p.psaTotal ?? "-"} / ${p.psaLibre ?? "-"}` : "-"}</td>
+                    <td>{getPSALibrePercent(p.psaTotal, p.psaLibre) != null ? `${getPSALibrePercent(p.psaTotal, p.psaLibre)}%` : "-"}</td>
                     <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       <div className="actions-cell">
                         <button onClick={() => irADetalle(p.id)} style={{ backgroundColor: "#2563eb" }}>Ver ficha</button>

@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getPSALibrePercent, getPSALibreInterpretation } from "../utils/psaUtils";
 
 export default function PacienteDetalle() {
   const { id } = useParams(); // ID del documento en "pacientes"
@@ -273,6 +274,11 @@ export default function PacienteDetalle() {
         <tbody>
           <tr><td><strong>PSA total (ng/ml)</strong></td><td>{(psaTotal.trim() || paciente.psaTotal) ?? "-"}</td></tr>
           <tr><td><strong>PSA libre (ng/ml)</strong></td><td>{(psaLibre.trim() || paciente.psaLibre) ?? "-"}</td></tr>
+          <tr><td><strong>PSA libre/total (%)</strong></td><td>
+            {getPSALibrePercent(psaTotal.trim() || paciente.psaTotal, psaLibre.trim() || paciente.psaLibre) != null
+              ? `${getPSALibrePercent(psaTotal.trim() || paciente.psaTotal, psaLibre.trim() || paciente.psaLibre)}%${getPSALibreInterpretation(psaTotal.trim() || paciente.psaTotal, psaLibre.trim() || paciente.psaLibre)}`
+              : "-"}
+          </td></tr>
         </tbody>
       </table>
       <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#666" }}>
@@ -346,6 +352,9 @@ export default function PacienteDetalle() {
         </p>
         <p style={{ margin: "0.25rem 0" }}>
           <strong>PSA total:</strong> {paciente.psaTotal ?? "-"} ng/ml &nbsp;|&nbsp; <strong>PSA libre:</strong> {paciente.psaLibre ?? "-"} ng/ml
+          {getPSALibrePercent(paciente.psaTotal, paciente.psaLibre) != null && (
+            <> &nbsp;|&nbsp; <strong>PSA libre/total:</strong> {getPSALibrePercent(paciente.psaTotal, paciente.psaLibre)}%{getPSALibreInterpretation(paciente.psaTotal, paciente.psaLibre)}</>
+          )}
         </p>
       </section>
 
@@ -368,6 +377,12 @@ export default function PacienteDetalle() {
             Imprimir resultados (tacto + PSA)
           </button>
         </form>
+        {getPSALibrePercent(psaTotal || paciente.psaTotal, psaLibre || paciente.psaLibre) != null && (
+          <p style={{ marginTop: "0.75rem", fontSize: "0.9rem", color: "var(--text-muted)" }}>
+            <strong>PSA libre/total:</strong> {getPSALibrePercent(psaTotal || paciente.psaTotal, psaLibre || paciente.psaLibre)}%
+            {getPSALibreInterpretation(psaTotal || paciente.psaTotal, psaLibre || paciente.psaLibre)}
+          </p>
+        )}
       </section>
 
       <div className="paciente-detalle-grid">
