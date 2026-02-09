@@ -1,7 +1,7 @@
 // src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
@@ -20,23 +20,27 @@ export default function Home() {
   const [showModalEntregados, setShowModalEntregados] = useState(false);
   const [busquedaEntregados, setBusquedaEntregados] = useState("");
 
+  // Suscripción en tiempo real para que el listado y las estadísticas se actualicen al confirmar entrega
   useEffect(() => {
-    const cargar = async () => {
-      try {
-        const snap = await getDocs(collection(db, "pacientes"));
+    if (!user) return;
+    setCargandoStats(true);
+    const unsubscribe = onSnapshot(
+      collection(db, "pacientes"),
+      (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setPacientesList(list);
         const atendidos = list.filter((p) => p.tacto).length;
         const entregados = list.filter((p) => p.entregaResultados === "entregado").length;
         const pendientesRetiro = list.filter((p) => p.tacto && p.entregaResultados !== "entregado").length;
         setStats({ atendidos, entregados, pendientesRetiro });
-      } catch (e) {
-        console.error(e);
-      } finally {
+        setCargandoStats(false);
+      },
+      (err) => {
+        console.error("Error cargando pacientes en Home:", err);
         setCargandoStats(false);
       }
-    };
-    if (user) cargar();
+    );
+    return () => unsubscribe();
   }, [user]);
 
   const pacientesEntregados = pacientesList.filter((p) => p.entregaResultados === "entregado");

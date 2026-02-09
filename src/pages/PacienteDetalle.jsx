@@ -58,6 +58,7 @@ export default function PacienteDetalle() {
   const [guardandoPSA, setGuardandoPSA] = useState(false);
   const [showPrintArea, setShowPrintArea] = useState(false);
   const [confirmandoEntrega, setConfirmandoEntrega] = useState(false);
+  const [mensajeEntrega, setMensajeEntrega] = useState("");
 
   // ---------------------------------------------------
   // 1) Cargar datos del paciente
@@ -293,28 +294,42 @@ export default function PacienteDetalle() {
             : "Estado: Pendiente por retiro"}
         </p>
         {paciente.entregaResultados !== "entregado" && (
-          <button
-            type="button"
-            disabled={confirmandoEntrega}
-            onClick={async () => {
-              setConfirmandoEntrega(true);
-              try {
-                const ref = doc(db, "pacientes", paciente.id);
-                await updateDoc(ref, {
-                  entregaResultados: "entregado",
-                  entregaResultadosAt: serverTimestamp(),
-                });
-                setPaciente((prev) => ({ ...prev, entregaResultados: "entregado", entregaResultadosAt: new Date() }));
-              } catch (e) {
-                console.error(e);
-              } finally {
-                setConfirmandoEntrega(false);
-              }
-            }}
-            style={{ padding: "0.5rem 1rem", background: "#059669", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
-          >
-            {confirmandoEntrega ? "Guardando..." : "Confirmar entrega"}
-          </button>
+          <>
+            <button
+              type="button"
+              disabled={confirmandoEntrega}
+              onClick={async () => {
+                setMensajeEntrega("");
+                setConfirmandoEntrega(true);
+                try {
+                  if (!paciente.id) {
+                    setMensajeEntrega("Error: no se puede identificar al paciente.");
+                    return;
+                  }
+                  const ref = doc(db, "pacientes", paciente.id);
+                  await updateDoc(ref, {
+                    entregaResultados: "entregado",
+                    entregaResultadosAt: serverTimestamp(),
+                  });
+                  setPaciente((prev) => ({ ...prev, entregaResultados: "entregado", entregaResultadosAt: new Date() }));
+                  setMensajeEntrega("✓ Guardado. Resultados marcados como entregados.");
+                } catch (e) {
+                  console.error("Error al confirmar entrega:", e);
+                  setMensajeEntrega("No se pudo guardar. Comprueba la conexión o permisos.");
+                } finally {
+                  setConfirmandoEntrega(false);
+                }
+              }}
+              style={{ padding: "0.5rem 1rem", background: "#059669", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
+            >
+              {confirmandoEntrega ? "Guardando..." : "Confirmar entrega"}
+            </button>
+            {mensajeEntrega && (
+              <p style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: mensajeEntrega.startsWith("No se pudo") ? "#ef4444" : "#10b981" }}>
+                {mensajeEntrega}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
