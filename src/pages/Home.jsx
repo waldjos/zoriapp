@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 import ProsilodBanner from "../components/ProsilodBanner";
 
 export default function Home() {
@@ -41,10 +42,12 @@ export default function Home() {
   const pacientesEntregados = pacientesList.filter((p) => p.entregaResultados === "entregado");
   const pacientesEntregadosFiltrados = busquedaEntregados.trim()
     ? pacientesEntregados.filter((p) => {
-        const term = busquedaEntregados.trim().toLowerCase();
-        const nombre = (p.nombreCompleto || "").toLowerCase();
-        const cedula = (p.cedula || "").toString().toLowerCase();
-        return nombre.includes(term) || cedula.includes(term);
+        const term = busquedaEntregados.trim();
+        const nombre = formatoNombre(p.nombreCompleto);
+        const cedula = formatoCedula(p.cedula);
+        const termUpper = term.toUpperCase();
+        const termDigitos = formatoCedula(term);
+        return nombre.includes(termUpper) || cedula.includes(termDigitos);
       })
     : pacientesEntregados;
 
@@ -149,7 +152,7 @@ export default function Home() {
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   {pacientesEntregadosFiltrados.map((p) => (
                     <li key={p.id} style={{ padding: "0.5rem 0", borderBottom: "1px solid rgba(148,163,184,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
-                      <span><strong>{p.nombreCompleto || "-"}</strong> · Cédula: {p.cedula || "-"}</span>
+                      <span><strong>{formatoNombre(p.nombreCompleto) || "-"}</strong> · Cédula: {formatoCedula(p.cedula) || "-"}</span>
                       <button type="button" onClick={() => { navigate(`/pacientes/${p.id}`); setShowModalEntregados(false); }} style={{ padding: "0.35rem 0.75rem", background: "#2563eb", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", whiteSpace: "nowrap" }}>Ver ficha</button>
                     </li>
                   ))}

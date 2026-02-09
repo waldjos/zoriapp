@@ -11,6 +11,7 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 
 export default function LabForm() {
   const [pacientes, setPacientes] = useState([]);
@@ -39,8 +40,13 @@ export default function LabForm() {
   }, []);
 
   const pacientesFiltrados = pacientes.filter((p) => {
-    const texto = `${p.nombreCompleto || ""} ${p.cedula || ""}`.toLowerCase();
-    return texto.includes(busqueda.toLowerCase());
+    const term = busqueda.trim();
+    if (!term) return true;
+    const nombre = formatoNombre(p.nombreCompleto);
+    const cedula = formatoCedula(p.cedula);
+    const termUpper = term.toUpperCase();
+    const termDigitos = term.replace(/\D/g, "");
+    return nombre.includes(termUpper) || cedula.includes(termDigitos);
   });
 
   const handleSeleccionPaciente = (paciente) => {
@@ -163,8 +169,8 @@ export default function LabForm() {
                 )}
                 {pacientesFiltrados.map((p) => (
                   <tr key={p.id}>
-                    <td>{p.nombreCompleto}</td>
-                    <td>{p.cedula}</td>
+                    <td>{formatoNombre(p.nombreCompleto)}</td>
+                    <td>{formatoCedula(p.cedula)}</td>
                     <td>{p.localidad}</td>
                     <td>{p.edad}</td>
                     <td>
@@ -184,8 +190,8 @@ export default function LabForm() {
           {pacienteSeleccionado && (
             <p className="selected-patient">
               Paciente seleccionado:{" "}
-              <strong>{pacienteSeleccionado.nombreCompleto}</strong> —{" "}
-              {pacienteSeleccionado.cedula}
+              <strong>{formatoNombre(pacienteSeleccionado.nombreCompleto)}</strong> —{" "}
+              {formatoCedula(pacienteSeleccionado.cedula)}
             </p>
           )}
         </section>

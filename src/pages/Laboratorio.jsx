@@ -11,6 +11,7 @@ import {
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../context/AuthContext.jsx";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 
 export default function Laboratorio() {
   const [pacientes, setPacientes] = useState([]);
@@ -50,11 +51,13 @@ export default function Laboratorio() {
   }, []);
 
   const pacientesFiltrados = pacientes.filter((p) => {
-    const t = searchTerm.toLowerCase();
+    const t = searchTerm.trim();
     if (!t) return true;
-    const nombre = (p.nombreCompleto || "").toLowerCase();
-    const ced = (p.cedula || "").toLowerCase();
-    return nombre.includes(t) || ced.includes(t);
+    const nombre = formatoNombre(p.nombreCompleto);
+    const ced = formatoCedula(p.cedula);
+    const tUpper = t.toUpperCase();
+    const tDigitos = t.replace(/\D/g, "");
+    return nombre.includes(tUpper) || ced.includes(tDigitos);
   });
 
   const handleUpload = async (e) => {
@@ -170,9 +173,9 @@ export default function Laboratorio() {
               }}
             >
               <div>
-                <strong>{p.nombreCompleto}</strong>
+                <strong>{formatoNombre(p.nombreCompleto)}</strong>
                 <div style={{ fontSize: "0.8rem", color: "#4b5563" }}>
-                  Cédula: {p.cedula}
+                  Cédula: {formatoCedula(p.cedula)}
                 </div>
               </div>
               <div style={{ fontSize: "0.8rem", color: "#4b5563" }}>
@@ -193,7 +196,7 @@ export default function Laboratorio() {
             readOnly
             value={
               selectedPaciente
-                ? `${selectedPaciente.nombreCompleto} (${selectedPaciente.cedula})`
+                ? `${formatoNombre(selectedPaciente.nombreCompleto)} (${formatoCedula(selectedPaciente.cedula)})`
                 : "Ninguno"
             }
             style={{

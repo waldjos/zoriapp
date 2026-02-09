@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function RegistroPaciente() {
@@ -56,8 +57,8 @@ export default function RegistroPaciente() {
         edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
 
       await addDoc(collection(db, "pacientes"), {
-        nombreCompleto: nombreCompleto.trim(),
-        cedula: cedula.trim(),
+        nombreCompleto: formatoNombre(nombreCompleto),
+        cedula: formatoCedula(cedula),
         telefono: telefono.trim(),
         localidad: localidad.trim(),
         edad: isNaN(edadNumero) ? null : edadNumero,

@@ -17,6 +17,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 
 export default function Pacientes() {
   // Campos del formulario
@@ -367,8 +368,8 @@ export default function Pacientes() {
         edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
 
       const dataPaciente = {
-        nombreCompleto: nombreCompleto.trim(),
-        cedula: cedula.trim(),
+        nombreCompleto: formatoNombre(nombreCompleto),
+        cedula: formatoCedula(cedula),
         telefono: telefono.trim(),
         localidad: localidad.trim(),
         edad: isNaN(edadNumero) ? null : edadNumero,
@@ -432,15 +433,17 @@ export default function Pacientes() {
     setSuccess("");
   };
 
-  // Filtrado por búsqueda (nombre o cédula)
+  // Filtrado por búsqueda (nombre o cédula) — comparación normalizada
   const pacientesFiltrados = pacientes.filter((p) => {
-    const termino = searchTerm.toLowerCase();
+    const termino = searchTerm.trim();
     if (!termino) return true;
 
-    const nombre = (p.nombreCompleto || "").toLowerCase();
-    const ced = (p.cedula || "").toLowerCase();
+    const nombre = formatoNombre(p.nombreCompleto);
+    const ced = formatoCedula(p.cedula);
+    const terminoUpper = termino.toUpperCase();
+    const terminoDigitos = termino.replace(/\D/g, "");
 
-    return nombre.includes(termino) || ced.includes(termino);
+    return nombre.includes(terminoUpper) || ced.includes(terminoDigitos);
   });
 
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
@@ -844,8 +847,8 @@ export default function Pacientes() {
               <tbody>
                 {pacientesFiltrados.map((p) => (
                   <tr key={p.id}>
-                    <td>{p.nombreCompleto}</td>
-                    <td>{p.cedula}</td>
+                    <td>{formatoNombre(p.nombreCompleto)}</td>
+                    <td>{formatoCedula(p.cedula)}</td>
                     <td>{p.localidad || "-"}</td>
                     <td>{p.edad ?? "-"}</td>
                     <td>{p.email || "-"}</td>

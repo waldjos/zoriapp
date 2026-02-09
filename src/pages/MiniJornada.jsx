@@ -4,6 +4,7 @@ import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, Timestam
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 
 export default function MiniJornada() {
   const [pacientes, setPacientes] = useState([]);
@@ -52,12 +53,14 @@ export default function MiniJornada() {
 
   // Filtrar por nombre o cédula
   const pacientesFiltrados = useMemo(() => {
-    const term = busqueda.trim().toLowerCase();
+    const term = busqueda.trim();
     if (!term) return pacientes;
+    const termUpper = term.toUpperCase();
+    const termDigitos = term.replace(/\D/g, "");
     return pacientes.filter((p) => {
-      const nombre = (p.nombreCompleto || "").toLowerCase();
-      const cedula = (p.cedula || "").toLowerCase();
-      return nombre.includes(term) || cedula.includes(term);
+      const nombre = formatoNombre(p.nombreCompleto);
+      const cedula = formatoCedula(p.cedula);
+      return nombre.includes(termUpper) || cedula.includes(termDigitos);
     });
   }, [pacientes, busqueda]);
 
@@ -142,7 +145,7 @@ export default function MiniJornada() {
     }
 
     // Construir el mensaje (igual que WhatsApp)
-    let mensaje = `Buen Día, ${seleccionado.nombreCompleto}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
+    let mensaje = `Buen Día, ${formatoNombre(seleccionado.nombreCompleto)}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
 
     // Grado
     mensaje += `Grado ${evaluacion.tamanio || 'N/A'}`;
@@ -178,7 +181,7 @@ export default function MiniJornada() {
     }
 
     // Construir el mensaje (igual que WhatsApp, pero más corto para SMS)
-    let mensaje = `Buen Día ${seleccionado.nombreCompleto}. Resumen Consulta Urológica 2025. Tacto: Grado ${evaluacion.tamanio || 'N/A'}, Consistencia: ${evaluacion.fibroelastica ? 'Fibroelástica' : 'Normal'}, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}. Dra. Milagro Tapia Cirujano Urologo`;
+    let mensaje = `Buen Día ${formatoNombre(seleccionado.nombreCompleto)}. Resumen Consulta Urológica 2025. Tacto: Grado ${evaluacion.tamanio || 'N/A'}, Consistencia: ${evaluacion.fibroelastica ? 'Fibroelástica' : 'Normal'}, Nódulo: ${evaluacion.nodulos === 'si' ? 'Sí' : 'No'}. Dra. Milagro Tapia Cirujano Urologo`;
 
     // Codificar mensaje
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -195,7 +198,7 @@ export default function MiniJornada() {
     }
 
     // Construir el mensaje
-    let mensaje = `Buen Día, ${seleccionado.nombreCompleto}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
+    let mensaje = `Buen Día, ${formatoNombre(seleccionado.nombreCompleto)}, gusto en saludarte.\nTe envío el resumen de la Consulta Urológica 2025\n\nExamen Físico: Tacto: `;
 
     // Grado
     mensaje += `Grado ${evaluacion.tamanio || 'N/A'}`;
@@ -261,8 +264,8 @@ export default function MiniJornada() {
             <tbody>
               {pacientesFiltrados.map((p) => (
                 <tr key={p.id}>
-                  <td>{p.nombreCompleto}</td>
-                  <td>{p.cedula}</td>
+                  <td>{formatoNombre(p.nombreCompleto)}</td>
+                  <td>{formatoCedula(p.cedula)}</td>
                   <td>{p.edad}</td>
                   <td>
                     <button
@@ -290,10 +293,10 @@ export default function MiniJornada() {
       {seleccionado && (
         <div className="form-card" style={{ marginTop: "1.2rem" }}>
           <h2 style={{ fontSize: "1rem", marginBottom: "0.4rem" }}>
-            Evaluación de: {seleccionado.nombreCompleto}
+            Evaluación de: {formatoNombre(seleccionado.nombreCompleto)}
           </h2>
           <p style={{ fontSize: "0.8rem", marginBottom: "0.9rem", color: "#9ca3af" }}>
-            C.I.: {seleccionado.cedula} • Edad: {seleccionado.edad} • Tel: {seleccionado.telefono}
+            C.I.: {formatoCedula(seleccionado.cedula)} • Edad: {seleccionado.edad} • Tel: {seleccionado.telefono}
           </p>
 
           <form onSubmit={handleGuardar} className="form-grid">

@@ -4,6 +4,7 @@ import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 import * as XLSX from 'xlsx';
 
 export default function Tacto() {
@@ -44,12 +45,14 @@ export default function Tacto() {
 
   // Filtrar por nombre o cédula
   const pacientesFiltrados = useMemo(() => {
-    const term = busqueda.trim().toLowerCase();
+    const term = busqueda.trim();
     if (!term) return pacientes;
+    const termUpper = term.toUpperCase();
+    const termDigitos = term.replace(/\D/g, "");
     return pacientes.filter((p) => {
-      const nombre = (p.nombreCompleto || "").toLowerCase();
-      const cedula = (p.cedula || "").toLowerCase();
-      return nombre.includes(term) || cedula.includes(term);
+      const nombre = formatoNombre(p.nombreCompleto);
+      const cedula = formatoCedula(p.cedula);
+      return nombre.includes(termUpper) || cedula.includes(termDigitos);
     });
   }, [pacientes, busqueda]);
 
@@ -243,8 +246,8 @@ export default function Tacto() {
             <tbody>
               {pacientesFiltrados.map((p) => (
                 <tr key={p.id}>
-                  <td>{p.nombreCompleto}</td>
-                  <td>{p.cedula}</td>
+                  <td>{formatoNombre(p.nombreCompleto)}</td>
+                  <td>{formatoCedula(p.cedula)}</td>
                   <td>{p.edad}</td>
                   <td>
                     <button
@@ -272,10 +275,10 @@ export default function Tacto() {
       {seleccionado && (
         <div className="form-card" style={{ marginTop: "1.2rem" }}>
           <h2 style={{ fontSize: "1rem", marginBottom: "0.4rem" }}>
-            Evaluación de: {seleccionado.nombreCompleto}
+            Evaluación de: {formatoNombre(seleccionado.nombreCompleto)}
           </h2>
           <p style={{ fontSize: "0.8rem", marginBottom: "0.9rem", color: "#9ca3af" }}>
-            C.I.: {seleccionado.cedula} • Edad: {seleccionado.edad} • Tel:{" "}
+            C.I.: {formatoCedula(seleccionado.cedula)} • Edad: {seleccionado.edad} • Tel:{" "}
             {seleccionado.telefono}
           </p>
 

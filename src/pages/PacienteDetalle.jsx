@@ -15,6 +15,7 @@ import {
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
+import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 
 export default function PacienteDetalle() {
   const { id } = useParams(); // ID del documento en "pacientes"
@@ -251,8 +252,8 @@ export default function PacienteDetalle() {
         <button type="button" onClick={() => setShowPrintArea(false)} className="btn-close-print">Cerrar</button>
         <button type="button" onClick={() => window.print()} className="btn-print">Imprimir</button>
       </div>
-      <h1 style={{ marginBottom: "0.5rem" }}>Resultados – {paciente.nombreCompleto}</h1>
-      <p><strong>Cédula:</strong> {paciente.cedula} &nbsp;|&nbsp; <strong>Edad:</strong> {paciente.edad ?? "-"} años</p>
+      <h1 style={{ marginBottom: "0.5rem" }}>Resultados – {formatoNombre(paciente.nombreCompleto)}</h1>
+      <p><strong>Cédula:</strong> {formatoCedula(paciente.cedula)} &nbsp;|&nbsp; <strong>Edad:</strong> {paciente.edad ?? "-"} años</p>
       <hr style={{ margin: "1rem 0" }} />
       <h2 style={{ fontSize: "1.1rem", marginTop: "1rem" }}>Evaluación de tacto rectal</h2>
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
@@ -359,9 +360,9 @@ export default function PacienteDetalle() {
 
       {/* Datos principales del paciente */}
       <section className="paciente-detalle-header">
-        <h1>{paciente.nombreCompleto}</h1>
+        <h1>{formatoNombre(paciente.nombreCompleto)}</h1>
         <p style={{ margin: "0.25rem 0" }}>
-          <strong>Cédula:</strong> {paciente.cedula}
+          <strong>Cédula:</strong> {formatoCedula(paciente.cedula)}
         </p>
         {/* Mostrar información del profesional que realizó el último tacto, si existe */}
         {paciente.tacto && (paciente.tacto.medicoEmail || paciente.tacto.medicoId) && (
