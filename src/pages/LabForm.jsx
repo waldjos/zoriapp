@@ -11,7 +11,7 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
-import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
 
 export default function LabForm() {
   const [pacientes, setPacientes] = useState([]);
@@ -43,9 +43,9 @@ export default function LabForm() {
     const term = busqueda.trim();
     if (!term) return true;
     const nombreTexto = p.nombreCompleto ?? p.nombre ?? "";
-    const nombreBusqueda = normalizarParaBusqueda(nombreTexto);
+    const nombreBusqueda = nombreParaBusqueda(nombreTexto);
     const cedula = formatoCedula(p.cedula);
-    const termNombre = normalizarParaBusqueda(term);
+    const termNombre = nombreParaBusqueda(term);
     const termDigitos = formatoCedula(term);
     const coincideNombre =
       nombreBusqueda.includes(termNombre) ||

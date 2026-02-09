@@ -11,7 +11,7 @@ import {
 import { db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../context/AuthContext.jsx";
-import { formatoNombre, formatoCedula, normalizarParaBusqueda } from "../utils/formatoPaciente";
+import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
 
 export default function Laboratorio() {
   const [pacientes, setPacientes] = useState([]);
@@ -54,9 +54,9 @@ export default function Laboratorio() {
     const t = searchTerm.trim();
     if (!t) return true;
     const nombreTexto = p.nombreCompleto ?? p.nombre ?? "";
-    const nombreBusqueda = normalizarParaBusqueda(nombreTexto);
+    const nombreBusqueda = nombreParaBusqueda(nombreTexto);
     const ced = formatoCedula(p.cedula);
-    const termNombre = normalizarParaBusqueda(t);
+    const termNombre = nombreParaBusqueda(t);
     const termDigitos = formatoCedula(t);
     const coincideNombre =
       nombreBusqueda.includes(termNombre) ||

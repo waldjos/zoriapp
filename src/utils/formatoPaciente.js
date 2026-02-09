@@ -15,20 +15,29 @@ export function formatoCedula(valor) {
   return valor.replace(/\D/g, "");
 }
 
+/** Mapa de acentos a letra base para búsqueda (misma idea que cédula: texto normalizado). */
+const ACENTOS_A_BASE = {
+  Á: "A", É: "E", Í: "I", Ó: "O", Ú: "U", Ü: "U", Ñ: "N",
+  á: "A", é: "E", í: "I", ó: "O", ú: "U", ü: "U", ñ: "N",
+};
+
 /**
- * Normaliza texto para comparación en búsqueda (sin acentos, mayúsculas, espacios colapsados).
- * Acepta cualquier tipo (se convierte a string). Así "jose" encuentra "JOSÉ" y la búsqueda por nombre funciona.
+ * Devuelve el nombre listo para búsqueda: mayúsculas, sin acentos, espacios simples.
+ * Misma idea que formatoCedula: un string normalizado para hacer includes().
  */
-export function normalizarParaBusqueda(valor) {
+export function nombreParaBusqueda(valor) {
   if (valor == null) return "";
-  const s = String(valor).trim().replace(/\s+/g, " ");
+  let s = String(valor).trim().replace(/\s+/g, " ");
   if (!s) return "";
-  try {
-    return s
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toUpperCase();
-  } catch (_) {
-    return s.toUpperCase();
+  s = s.toUpperCase();
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    out += ACENTOS_A_BASE[s[i]] ?? s[i];
   }
+  return out;
+}
+
+/** @deprecated Usar nombreParaBusqueda. Se mantiene por compatibilidad. */
+export function normalizarParaBusqueda(valor) {
+  return nombreParaBusqueda(valor);
 }
