@@ -53,11 +53,15 @@ export default function Laboratorio() {
   const pacientesFiltrados = pacientes.filter((p) => {
     const t = searchTerm.trim();
     if (!t) return true;
-    const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
+    const nombreTexto = p.nombreCompleto ?? p.nombre ?? "";
+    const nombreBusqueda = normalizarParaBusqueda(nombreTexto);
     const ced = formatoCedula(p.cedula);
     const termNombre = normalizarParaBusqueda(t);
     const termDigitos = formatoCedula(t);
-    return nombreBusqueda.includes(termNombre) || ced.includes(termDigitos);
+    const coincideNombre =
+      nombreBusqueda.includes(termNombre) ||
+      (termNombre.length > 0 && termNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
+    return coincideNombre || ced.includes(termDigitos);
   });
 
   const handleUpload = async (e) => {

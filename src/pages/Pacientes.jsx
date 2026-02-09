@@ -438,12 +438,16 @@ export default function Pacientes() {
     const termino = searchTerm.trim();
     if (!termino) return true;
 
-    const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
+    const nombreTexto = p.nombreCompleto ?? p.nombre ?? "";
+    const nombreBusqueda = normalizarParaBusqueda(nombreTexto);
     const ced = formatoCedula(p.cedula);
     const terminoNombre = normalizarParaBusqueda(termino);
     const terminoDigitos = formatoCedula(termino);
 
-    return nombreBusqueda.includes(terminoNombre) || ced.includes(terminoDigitos);
+    const coincideNombre =
+      nombreBusqueda.includes(terminoNombre) ||
+      (terminoNombre.length > 0 && terminoNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
+    return coincideNombre || ced.includes(terminoDigitos);
   });
 
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)

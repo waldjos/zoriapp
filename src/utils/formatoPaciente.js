@@ -16,16 +16,19 @@ export function formatoCedula(valor) {
 }
 
 /**
- * Normaliza texto para comparación en búsqueda (sin acentos, mayúsculas).
- * Así "jose" encuentra "JOSÉ" y "maria" encuentra "MARÍA".
- * Usa NFD + rango de marcas combinadas para compatibilidad en todos los entornos.
+ * Normaliza texto para comparación en búsqueda (sin acentos, mayúsculas, espacios colapsados).
+ * Acepta cualquier tipo (se convierte a string). Así "jose" encuentra "JOSÉ" y la búsqueda por nombre funciona.
  */
 export function normalizarParaBusqueda(valor) {
-  if (valor == null || typeof valor !== "string") return "";
-  const s = String(valor).trim();
+  if (valor == null) return "";
+  const s = String(valor).trim().replace(/\s+/g, " ");
   if (!s) return "";
-  return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
+  try {
+    return s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase();
+  } catch (_) {
+    return s.toUpperCase();
+  }
 }

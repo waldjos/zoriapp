@@ -58,9 +58,13 @@ export default function MiniJornada() {
     const termNombre = normalizarParaBusqueda(term);
     const termDigitos = formatoCedula(term);
     return pacientes.filter((p) => {
-      const nombreBusqueda = normalizarParaBusqueda(p.nombreCompleto);
+      const nombreTexto = p.nombreCompleto ?? p.nombre ?? "";
+      const nombreBusqueda = normalizarParaBusqueda(nombreTexto);
       const cedula = formatoCedula(p.cedula);
-      return nombreBusqueda.includes(termNombre) || cedula.includes(termDigitos);
+      const coincideNombre =
+        nombreBusqueda.includes(termNombre) ||
+        (termNombre.length > 0 && termNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
+      return coincideNombre || cedula.includes(termDigitos);
     });
   }, [pacientes, busqueda]);
 
