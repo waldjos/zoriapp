@@ -16,9 +16,24 @@ export function normalizarNombre(str) {
     .trim();
 }
 
+/** Normaliza cédula para comparación: solo dígitos (537.389 y 537389 coinciden). */
+export function normalizarCedula(str) {
+  if (!str || typeof str !== "string") return "";
+  return str.replace(/\D/g, "");
+}
+
 const numeric = /^-?\d+([.,]\d+)?$/;
-const numericOrCedula = /^[\d.,]+$/;
+const numericOrCedula = /^[\d.,\s]+$/;
 const codePattern = /^\d+HDL\d+$/i;
+
+function normalizarNumeroStr(s) {
+  return String(s).replace(/\s/g, "").replace(/,/g, ".").replace(/‚/g, ".").replace(/，/g, ".");
+}
+
+function esNumero(s) {
+  const n = normalizarNumeroStr(s);
+  return n !== "" && numeric.test(n);
+}
 
 /**
  * Parsea una línea con formato: [código] nombre cédula PSA_total PSA_libre
@@ -29,30 +44,28 @@ function parseLine(line) {
   const trimmed = line.trim();
   if (!trimmed) return null;
 
-  let parts = trimmed.split(/\s{2,}|\t/).map((p) => p.trim()).filter(Boolean);
-  if (parts.length < 2) parts = trimmed.split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return null;
+  let parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length < 5) return null;
 
   let cedula = null;
   let nombre = "";
   let psaTotal = null;
   let psaLibre = null;
 
-  // Últimos dos números: en el .txt va primero PSA total, luego PSA libre
-  let i = parts.length - 1;
-  if (i >= 0 && numeric.test(String(parts[i]).replace(",", "."))) {
-    psaLibre = parseFloat(String(parts[i]).replace(",", ".")); // último = PSA libre
-    i--;
-  }
-  if (i >= 0 && numeric.test(String(parts[i]).replace(",", "."))) {
-    psaTotal = parseFloat(String(parts[i]).replace(",", ".")); // penúltimo = PSA total
-    i--;
-  }
+  const last = parts[parts.length - 1];
+  const penult = parts[parts.length - 2];
+  if (!esNumero(last) || !esNumero(penult)) return null;
 
-  let rest = parts.slice(0, i + 1);
-  if (rest.length >= 1 && numericOrCedula.test(String(rest[rest.length - 1]).replace(",", "."))) {
-    cedula = String(rest[rest.length - 1]).replace(/\./g, "").replace(",", "");
-    rest = rest.slice(0, -1);
+  psaLibre = parseFloat(normalizarNumeroStr(last));
+  psaTotal = parseFloat(normalizarNumeroStr(penult));
+  let rest = parts.slice(0, -2);
+
+  if (rest.length >= 1) {
+    const ultimoRest = String(rest[rest.length - 1]).replace(/\s/g, "");
+    if (/^[\d.,]+$/.test(ultimoRest)) {
+      cedula = ultimoRest.replace(/\./g, "").replace(/,/g, "");
+      rest = rest.slice(0, -1);
+    }
   }
 
   if (rest.length >= 1) {

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { parseTxtToRows, normalizarNombre } from "../utils/pdfParser";
+import { parseTxtToRows, normalizarNombre, normalizarCedula } from "../utils/pdfParser";
 
 // Archivo .txt en public/ — coloca aquí tu base HDL convertida a texto
 const TXT_URL = "/datos-psa.txt";
@@ -78,12 +78,12 @@ export default function ImportarPSA() {
     }
   };
 
-  // Asignar solo a pacientes que coincidan por nombre y/o cédula
+  // Asignar solo a pacientes que coincidan por nombre y/o cédula (cédula normalizada: 537.389 = 537389)
   const coincidencia = (paciente, row) => {
     const nomPac = normalizarNombre(paciente.nombreCompleto || "");
     const nomRow = normalizarNombre(row.nombre || "");
-    const cedPac = String(paciente.cedula || "").replace(/\s/g, "");
-    const cedRow = String(row.cedula || "").replace(/\s/g, "");
+    const cedPac = normalizarCedula(paciente.cedula || "");
+    const cedRow = normalizarCedula(row.cedula || "");
 
     if (cedPac && cedRow && cedPac === cedRow) return true;
     if (nomPac && nomRow) {
