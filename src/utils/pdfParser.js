@@ -17,11 +17,13 @@ export function normalizarNombre(str) {
 }
 
 const numeric = /^-?\d+([.,]\d+)?$/;
-const cedulaLike = /^[VEJPG]?-?\d{6,10}$/i;
+const numericOrCedula = /^[\d.,]+$/;
+const codePattern = /^\d+HDL\d+$/i;
 
 /**
- * Intenta parsear una línea del PDF como: cedula, nombre, psaTotal, psaLibre.
- * Prueba primero columnas separadas por 2+ espacios/tabs; luego por un solo espacio.
+ * Parsea una línea con formato: [código] nombre cédula PSA_total PSA_libre
+ * En el archivo va primero PSA total, luego PSA libre (no invertir).
+ * Ejemplo: "1HDL146 RAFAEL MEZA 537.389 2,33 1,1" -> total=2,33, libre=1,1
  */
 function parseLine(line) {
   const trimmed = line.trim();
@@ -36,21 +38,26 @@ function parseLine(line) {
   let psaTotal = null;
   let psaLibre = null;
 
+  // Últimos dos números: en el .txt va primero PSA total, luego PSA libre
   let i = parts.length - 1;
   if (i >= 0 && numeric.test(String(parts[i]).replace(",", "."))) {
-    psaLibre = parseFloat(String(parts[i]).replace(",", "."));
+    psaLibre = parseFloat(String(parts[i]).replace(",", ".")); // último = PSA libre
     i--;
   }
   if (i >= 0 && numeric.test(String(parts[i]).replace(",", "."))) {
-    psaTotal = parseFloat(String(parts[i]).replace(",", "."));
+    psaTotal = parseFloat(String(parts[i]).replace(",", ".")); // penúltimo = PSA total
     i--;
   }
 
-  const rest = parts.slice(0, i + 1);
+  let rest = parts.slice(0, i + 1);
+  if (rest.length >= 1 && numericOrCedula.test(String(rest[rest.length - 1]).replace(",", "."))) {
+    cedula = String(rest[rest.length - 1]).replace(/\./g, "").replace(",", "");
+    rest = rest.slice(0, -1);
+  }
+
   if (rest.length >= 1) {
-    const first = rest[0].replace(/\s/g, "");
-    if (cedulaLike.test(first) || /^\d{6,10}$/.test(first)) {
-      cedula = first;
+    const first = rest[0];
+    if (codePattern.test(first)) {
       nombre = rest.slice(1).join(" ").trim();
     } else {
       nombre = rest.join(" ").trim();

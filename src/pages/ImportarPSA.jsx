@@ -78,6 +78,7 @@ export default function ImportarPSA() {
     }
   };
 
+  // Asignar solo a pacientes que coincidan por nombre y/o cédula
   const coincidencia = (paciente, row) => {
     const nomPac = normalizarNombre(paciente.nombreCompleto || "");
     const nomRow = normalizarNombre(row.nombre || "");
@@ -140,7 +141,7 @@ export default function ImportarPSA() {
     <div className="page" style={{ maxWidth: 720, margin: "0 auto", padding: "1rem" }}>
       <h1 className="page-header-title">Importar PSA desde archivo .txt</h1>
       <p className="page-header-subtitle">
-        Elige el archivo .txt de la base HDL (una línea por persona). Se asignan PSA total y libre a cada paciente por nombre o cédula.
+        Elige el archivo .txt de la base HDL (una línea por persona). Se asignan PSA total y PSA libre solo a los pacientes que coincidan por nombre y cédula (orden en el archivo: primero PSA total, luego PSA libre).
       </p>
 
       <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
