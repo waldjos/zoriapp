@@ -14,13 +14,16 @@ export default function Home() {
     entregados: 0,
     pendientesRetiro: 0,
   });
+  const [pacientesList, setPacientesList] = useState([]);
   const [cargandoStats, setCargandoStats] = useState(true);
+  const [showModalEntregados, setShowModalEntregados] = useState(false);
 
   useEffect(() => {
     const cargar = async () => {
       try {
         const snap = await getDocs(collection(db, "pacientes"));
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setPacientesList(list);
         const atendidos = list.filter((p) => p.tacto).length;
         const entregados = list.filter((p) => p.entregaResultados === "entregado").length;
         const pendientesRetiro = list.filter((p) => p.tacto && p.entregaResultados !== "entregado").length;
@@ -33,6 +36,8 @@ export default function Home() {
     };
     if (user) cargar();
   }, [user]);
+
+  const pacientesEntregados = pacientesList.filter((p) => p.entregaResultados === "entregado");
 
   if (!user) return null; // protección básica
 
@@ -85,10 +90,15 @@ export default function Home() {
                 <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--accent)" }}>{stats.atendidos}</div>
                 <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Pacientes atendidos</div>
               </div>
-              <div style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center" }}>
+              <button
+                type="button"
+                onClick={() => setShowModalEntregados(true)}
+                style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center", cursor: "pointer", width: "100%", color: "inherit", font: "inherit" }}
+              >
                 <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981" }}>{stats.entregados}</div>
                 <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Resultados entregados</div>
-              </div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>Ver listado</div>
+              </button>
               <div style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center" }}>
                 <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#f59e0b" }}>{stats.pendientesRetiro}</div>
                 <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Pendientes por retiro</div>
@@ -96,6 +106,39 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Modal: listado de pacientes con resultados entregados */}
+        {showModalEntregados && (
+          <div
+            className="home-dashboard"
+            style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
+            onClick={() => setShowModalEntregados(false)}
+            role="dialog"
+            aria-label="Pacientes con resultados entregados"
+          >
+            <div
+              style={{ background: "var(--bg-card)", borderRadius: "12px", padding: "1.5rem", maxWidth: "480px", width: "90%", maxHeight: "80vh", overflow: "auto", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Resultados entregados</h3>
+                <button type="button" onClick={() => setShowModalEntregados(false)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)" }} aria-label="Cerrar">×</button>
+              </div>
+              {pacientesEntregados.length === 0 ? (
+                <p style={{ color: "var(--text-muted)", margin: 0 }}>Ningún paciente con resultados entregados.</p>
+              ) : (
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {pacientesEntregados.map((p) => (
+                    <li key={p.id} style={{ padding: "0.5rem 0", borderBottom: "1px solid rgba(148,163,184,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+                      <span><strong>{p.nombreCompleto || "-"}</strong> · Cédula: {p.cedula || "-"}</span>
+                      <button type="button" onClick={() => { navigate(`/pacientes/${p.id}`); setShowModalEntregados(false); }} style={{ padding: "0.35rem 0.75rem", background: "#2563eb", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", whiteSpace: "nowrap" }}>Ver ficha</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Banner Prosilod (fuera del dashboard, mejor disposición) */}
         <ProsilodBanner />
