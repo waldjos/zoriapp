@@ -2,7 +2,15 @@
  * Cociente PSA libre/total (%): ayuda a evaluar riesgo de cáncer de próstata
  * cuando el PSA total está en zona gris (4-10 ng/mL).
  * <10% sugiere mayor riesgo de cáncer; >25% sugestivo de causas benignas (HBP).
+ * No se muestra la relación cuando PSA total > 2,5 y < 10.
  */
+
+export function shouldShowPSALibreRelation(psaTotal) {
+  const t = parseFloat(psaTotal);
+  if (t == null || isNaN(t)) return true;
+  if (t > 2.5 && t < 10) return false;
+  return true;
+}
 
 export function getPSALibrePercent(psaTotal, psaLibre) {
   const t = parseFloat(psaTotal);
