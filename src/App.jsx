@@ -22,7 +22,7 @@ function AppShell() {
   const { user, logout } = useAuth();
   return (
     <div className="app-shell">
-      <header className="app-header" style={{ width: "100%", display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0.7rem 1.2rem", background: "rgba(15,23,42,0.85)" }}>
+      <header className="app-header">
         {user && (
           <button onClick={logout} style={{ backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "999px", padding: "0.5rem 1.1rem", fontWeight: 600, cursor: "pointer" }}>
             Cerrar sesión

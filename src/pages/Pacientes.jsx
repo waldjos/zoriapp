@@ -751,7 +751,7 @@ export default function Pacientes() {
               )}
             </div>
 
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div className="list-actions-row">
                 <input
                   type="text"
                   placeholder="Buscar por nombre o cédula..."
@@ -759,27 +759,26 @@ export default function Pacientes() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="search-input"
                 />
-                <button type="button" onClick={() => setShowListBox(true)} style={{ backgroundColor: '#111827' }}>
+                <button type="button" onClick={() => setShowListBox(true)} className="btn-secondary">
                   Ver lista
                 </button>
-                <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827' }}>
+                <button type="button" onClick={exportToCSV} className="btn-secondary">
                   Exportar CSV
                 </button>
-                <button type="button" onClick={exportToJSON} style={{ backgroundColor: '#111827' }}>
+                <button type="button" onClick={exportToJSON} className="btn-secondary">
                   Exportar JSON
                 </button>
                 <button
                   type="button"
                   onClick={enviarSMSLote}
                   disabled={enviandoSMS}
-                  style={{ backgroundColor: '#059669' }}
+                  className="btn-sms"
                 >
-                  {enviandoSMS ? 'Enviando SMS...' : 'Enviar SMS – Lote del día'}
+                  {enviandoSMS ? 'Enviando SMS...' : 'Enviar SMS'}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    // calcular próximo lunes
                     const now = new Date();
                     const daysToAdd = ((8 - now.getDay()) % 7) || 7;
                     const nextMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToAdd);
@@ -787,9 +786,9 @@ export default function Pacientes() {
                     const dateStr = `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth()+1)}-${pad(nextMonday.getDate())}`;
                     window.open(`/whatsapp-link?date=${encodeURIComponent(dateStr)}`, '_blank');
                   }}
-                  style={{ backgroundColor: '#128C7E', marginLeft: '0.5rem' }}
+                  className="btn-whatsapp"
                 >
-                  WhatsApp Broadcast
+                  WhatsApp
                 </button>
               </div>
           </div>

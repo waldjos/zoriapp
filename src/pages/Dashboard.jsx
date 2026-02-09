@@ -31,9 +31,9 @@ export default function Dashboard() {
 
         setPacientesPorLocalidad(listaLocalidades);
 
-        // Laboratorios
-        const labsSnap = await getDocs(collection(db, "laboratorios"));
-        setTotalLaboratorios(labsSnap.size);
+        // Pacientes con PDF de laboratorio asociado (LabForm guarda laboratorioPdfUrl en el paciente)
+        const conLab = pacientes.filter((p) => p.laboratorioPdfUrl).length;
+        setTotalLaboratorios(conLab);
       } catch (error) {
         console.error("Error cargando estadísticas:", error);
       } finally {

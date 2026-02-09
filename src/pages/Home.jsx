@@ -10,7 +10,8 @@ export default function Home() {
   if (!user) return null; // protección básica
 
   return (
-    <div className="home-container">
+    <div className="page home-page">
+      <div className="home-container">
       <div className="home-card">
         <h1 className="home-title">Zoriapp</h1>
         <p className="home-subtitle">Panel principal de la jornada</p>
@@ -52,6 +53,7 @@ export default function Home() {
 
         {/* Banner Prosilod (fuera del dashboard, mejor disposición) */}
         <ProsilodBanner />
+      </div>
       </div>
     </div>
   );
