@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   doc,
   getDoc,
+  updateDoc,
   collection,
   addDoc,
   serverTimestamp,
@@ -48,6 +49,12 @@ export default function PacienteDetalle() {
   // ---- Lista de evaluaciones guardadas ----
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [cargandoEvaluaciones, setCargandoEvaluaciones] = useState(true);
+
+  // ---- PSA (total y libre): editables en ficha ----
+  const [psaTotal, setPsaTotal] = useState("");
+  const [psaLibre, setPsaLibre] = useState("");
+  const [guardandoPSA, setGuardandoPSA] = useState(false);
+  const [showPrintArea, setShowPrintArea] = useState(false);
 
   // ---------------------------------------------------
   // 1) Cargar datos del paciente
@@ -119,6 +126,13 @@ export default function PacienteDetalle() {
     } catch (err) {
       console.warn("No se pudieron mapear los datos de tacto:", err);
     }
+  }, [paciente]);
+
+  // Sincronizar PSA desde el paciente
+  useEffect(() => {
+    if (!paciente) return;
+    setPsaTotal(paciente.psaTotal ?? "");
+    setPsaLibre(paciente.psaLibre ?? "");
   }, [paciente]);
 
   // ---------------------------------------------------
@@ -209,6 +223,64 @@ export default function PacienteDetalle() {
     }
   };
 
+  const handleGuardarPSA = async (e) => {
+    e.preventDefault();
+    if (!paciente) return;
+    setGuardandoPSA(true);
+    try {
+      const ref = doc(db, "pacientes", paciente.id);
+      await updateDoc(ref, {
+        psaTotal: psaTotal.trim() || null,
+        psaLibre: psaLibre.trim() || null,
+      });
+      setPaciente((prev) => prev ? { ...prev, psaTotal: psaTotal.trim() || null, psaLibre: psaLibre.trim() || null } : prev);
+    } catch (err) {
+      console.error("Error guardando PSA:", err);
+    } finally {
+      setGuardandoPSA(false);
+    }
+  };
+
+  // Contenido para impresión: tacto + PSA
+  const tacto = paciente?.tacto;
+  const printContent = paciente && (
+    <div className="print-results-content" id="print-results-area">
+      <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <button type="button" onClick={() => setShowPrintArea(false)} className="btn-close-print">Cerrar</button>
+        <button type="button" onClick={() => window.print()} className="btn-print">Imprimir</button>
+      </div>
+      <h1 style={{ marginBottom: "0.5rem" }}>Resultados – {paciente.nombreCompleto}</h1>
+      <p><strong>Cédula:</strong> {paciente.cedula} &nbsp;|&nbsp; <strong>Edad:</strong> {paciente.edad ?? "-"} años</p>
+      <hr style={{ margin: "1rem 0" }} />
+      <h2 style={{ fontSize: "1.1rem", marginTop: "1rem" }}>Evaluación de tacto rectal</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+        <tbody>
+          <tr><td><strong>Tamaño</strong></td><td>{tacto?.tamanio || tacto?.tamano || "-"}</td></tr>
+          <tr><td><strong>Consistencia</strong></td><td>
+            {[tacto?.fibroelastica && "Fibroelástica", tacto?.aumentadaConsistencia && "Aumentada", tacto?.petrea && "Pétrea"].filter(Boolean).join(", ") || "Normal"}
+          </td></tr>
+          <tr><td><strong>Bordes</strong></td><td>{tacto?.bordes || "-"}</td></tr>
+          <tr><td><strong>Nódulos</strong></td><td>{tacto?.nodulos === "si" ? `Sí${tacto?.ladoNodulo ? ` (${tacto.ladoNodulo})` : ""}` : "No"}</td></tr>
+          <tr><td><strong>Planos de clivaje</strong></td><td>{tacto?.planosClivaje === "si" ? "Sí" : tacto?.planosClivaje ? "No" : "-"}</td></tr>
+          <tr><td><strong>IPSS</strong></td><td>{tacto?.ipss ?? "-"}</td></tr>
+          <tr><td><strong>PCA (ng/ml)</strong></td><td>{tacto?.pca ?? "-"}</td></tr>
+          <tr><td><strong>Tratamiento</strong></td><td>{tacto?.tratamiento === "control_anual" ? "Control anual" : tacto?.tratamiento === "tratamiento_medico" ? "Tratamiento médico" : tacto?.tratamiento || "-"}</td></tr>
+          <tr><td><strong>Indicación</strong></td><td>{tacto?.indicacion === "biopsia" ? "Indicación biopsia prostática" : tacto?.indicacion || "-"}</td></tr>
+        </tbody>
+      </table>
+      <h2 style={{ fontSize: "1.1rem", marginTop: "1.25rem" }}>PSA (laboratorio)</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+        <tbody>
+          <tr><td><strong>PSA total (ng/ml)</strong></td><td>{psaTotal.trim() || paciente.psaTotal ?? "-"}</td></tr>
+          <tr><td><strong>PSA libre (ng/ml)</strong></td><td>{psaLibre.trim() || paciente.psaLibre ?? "-"}</td></tr>
+        </tbody>
+      </table>
+      <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#666" }}>
+        Impreso el {new Date().toLocaleString("es")} – Hospital Domingo Luciani – Proyecto Zoriak
+      </p>
+    </div>
+  );
+
   // ---------------------------------------------------
   // Render
   // ---------------------------------------------------
@@ -236,6 +308,13 @@ export default function PacienteDetalle() {
 
   return (
     <div className="paciente-detalle-layout">
+      {showPrintArea && (
+        <div className="print-overlay" role="dialog" aria-label="Vista de impresión">
+          <div className="print-overlay-inner">
+            {printContent}
+          </div>
+        </div>
+      )}
       <button onClick={() => navigate(-1)} style={{ marginBottom: "1rem" }}>
         ⬅ Volver
       </button>
@@ -265,6 +344,30 @@ export default function PacienteDetalle() {
         <p style={{ margin: "0.25rem 0" }}>
           <strong>Correo:</strong> {paciente.email || "-"}
         </p>
+        <p style={{ margin: "0.25rem 0" }}>
+          <strong>PSA total:</strong> {paciente.psaTotal ?? "-"} ng/ml &nbsp;|&nbsp; <strong>PSA libre:</strong> {paciente.psaLibre ?? "-"} ng/ml
+        </p>
+      </section>
+
+      {/* Editar PSA y botón Imprimir */}
+      <section style={{ marginBottom: "1rem", padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.25)" }}>
+        <h2 style={{ fontSize: "1rem", marginBottom: "0.75rem" }}>Resultados de laboratorio (PSA)</h2>
+        <form onSubmit={handleGuardarPSA} style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
+          <div>
+            <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.85rem" }}>PSA total (ng/ml)</label>
+            <input type="text" value={psaTotal} onChange={(e) => setPsaTotal(e.target.value)} placeholder="Ej. 2.5" style={{ width: "120px", padding: "0.4rem 0.6rem" }} />
+          </div>
+          <div>
+            <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.85rem" }}>PSA libre (ng/ml)</label>
+            <input type="text" value={psaLibre} onChange={(e) => setPsaLibre(e.target.value)} placeholder="Ej. 0.8" style={{ width: "120px", padding: "0.4rem 0.6rem" }} />
+          </div>
+          <button type="submit" disabled={guardandoPSA} style={{ padding: "0.5rem 1rem", background: "#2563eb", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>
+            {guardandoPSA ? "Guardando..." : "Guardar PSA"}
+          </button>
+          <button type="button" onClick={() => setShowPrintArea(true)} style={{ padding: "0.5rem 1rem", background: "#059669", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>
+            Imprimir resultados (tacto + PSA)
+          </button>
+        </form>
       </section>
 
       <div className="paciente-detalle-grid">

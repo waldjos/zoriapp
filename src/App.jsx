@@ -12,6 +12,7 @@ import LabForm from "./pages/LabForm";
 import Tacto from "./pages/Tacto";
 import Dashboard from "./pages/Dashboard";
 import MiniJornada from "./pages/MiniJornada";
+import ImportarPSA from "./pages/ImportarPSA";
 
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
@@ -41,6 +42,7 @@ function AppShell() {
           <Route path="/laboratorio" element={<PrivateRoute><LabForm /></PrivateRoute>} />
           <Route path="/validar-resultados" element={<PrivateRoute><Pacientes /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/importar-psa" element={<PrivateRoute><ImportarPSA /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

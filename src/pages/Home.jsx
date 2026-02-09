@@ -41,6 +41,10 @@ export default function Home() {
           <button className="home-button" onClick={() => navigate("/validar-resultados")}>
             Validar resultados
           </button>
+
+          <button className="home-button" onClick={() => navigate("/importar-psa")}>
+            Importar PSA (.txt)
+          </button>
         </div>
 
         {/* Dashboard */}

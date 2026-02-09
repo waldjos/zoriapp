@@ -29,6 +29,8 @@ export default function Pacientes() {
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState("");
   const [estadoResultado, setEstadoResultado] = useState("pendiente");
+  const [psaTotal, setPsaTotal] = useState("");
+  const [psaLibre, setPsaLibre] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -332,6 +334,8 @@ export default function Pacientes() {
     setFechaNacimiento("");
     setEmail("");
     setNotas("");
+    setPsaTotal("");
+    setPsaLibre("");
     setEditingId(null);
   };
 
@@ -371,6 +375,8 @@ export default function Pacientes() {
         fechaNacimiento: fechaNacimiento.trim(),
         email: email.trim(),
         notas: notas.trim(),
+        psaTotal: psaTotal.trim() || null,
+        psaLibre: psaLibre.trim() || null,
       };
 
       if (editingId) {
@@ -413,6 +419,8 @@ export default function Pacientes() {
     setEmail(paciente.email || "");
     setNotas(paciente.notas || "");
     setEstadoResultado(paciente.estadoResultado || "pendiente");
+    setPsaTotal(paciente.psaTotal ?? "");
+    setPsaLibre(paciente.psaLibre ?? "");
     setEditingId(paciente.id);
     setError("");
     setSuccess("");
@@ -661,6 +669,28 @@ export default function Pacientes() {
             </select>
           </div>
 
+          {/* PSA Total y Libre (ng/ml) */}
+          <div style={{ marginBottom: "0.75rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 140px" }}>
+              <label>PSA total (ng/ml)</label>
+              <input
+                type="text"
+                value={psaTotal}
+                onChange={(e) => setPsaTotal(e.target.value)}
+                placeholder="Ej. 2.5"
+              />
+            </div>
+            <div style={{ flex: "1 1 140px" }}>
+              <label>PSA libre (ng/ml)</label>
+              <input
+                type="text"
+                value={psaLibre}
+                onChange={(e) => setPsaLibre(e.target.value)}
+                placeholder="Ej. 0.8"
+              />
+            </div>
+          </div>
+
           {/* Notas */}
           <div style={{ marginBottom: "0.75rem" }}>
             <label>Notas (motivo, hallazgos, etc.)</label>
@@ -814,6 +844,7 @@ export default function Pacientes() {
                   <th>Localidad</th>
                   <th>Edad</th>
                   <th>Correo</th>
+                  <th>PSA total / libre</th>
                   <th>Estado</th>
                   <th style={{ textAlign: "center" }}>Acciones</th>
                 </tr>
@@ -826,6 +857,7 @@ export default function Pacientes() {
                     <td>{p.localidad || "-"}</td>
                     <td>{p.edad ?? "-"}</td>
                     <td>{p.email || "-"}</td>
+                    <td>{(p.psaTotal != null || p.psaLibre != null) ? `${p.psaTotal ?? "-"} / ${p.psaLibre ?? "-"}` : "-"}</td>
                     <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       <div className="actions-cell">
                         <button onClick={() => irADetalle(p.id)} style={{ backgroundColor: "#2563eb" }}>Ver ficha</button>
