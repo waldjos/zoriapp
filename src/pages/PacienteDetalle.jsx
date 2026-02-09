@@ -56,6 +56,7 @@ export default function PacienteDetalle() {
   const [psaLibre, setPsaLibre] = useState("");
   const [guardandoPSA, setGuardandoPSA] = useState(false);
   const [showPrintArea, setShowPrintArea] = useState(false);
+  const [confirmandoEntrega, setConfirmandoEntrega] = useState(false);
 
   // ---------------------------------------------------
   // 1) Cargar datos del paciente
@@ -283,6 +284,38 @@ export default function PacienteDetalle() {
       <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#666" }}>
         Impreso el {new Date().toLocaleString("es")} – Hospital Domingo Luciani – Proyecto Zoriak
       </p>
+      {/* Confirmar entrega (no se imprime) */}
+      <div className="no-print" style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
+        <p style={{ marginBottom: "0.5rem", fontWeight: 600 }}>
+          {paciente.entregaResultados === "entregado"
+            ? "✓ Resultados entregados"
+            : "Estado: Pendiente por retiro"}
+        </p>
+        {paciente.entregaResultados !== "entregado" && (
+          <button
+            type="button"
+            disabled={confirmandoEntrega}
+            onClick={async () => {
+              setConfirmandoEntrega(true);
+              try {
+                const ref = doc(db, "pacientes", paciente.id);
+                await updateDoc(ref, {
+                  entregaResultados: "entregado",
+                  entregaResultadosAt: serverTimestamp(),
+                });
+                setPaciente((prev) => ({ ...prev, entregaResultados: "entregado", entregaResultadosAt: new Date() }));
+              } catch (e) {
+                console.error(e);
+              } finally {
+                setConfirmandoEntrega(false);
+              }
+            }}
+            style={{ padding: "0.5rem 1rem", background: "#059669", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
+          >
+            {confirmandoEntrega ? "Guardando..." : "Confirmar entrega"}
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -348,6 +381,12 @@ export default function PacienteDetalle() {
         </p>
         <p style={{ margin: "0.25rem 0" }}>
           <strong>Correo:</strong> {paciente.email || "-"}
+        </p>
+        <p style={{ margin: "0.25rem 0" }}>
+          <strong>Entrega resultados:</strong>{" "}
+          <span style={{ color: paciente.entregaResultados === "entregado" ? "#10b981" : "#f59e0b" }}>
+            {paciente.entregaResultados === "entregado" ? "Entregado" : "Pendiente por retiro"}
+          </span>
         </p>
         <p style={{ margin: "0.25rem 0" }}>
           <strong>PSA total:</strong> {paciente.psaTotal ?? "-"} ng/ml &nbsp;|&nbsp; <strong>PSA libre:</strong> {paciente.psaLibre ?? "-"} ng/ml
