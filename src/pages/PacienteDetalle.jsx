@@ -271,8 +271,8 @@ export default function PacienteDetalle() {
       <h2 style={{ fontSize: "1.1rem", marginTop: "1.25rem" }}>PSA (laboratorio)</h2>
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
         <tbody>
-          <tr><td><strong>PSA total (ng/ml)</strong></td><td>{psaTotal.trim() || paciente.psaTotal ?? "-"}</td></tr>
-          <tr><td><strong>PSA libre (ng/ml)</strong></td><td>{psaLibre.trim() || paciente.psaLibre ?? "-"}</td></tr>
+          <tr><td><strong>PSA total (ng/ml)</strong></td><td>{(psaTotal.trim() || paciente.psaTotal) ?? "-"}</td></tr>
+          <tr><td><strong>PSA libre (ng/ml)</strong></td><td>{(psaLibre.trim() || paciente.psaLibre) ?? "-"}</td></tr>
         </tbody>
       </table>
       <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#666" }}>

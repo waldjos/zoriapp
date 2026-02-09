@@ -1,47 +1,7 @@
 /**
- * Parser de texto/PDF para importar datos HDL: cedula, nombre, psaTotal, psaLibre.
- * Uso principal: archivo .txt (una línea por persona). PDF opcional.
+ * Parser de texto para importar datos HDL: cedula, nombre, psaTotal, psaLibre.
+ * Uso: archivo .txt (una línea por persona) en public/datos-psa.txt o subido por el usuario.
  */
-
-/**
- * Extrae el texto de todas las páginas del PDF (requiere pdfjs-dist).
- * Agrupa items por línea (Y) y devuelve un array de strings (una por línea).
- */
-export async function extractLinesFromPdf(pdfUrl) {
-  const pdfjsLib = await import("pdfjs-dist");
-  if (pdfjsLib.GlobalWorkerOptions?.workerSrc == null) {
-    pdfjsLib.GlobalWorkerOptions = pdfjsLib.GlobalWorkerOptions || {};
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || "4.7.76"}/build/pdf.worker.min.mjs`;
-  }
-  const doc = await pdfjsLib.getDocument(pdfUrl).promise;
-  const numPages = doc.numPages;
-  const allLines = [];
-
-  for (let i = 1; i <= numPages; i++) {
-    const page = await doc.getPage(i);
-    const textContent = await page.getTextContent({ includeMarkedContent: true });
-    const items = textContent.items || [];
-
-    // Agrupar por posición Y (redondeada) para formar líneas
-    const lineMap = {};
-    for (const item of items) {
-      const y = item.transform ? item.transform[5] : 0;
-      const lineKey = Math.round(y);
-      if (!lineMap[lineKey]) lineMap[lineKey] = [];
-      lineMap[lineKey].push(item.str || "");
-    }
-
-    // Ordenar líneas de arriba a abajo (Y decreciente en PDF) y unir textos
-    const sortedYs = Object.keys(lineMap).map(Number).sort((a, b) => b - a);
-    for (const y of sortedYs) {
-      const parts = lineMap[y];
-      const line = parts.join(" ").trim();
-      if (line) allLines.push(line);
-    }
-  }
-
-  return allLines;
-}
 
 /**
  * Normaliza un nombre para comparación (minúsculas, sin acentos, espacios colapsados).
@@ -126,13 +86,5 @@ export function parsePdfLinesToRows(lines) {
 export function parseTxtToRows(text) {
   if (!text || typeof text !== "string") return [];
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  return parsePdfLinesToRows(lines);
-}
-
-/**
- * Carga el PDF desde la URL pública, extrae líneas y las parsea en filas.
- */
-export async function loadPdfAndParseRows(pdfUrl) {
-  const lines = await extractLinesFromPdf(pdfUrl);
   return parsePdfLinesToRows(lines);
 }
