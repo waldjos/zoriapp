@@ -11,7 +11,6 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -431,21 +430,6 @@ export default function Pacientes() {
     limpiarFormulario();
     setError("");
     setSuccess("");
-  };
-
-  const eliminarPaciente = async (idPaciente) => {
-    const confirmar = window.confirm(
-      "¿Seguro que deseas eliminar este paciente? Esta acción no se puede deshacer."
-    );
-    if (!confirmar) return;
-
-    try {
-      const ref = doc(db, "pacientes", idPaciente);
-      await deleteDoc(ref);
-    } catch (err) {
-      console.error("Error eliminando paciente:", err);
-      alert("No se pudo eliminar el paciente.");
-    }
   };
 
   // Filtrado por búsqueda (nombre o cédula)
@@ -871,7 +855,6 @@ export default function Pacientes() {
                       <div className="actions-cell">
                         <button onClick={() => irADetalle(p.id)} style={{ backgroundColor: "#2563eb" }}>Ver ficha</button>
                         <button onClick={() => empezarEdicion(p)} style={{ backgroundColor: "#10b981" }}>Editar</button>
-                        <button onClick={() => eliminarPaciente(p.id)} style={{ backgroundColor: "var(--danger)" }}>Eliminar</button>
                       </div>
                     </td>
                   </tr>
