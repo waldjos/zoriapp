@@ -838,6 +838,49 @@ button:active {
   cursor: pointer;
 }
 
+/* === Barra de navegación principal === */
+.main-nav {
+  width: 100%;
+  padding: 0.35rem 0.75rem 0.4rem;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  box-sizing: border-box;
+}
+
+.main-nav-inner {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+
+.main-nav-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.main-nav-btn--active {
+  background: var(--primary-soft);
+  color: #bbf7d0;
+  border-color: #5cc52e;
+}
+
+@media (max-width: 640px) {
+  .main-nav {
+    padding-inline: 0.5rem;
+  }
+
+  .main-nav-btn {
+    font-size: 0.78rem;
+    padding-inline: 0.8rem;
+  }
+}
+
 /* === Vista de impresión (tacto + PSA) === */
 .print-overlay {
   position: fixed;

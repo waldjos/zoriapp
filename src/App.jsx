@@ -16,6 +16,7 @@ import ImportarPSA from "./pages/ImportarPSA";
 
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
+import MainNav from "./components/MainNav";
 
 import "./App.css";
 
@@ -30,6 +31,7 @@ function AppShell() {
           </button>
         )}
       </header>
+      {user && <MainNav />}
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<Login />} />
