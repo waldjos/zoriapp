@@ -472,7 +472,7 @@ button:active {
   border: 1px solid rgba(148, 163, 184, 0.25);
   margin-top: 1rem;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible; /* permitir que los scrollbars internos sean visibles */
 }
 
 .form-grid {
@@ -577,7 +577,6 @@ button:active {
 .table-wrapper {
   margin-top: 0.4rem;
   border-radius: 14px;
-  overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
@@ -586,6 +585,12 @@ button:active {
 .table-scroll {
   width: 100%;
   overflow-x: auto;
+}
+
+/* Contenedores de tablas con scroll vertical interno (listas largas) */
+.table-wrapper--scroll-y {
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .pacientes-table {

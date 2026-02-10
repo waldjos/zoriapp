@@ -237,7 +237,7 @@ export default function Tacto() {
         </div>
 
         {/* Lista corta de resultados */}
-        <div className="table-wrapper">
+        <div className="table-wrapper table-wrapper--scroll-y">
           <table className="pacientes-table">
             <thead>
               <tr>

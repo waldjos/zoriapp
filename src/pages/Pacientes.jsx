@@ -835,7 +835,7 @@ export default function Pacientes() {
             {searchTerm.trim() ? `Ninguna coincidencia para "${searchTerm.trim()}".` : "No hay pacientes registrados aún."}
           </p>
         ) : (
-          <div className="table-wrapper table-scroll" style={{ marginTop: "0.6rem" }}>
+          <div className="table-wrapper table-scroll table-wrapper--scroll-y" style={{ marginTop: "0.6rem" }}>
             <table className="pacientes-table" role="table">
               <thead>
                 <tr>
