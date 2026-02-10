@@ -6,13 +6,17 @@
  */
 
 export function formatoNombre(valor) {
-  if (valor == null || typeof valor !== "string") return "";
-  return valor.trim().toUpperCase();
+  if (valor == null) return "";
+  // Acepta strings o valores antiguos (por ejemplo, números) y los convierte a texto
+  const s = String(valor);
+  return s.trim().toUpperCase();
 }
 
 export function formatoCedula(valor) {
-  if (valor == null || typeof valor !== "string") return "";
-  return valor.replace(/\D/g, "");
+  if (valor == null) return "";
+  // Acepta strings o números y deja solo dígitos (sin puntos, guiones ni letras)
+  const s = String(valor);
+  return s.replace(/\D/g, "");
 }
 
 /** Mapa de acentos a letra base para búsqueda (misma idea que cédula: texto normalizado). */
