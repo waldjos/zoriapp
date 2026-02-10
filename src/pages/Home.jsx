@@ -5,6 +5,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
+import { getPSARiskCategory } from "../utils/psaUtils";
 import ProsilodBanner from "../components/ProsilodBanner";
 
 export default function Home() {
@@ -14,6 +15,12 @@ export default function Home() {
     atendidos: 0,
     entregados: 0,
     pendientesRetiro: 0,
+  });
+  const [riesgoStats, setRiesgoStats] = useState({
+    sinRiesgo: 0,
+    intermedio: 0,
+    alto: 0,
+    sinDato: 0,
   });
   const [pacientesList, setPacientesList] = useState([]);
   const [cargandoStats, setCargandoStats] = useState(true);
@@ -33,6 +40,27 @@ export default function Home() {
         const entregados = list.filter((p) => p.entregaResultados === "entregado").length;
         const pendientesRetiro = list.filter((p) => p.tacto && p.entregaResultados !== "entregado").length;
         setStats({ atendidos, entregados, pendientesRetiro });
+
+        // Clasificación de riesgo por PSA para el dashboard principal
+        const riesgoCounts = {
+          sinRiesgo: 0,
+          intermedio: 0,
+          alto: 0,
+          sinDato: 0,
+        };
+
+        list.forEach((p) => {
+          const categoria = getPSARiskCategory(p.psaTotal, p.psaLibre);
+          if (!categoria) {
+            riesgoCounts.sinDato += 1;
+            return;
+          }
+          if (categoria === "sin_riesgo") riesgoCounts.sinRiesgo += 1;
+          else if (categoria === "riesgo_intermedio") riesgoCounts.intermedio += 1;
+          else if (categoria === "alto_riesgo") riesgoCounts.alto += 1;
+        });
+
+        setRiesgoStats(riesgoCounts);
         setCargandoStats(false);
       },
       (err) => {
@@ -105,25 +133,54 @@ export default function Home() {
           {cargandoStats ? (
             <p className="dashboard-text">Cargando estadísticas...</p>
           ) : (
-            <div className="dashboard-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem", marginTop: "0.75rem" }}>
-              <div style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--accent)" }}>{stats.atendidos}</div>
-                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Pacientes atendidos</div>
+            <>
+              <div className="dashboard-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem", marginTop: "0.75rem" }}>
+                <div style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--accent)" }}>{stats.atendidos}</div>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Pacientes atendidos</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowModalEntregados(true); setBusquedaEntregados(""); }}
+                  style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center", cursor: "pointer", width: "100%", color: "inherit", font: "inherit" }}
+                >
+                  <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981" }}>{stats.entregados}</div>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Resultados entregados</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>Ver listado</div>
+                </button>
+                <div style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#f59e0b" }}>{stats.pendientesRetiro}</div>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Pendientes por retiro</div>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => { setShowModalEntregados(true); setBusquedaEntregados(""); }}
-                style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center", cursor: "pointer", width: "100%", color: "inherit", font: "inherit" }}
-              >
-                <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981" }}>{stats.entregados}</div>
-                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Resultados entregados</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>Ver listado</div>
-              </button>
-              <div style={{ padding: "1rem", background: "var(--bg-soft)", borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#f59e0b" }}>{stats.pendientesRetiro}</div>
-                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Pendientes por retiro</div>
+
+              {/* Distribución por nivel de riesgo (PSA) */}
+              <div style={{ marginTop: "1.25rem" }}>
+                <h3 style={{ fontSize: "0.95rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
+                  Distribución por nivel de riesgo (PSA)
+                </h3>
+                <div className="dashboard-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "0.75rem" }}>
+                  <div style={{ padding: "0.85rem", background: "var(--bg-soft)", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.25)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#22c55e" }}>{riesgoStats.sinRiesgo}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Sin riesgo</div>
+                  </div>
+                  <div style={{ padding: "0.85rem", background: "var(--bg-soft)", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.25)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#eab308" }}>{riesgoStats.intermedio}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Riesgo intermedio</div>
+                  </div>
+                  <div style={{ padding: "0.85rem", background: "var(--bg-soft)", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.25)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#f97316" }}>{riesgoStats.alto}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Alto riesgo</div>
+                  </div>
+                </div>
+                {riesgoStats.sinDato > 0 && (
+                  <p style={{ marginTop: "0.4rem", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                    Pacientes sin datos suficientes de PSA para clasificar:{" "}
+                    <strong>{riesgoStats.sinDato}</strong>
+                  </p>
+                )}
               </div>
-            </div>
+            </>
           )}
         </div>
 
