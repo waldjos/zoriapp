@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
 import { getPSARiskCategory } from "../utils/psaUtils";
+import { getTactoRiskCategory } from "../utils/tactoUtils";
 import ProsilodBanner from "../components/ProsilodBanner";
 
 export default function Home() {
@@ -17,6 +18,12 @@ export default function Home() {
     pendientesRetiro: 0,
   });
   const [riesgoStats, setRiesgoStats] = useState({
+    sinRiesgo: 0,
+    intermedio: 0,
+    alto: 0,
+    sinDato: 0,
+  });
+  const [tactoStats, setTactoStats] = useState({
     sinRiesgo: 0,
     intermedio: 0,
     alto: 0,
@@ -61,6 +68,31 @@ export default function Home() {
         });
 
         setRiesgoStats(riesgoCounts);
+
+        // Clasificación de hallazgos de tacto rectal
+        const tactoCounts = {
+          sinRiesgo: 0,
+          intermedio: 0,
+          alto: 0,
+          sinDato: 0,
+        };
+
+        list.forEach((p) => {
+          if (!p.tacto) {
+            tactoCounts.sinDato += 1;
+            return;
+          }
+          const categoria = getTactoRiskCategory(p.tacto);
+          if (!categoria) {
+            tactoCounts.sinDato += 1;
+            return;
+          }
+          if (categoria === "sin_riesgo") tactoCounts.sinRiesgo += 1;
+          else if (categoria === "riesgo_intermedio") tactoCounts.intermedio += 1;
+          else if (categoria === "alto_riesgo") tactoCounts.alto += 1;
+        });
+
+        setTactoStats(tactoCounts);
         setCargandoStats(false);
       },
       (err) => {
@@ -177,6 +209,33 @@ export default function Home() {
                   <p style={{ marginTop: "0.4rem", fontSize: "0.78rem", color: "var(--text-muted)" }}>
                     Pacientes sin datos suficientes de PSA para clasificar:{" "}
                     <strong>{riesgoStats.sinDato}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Distribución por hallazgos en tacto rectal */}
+              <div style={{ marginTop: "1.1rem" }}>
+                <h3 style={{ fontSize: "0.95rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
+                  Distribución por hallazgos en tacto rectal
+                </h3>
+                <div className="dashboard-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "0.75rem" }}>
+                  <div style={{ padding: "0.85rem", background: "var(--bg-soft)", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.25)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#22c55e" }}>{tactoStats.sinRiesgo}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Sin hallazgos sospechosos</div>
+                  </div>
+                  <div style={{ padding: "0.85rem", background: "var(--bg-soft)", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.25)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#eab308" }}>{tactoStats.intermedio}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Hallazgos intermedios</div>
+                  </div>
+                  <div style={{ padding: "0.85rem", background: "var(--bg-soft)", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.25)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#f97316" }}>{tactoStats.alto}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Hallazgos de alto riesgo</div>
+                  </div>
+                </div>
+                {tactoStats.sinDato > 0 && (
+                  <p style={{ marginTop: "0.4rem", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                    Pacientes sin evaluación de tacto registrada:{" "}
+                    <strong>{tactoStats.sinDato}</strong>
                   </p>
                 )}
               </div>
