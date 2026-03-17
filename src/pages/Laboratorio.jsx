@@ -61,7 +61,8 @@ export default function Laboratorio() {
     const coincideNombre =
       nombreBusqueda.includes(termNombre) ||
       (termNombre.length > 0 && termNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
-    return coincideNombre || ced.includes(termDigitos);
+    const coincideCedula = termDigitos.length > 0 && ced.includes(termDigitos);
+    return coincideNombre || coincideCedula;
   });
 
   const handleUpload = async (e) => {
