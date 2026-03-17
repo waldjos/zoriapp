@@ -50,7 +50,8 @@ export default function LabForm() {
     const coincideNombre =
       nombreBusqueda.includes(termNombre) ||
       (termNombre.length > 0 && termNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
-    return coincideNombre || cedula.includes(termDigitos);
+    const coincideCedula = termDigitos.length > 0 && cedula.includes(termDigitos);
+    return coincideNombre || coincideCedula;
   });
 
   const handleSeleccionPaciente = (paciente) => {

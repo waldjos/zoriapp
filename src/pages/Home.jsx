@@ -8,6 +8,7 @@ import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/forma
 import { getPSARiskCategory } from "../utils/psaUtils";
 import { getTactoRiskCategory } from "../utils/tactoUtils";
 import ProsilodBanner from "../components/ProsilodBanner";
+import logo from "../assets/logo.png";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -115,7 +116,8 @@ export default function Home() {
         const coincideNombre =
           nombreBusqueda.includes(termNombre) ||
           (termNombre.length > 0 && termNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
-        return coincideNombre || cedula.includes(termDigitos);
+        const coincideCedula = termDigitos.length > 0 && cedula.includes(termDigitos);
+        return coincideNombre || coincideCedula;
       })
     : pacientesEntregados;
 
@@ -125,7 +127,14 @@ export default function Home() {
     <div className="page home-page">
       <div className="home-container">
       <div className="home-card">
-        <h1 className="home-title">Zoriapp</h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem" }}>
+          <img
+            src={logo}
+            alt="Zoriapp"
+            style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }}
+          />
+          <h1 className="home-title" style={{ margin: 0 }}>Zoriapp</h1>
+        </div>
         <p className="home-subtitle">Panel principal de la jornada</p>
 
         {/* Botones principales */}

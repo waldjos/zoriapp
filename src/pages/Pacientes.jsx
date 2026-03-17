@@ -447,7 +447,8 @@ export default function Pacientes() {
     const coincideNombre =
       nombreBusqueda.includes(terminoNombre) ||
       (terminoNombre.length > 0 && terminoNombre.split(/\s+/).every((palabra) => nombreBusqueda.includes(palabra)));
-    return coincideNombre || ced.includes(terminoDigitos);
+    const coincideCedula = terminoDigitos.length > 0 && ced.includes(terminoDigitos);
+    return coincideNombre || coincideCedula;
   });
 
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
