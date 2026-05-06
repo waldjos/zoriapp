@@ -8,6 +8,9 @@ import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/forma
 import { getPSARiskCategory } from "../utils/psaUtils";
 import { getTactoRiskCategory } from "../utils/tactoUtils";
 import ProsilodBanner from "../components/ProsilodBanner";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import logo from "../assets/logo.png";
 
 export default function Home() {
@@ -34,6 +37,132 @@ export default function Home() {
   const [cargandoStats, setCargandoStats] = useState(true);
   const [showModalEntregados, setShowModalEntregados] = useState(false);
   const [busquedaEntregados, setBusquedaEntregados] = useState("");
+
+  const exportColumns = [
+    { key: 'nombreCompleto', label: 'Nombre completo' },
+    { key: 'cedula', label: 'Cédula' },
+    { key: 'telefono', label: 'Teléfono' },
+    { key: 'email', label: 'Correo electrónico' },
+    { key: 'localidad', label: 'Localidad' },
+    { key: 'edad', label: 'Edad' },
+    { key: 'fechaNacimiento', label: 'Fecha de nacimiento' },
+    { key: 'estadoResultado', label: 'Estado del resultado' },
+    { key: 'notas', label: 'Notas' },
+    { key: 'psaTotal', label: 'PSA total (ng/ml)' },
+    { key: 'psaLibre', label: 'PSA libre (ng/ml)' },
+    { key: 'psaRelacion', label: 'Relación PSA libre/total (%)' },
+    { key: 'entregaResultados', label: 'Entrega de resultados' },
+    { key: 'laboratorioPdfUrl', label: 'PDF laboratorio' },
+    { key: 'tacto.tamanio', label: 'Tamaño tacto' },
+    { key: 'tacto.fibroelastica', label: 'Fibroelástica tacto' },
+    { key: 'tacto.aumentadaConsistencia', label: 'Tacto aumentada consistencia' },
+    { key: 'tacto.petrea', label: 'Tacto pétrea' },
+    { key: 'tacto.bordes', label: 'Tacto bordes' },
+    { key: 'tacto.nodulos', label: 'Tacto nódulos' },
+    { key: 'tacto.ladoNodulo', label: 'Tacto lado nódulo' },
+    { key: 'tacto.planosClivaje', label: 'Tacto planos de clivaje' },
+    { key: 'tacto.actualizadoEn', label: 'Tacto actualizado en' },
+    { key: 'tacto.medicoEmail', label: 'Médico responsable tacto' },
+    { key: 'createdAt', label: 'Fecha de registro' },
+  ];
+
+  const formatExportValue = (value) => {
+    if (value == null || value === "") return "";
+    if (typeof value === "boolean") return value ? "Sí" : "No";
+    if (value instanceof Date) return value.toLocaleString();
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
+  };
+
+  const getExportValue = (paciente, key) => {
+    if (key === 'nombreCompleto') {
+      return formatExportValue(paciente.nombreCompleto ?? paciente.nombre ?? '');
+    }
+
+    if (key === 'psaRelacion') {
+      const total = paciente.psaTotal;
+      const libre = paciente.psaLibre;
+      if (total == null || total === '' || libre == null || libre === '') return '';
+      const percent = Number(total) ? Math.round((Number(libre) / Number(total)) * 10000) / 100 : null;
+      return percent != null && !Number.isNaN(percent) ? `${percent}%` : '';
+    }
+
+    if (key === 'createdAt') {
+      const createdAt = paciente.createdAt;
+      if (!createdAt) return '';
+      if (typeof createdAt.toDate === 'function') {
+        return formatExportValue(createdAt.toDate());
+      }
+      return formatExportValue(createdAt);
+    }
+
+    if (key.includes('.')) {
+      const [objectKey, fieldKey] = key.split('.');
+      return formatExportValue(paciente[objectKey]?.[fieldKey]);
+    }
+
+    return formatExportValue(paciente[key]);
+  };
+
+  const exportAllPatientsToExcel = () => {
+    if (!pacientesList || pacientesList.length === 0) {
+      alert('No hay pacientes para exportar.');
+      return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+    const rows = [exportColumns.map((col) => col.label)];
+    pacientesList.forEach((paciente) => {
+      rows.push(exportColumns.map((col) => getExportValue(paciente, col.key)));
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet['!cols'] = exportColumns.map((col) => ({ wch: Math.max(18, col.label.length + 6) }));
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pacientes');
+    XLSX.writeFile(workbook, `pacientes_completo_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportAllPatientsToPDF = () => {
+    if (!pacientesList || pacientesList.length === 0) {
+      alert('No hay pacientes para exportar.');
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    doc.setFontSize(14);
+    doc.text('Pacientes completos', 40, 45);
+
+    const head = [exportColumns.map((col) => col.label)];
+    const body = pacientesList.map((paciente) =>
+      exportColumns.map((col) => getExportValue(paciente, col.key))
+    );
+
+    autoTable(doc, {
+      startY: 60,
+      head,
+      body,
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        cellPadding: 4,
+        overflow: 'linebreak',
+        cellWidth: 'wrap',
+      },
+      headStyles: { fillColor: [22, 54, 92], textColor: 255, halign: 'center' },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      margin: { left: 20, right: 20, bottom: 20 },
+      columnStyles: exportColumns.reduce((acc, _, idx) => {
+        acc[idx] = { cellWidth: 'auto' };
+        return acc;
+      }, {}),
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.3,
+      showHead: 'everyPage',
+      overflow: 'linebreak',
+    });
+
+    doc.save(`pacientes_completo_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
 
   // Suscripción en tiempo real para que el listado y las estadísticas se actualicen al confirmar entrega
   useEffect(() => {
@@ -166,6 +295,23 @@ export default function Home() {
           <button className="home-button" onClick={() => navigate("/importar-psa")}>
             Importar PSA (.txt)
           </button>
+        </div>
+
+        <div className="home-export-card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '1rem', marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(255,255,255,0.05)', borderRadius: '22px', border: '1px solid rgba(148,163,184,0.18)' }}>
+          <div style={{ minWidth: '240px', flex: '1 1 360px' }}>
+            <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Exportar todos los pacientes</h2>
+            <p style={{ margin: '0.5rem 0 0', color: '#cbd5e1', maxWidth: '640px', lineHeight: 1.6 }}>
+              Descarga un informe completo con todos los datos de cada paciente, incluyendo datos de tacto y PSA para una base 100% organizada.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button className="home-button home-button-primary" type="button" onClick={exportAllPatientsToExcel}>
+              Exportar Excel
+            </button>
+            <button className="home-button" type="button" onClick={exportAllPatientsToPDF} style={{ backgroundColor: '#0f766e', color: '#fff' }}>
+              Exportar PDF
+            </button>
+          </div>
         </div>
 
         {/* Dashboard */}

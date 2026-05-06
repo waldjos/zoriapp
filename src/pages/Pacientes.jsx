@@ -829,8 +829,6 @@ export default function Pacientes() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <h3 style={{ margin: 0 }}>Lista de pacientes</h3>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button type="button" onClick={exportToExcel} style={{ backgroundColor: '#111827', color: 'white' }}>Exportar Excel</button>
-                <button type="button" onClick={exportToPDF} style={{ backgroundColor: '#0f766e', color: 'white' }}>Exportar PDF</button>
                 <button type="button" onClick={() => setShowListBox(false)} style={{ backgroundColor: '#6b7280', color: 'white' }}>Cerrar</button>
               </div>
             </div>
@@ -883,15 +881,6 @@ export default function Pacientes() {
                 />
                 <button type="button" onClick={() => setShowListBox(true)} className="btn-secondary">
                   Ver lista
-                </button>
-                <button type="button" onClick={exportToExcel} className="btn-secondary">
-                  Exportar Excel
-                </button>
-                <button type="button" onClick={exportToPDF} className="btn-secondary">
-                  Exportar PDF
-                </button>
-                <button type="button" onClick={exportToJSON} className="btn-secondary">
-                  Exportar JSON
                 </button>
                 <button
                   type="button"

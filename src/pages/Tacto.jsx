@@ -5,7 +5,6 @@ import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
-import * as XLSX from 'xlsx';
 
 export default function Tacto() {
   const [pacientes, setPacientes] = useState([]);
@@ -61,85 +60,6 @@ export default function Tacto() {
     });
   }, [pacientes, busqueda]);
 
-  // Columnas a mostrar/exportar para tacto
-  const exportColumns = [
-    { key: 'nombreCompleto', label: 'Nombre' },
-    { key: 'cedula', label: 'Cédula' },
-    { key: 'tacto.tamanio', label: 'Tamaño' },
-    { key: 'tacto.fibroelastica', label: 'Fibroelástica' },
-    { key: 'tacto.aumentadaConsistencia', label: 'Aumentada de consistencia' },
-    { key: 'tacto.petrea', label: 'Pétrea' },
-    { key: 'tacto.bordes', label: 'Bordes' },
-    { key: 'tacto.nodulos', label: 'Nódulos' },
-    { key: 'tacto.ladoNodulo', label: 'Lado del nódulo' },
-    { key: 'tacto.planosClivaje', label: 'Planos de clivaje' },
-  ];
-
-  const exportToCSV = () => {
-    const list = pacientesFiltrados.filter((p) => p.tacto); // Solo pacientes con tacto
-    if (!list || list.length === 0) {
-      alert('No hay pacientes con evaluaciones de tacto para exportar.');
-      return;
-    }
-
-    // Preparar datos para Excel
-    const data = [];
-    // Headers
-    const headers = exportColumns.map((c) => c.label);
-    data.push(headers);
-
-    // Rows
-    list.forEach((p) => {
-      const row = exportColumns.map((col) => {
-        let v = '';
-        if (col.key.includes('.')) {
-          const [obj, prop] = col.key.split('.');
-          v = p[obj]?.[prop] ?? '';
-        } else {
-          v = p[col.key] ?? '';
-        }
-        // Convertir booleanos a Sí/No
-        if (typeof v === 'boolean') {
-          v = v ? 'Sí' : 'No';
-        }
-        return v;
-      });
-      data.push(row);
-    });
-
-    // Crear workbook y worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(data);
-
-    // Establecer anchos de columna
-    const colWidths = headers.map(() => ({ wch: 20 })); // Ancho aproximado
-    ws['!cols'] = colWidths;
-
-    // Estilo por defecto: Arial 12, bordes
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = { c: C, r: R };
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
-        if (!ws[cell_ref]) continue;
-        ws[cell_ref].s = {
-          font: { name: 'Arial', sz: 12 },
-          border: {
-            top: { style: 'thin' },
-            bottom: { style: 'thin' },
-            left: { style: 'thin' },
-            right: { style: 'thin' }
-          }
-        };
-      }
-    }
-
-    // Agregar worksheet al workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Tacto');
-
-    // Exportar
-    XLSX.writeFile(wb, `tacto_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  };
 
   const seleccionarPaciente = (paciente) => {
     console.log("Seleccionando paciente:", paciente);
@@ -226,8 +146,7 @@ export default function Tacto() {
         <div className="list-header">
           <div className="list-header-top">
             <div className="list-title">Buscar paciente</div>
-            <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>Exportar Excel</button>
-          </div>
+            </div>
           <input
             className="search-input"
             type="text"
