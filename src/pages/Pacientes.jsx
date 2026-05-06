@@ -16,6 +16,9 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import ProsilodBanner from "../components/ProsilodBanner";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
 
@@ -457,43 +460,132 @@ export default function Pacientes() {
   // Columnas a mostrar/exportar: clave y etiqueta en español
   const exportColumns = [
     { key: 'nombreCompleto', label: 'Nombre' },
-    { key: 'email', label: 'Correo' },
+    { key: 'cedula', label: 'Cédula' },
     { key: 'telefono', label: 'Teléfono' },
-    { key: 'edad', label: 'Edad' },
+    { key: 'email', label: 'Correo electrónico' },
     { key: 'localidad', label: 'Localidad' },
+    { key: 'edad', label: 'Edad' },
+    { key: 'fechaNacimiento', label: 'Fecha de nacimiento' },
+    { key: 'estadoResultado', label: 'Estado del resultado' },
+    { key: 'notas', label: 'Notas' },
+    { key: 'psaTotal', label: 'PSA total (ng/ml)' },
+    { key: 'psaLibre', label: 'PSA libre (ng/ml)' },
+    { key: 'psaRelacion', label: 'Relación PSA libre/total (%)' },
+    { key: 'createdAt', label: 'Fecha de registro' },
   ];
+
+  const getValue = (p, key) => {
+    if (key === 'nombreCompleto') {
+      return p.nombreCompleto ?? p.nombre ?? '';
+    }
+
+    if (key === 'psaRelacion') {
+      const percent = getPSALibrePercent(p.psaTotal, p.psaLibre);
+      return percent != null ? `${percent}%` : '';
+    }
+
+    if (key === 'createdAt') {
+      const createdAt = p.createdAt;
+      if (!createdAt) return '';
+      if (typeof createdAt.toDate === 'function') {
+        return createdAt.toDate().toLocaleString();
+      }
+      return String(createdAt);
+    }
+
+    let value = '';
+    if (key.includes('.')) {
+      const [obj, prop] = key.split('.');
+      value = p[obj]?.[prop] ?? '';
+    } else {
+      value = p[key] ?? '';
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Sí' : 'No';
+    }
+    return value;
+  };
 
   const [showListBox, setShowListBox] = useState(false);
 
-  const exportToCSV = () => {
+  const exportToExcel = () => {
     const list = getExportList();
     if (!list || list.length === 0) {
       alert('No hay pacientes para exportar.');
       return;
     }
 
-    const headers = exportColumns.map((c) => c.label);
-    const keys = exportColumns.map((c) => c.key);
-    const csvLines = [headers.map((h) => `"${h}"`).join(',')];
+    const data = [exportColumns.map((c) => c.label)];
     list.forEach((p) => {
-      const row = keys.map((f) => {
-        const v = p[f] ?? '';
-        return `"${String(v).replace(/"/g, '""')}"`;
-      }).join(',');
-      csvLines.push(row);
+      const row = exportColumns.map((col) => getValue(p, col.key));
+      data.push(row);
     });
 
-    // Añadir BOM para mejor compatibilidad con Excel y forzar nueva línea CRLF
-    const csv = '\uFEFF' + csvLines.join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pacientes_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = exportColumns.map((col) => ({ wch: Math.max(16, col.label.length + 4) }));
+
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+        const cell = ws[cellRef];
+        if (!cell) continue;
+
+        const style = {
+          font: { name: 'Arial', sz: 11 },
+          border: {
+            top: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+          },
+        };
+
+        if (R === 0) {
+          style.font.bold = true;
+          style.fill = { fgColor: { rgb: 'FFDCE6F1' } };
+        } else if (R % 2 === 1) {
+          style.fill = { fgColor: { rgb: 'FFF7FAFC' } };
+        }
+
+        cell.s = style;
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Pacientes');
+    XLSX.writeFile(wb, `pacientes_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const list = getExportList();
+    if (!list || list.length === 0) {
+      alert('No hay pacientes para exportar.');
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const title = 'Listado de pacientes';
+    doc.setFontSize(14);
+    doc.text(title, 40, 40);
+
+    const head = [exportColumns.map((c) => c.label)];
+    const body = list.map((p) => exportColumns.map((col) => String(getValue(p, col.key) ?? '')));
+
+    autoTable(doc, {
+      startY: 60,
+      head,
+      body,
+      styles: { font: 'helvetica', fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [22, 54, 92], textColor: 255, halign: 'center' },
+      alternateRowStyles: { fillColor: [244, 246, 248] },
+      margin: { left: 20, right: 20 },
+      tableLineWidth: 0.3,
+      tableLineColor: [200, 200, 200],
+    });
+
+    doc.save(`pacientes_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   const exportToJSON = () => {
@@ -507,7 +599,7 @@ export default function Pacientes() {
     const keys = exportColumns.map((c) => c.key);
     const reduced = list.map((p) => {
       const obj = {};
-      keys.forEach((f) => { obj[f] = p[f] ?? ''; });
+      keys.forEach((f) => { obj[f] = getValue(p, f); });
       return obj;
     });
 
@@ -736,8 +828,9 @@ export default function Pacientes() {
           <div style={{ width: '95%', maxWidth: 760, background: 'white', color: '#020617', borderRadius: 10, padding: 16, boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <h3 style={{ margin: 0 }}>Lista de pacientes</h3>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={exportToCSV} style={{ backgroundColor: '#111827', color: 'white' }}>Exportar CSV</button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button type="button" onClick={exportToExcel} style={{ backgroundColor: '#111827', color: 'white' }}>Exportar Excel</button>
+                <button type="button" onClick={exportToPDF} style={{ backgroundColor: '#0f766e', color: 'white' }}>Exportar PDF</button>
                 <button type="button" onClick={() => setShowListBox(false)} style={{ backgroundColor: '#6b7280', color: 'white' }}>Cerrar</button>
               </div>
             </div>
@@ -755,7 +848,7 @@ export default function Pacientes() {
                   {(searchTerm ? pacientesFiltrados : pacientes).map((p) => (
                     <tr key={p.id}>
                       {exportColumns.map((c) => (
-                        <td key={c.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6' }}>{p[c.key] ?? ''}</td>
+                        <td key={c.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6' }}>{getValue(p, c.key)}</td>
                       ))}
                     </tr>
                   ))}
@@ -791,8 +884,11 @@ export default function Pacientes() {
                 <button type="button" onClick={() => setShowListBox(true)} className="btn-secondary">
                   Ver lista
                 </button>
-                <button type="button" onClick={exportToCSV} className="btn-secondary">
-                  Exportar CSV
+                <button type="button" onClick={exportToExcel} className="btn-secondary">
+                  Exportar Excel
+                </button>
+                <button type="button" onClick={exportToPDF} className="btn-secondary">
+                  Exportar PDF
                 </button>
                 <button type="button" onClick={exportToJSON} className="btn-secondary">
                   Exportar JSON
