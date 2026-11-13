@@ -30,7 +30,7 @@ function esOcr(url) {
 
 async function primeroCache(request, cacheNombre) {
   const cache = await caches.open(cacheNombre);
-  const existente = await cache.match(request);
+  const existente = await caches.match(request);
   if (existente) return existente;
   const respuesta = await fetch(request);
   if (respuesta.ok || respuesta.type === "opaque") {
