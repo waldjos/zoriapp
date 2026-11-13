@@ -17,21 +17,37 @@ import ImportarPSA from "./pages/ImportarPSA";
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
 import MainNav from "./components/MainNav";
+import EstadoSincronizacion from "./components/EstadoSincronizacion";
+import { pendientesLocales } from "./utils/colaPacientesOffline";
 
 import "./App.css";
 
 function AppShell() {
   const { user, logout } = useAuth();
+  const salir = async () => {
+    if (user?.uid) {
+      try {
+        const sinSubir = await pendientesLocales(user.uid);
+        if (sinSubir.length && !window.confirm(
+          "Hay " + sinSubir.length + " registros SIN SINCRONIZAR en este teléfono. Si cierras sesión no podrás verlos hasta entrar nuevamente con esta cuenta. ¿Cerrar sesión?"
+        )) return;
+      } catch {
+        if (!window.confirm("No se pudo comprobar la cola local. ¿Cerrar sesión de todos modos?")) return;
+      }
+    }
+    await logout();
+  };
   return (
     <div className="app-shell">
       <header className="app-header">
         {user && (
-          <button onClick={logout} style={{ backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "999px", padding: "0.5rem 1.1rem", fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={salir} style={{ backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "999px", padding: "0.5rem 1.1rem", fontWeight: 600, cursor: "pointer" }}>
             Cerrar sesión
           </button>
         )}
       </header>
       {user && <MainNav />}
+      {user && <EstadoSincronizacion user={user} />}
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<Login />} />
