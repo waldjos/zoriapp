@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/preparar-ocr.mjs && vite build",
+    "build": "npm run test && node scripts/preparar-ocr.mjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js",
-    "dev:server": "node server.js"
+    "dev:server": "node server.js",
+    "test": "node --test src/utils/*.test.js"
   },
   "dependencies": {
     "body-parser": "^1.20.2",
