@@ -1,5 +1,5 @@
 /* PWA ZoriApp: archivos de interfaz + recursos OCR, sin almacenar datos clínicos. */
-const VERSION = "zoriapp-registro-offline-2026-11-v1";
+const VERSION = "zoriapp-registro-offline-2026-11-v2";
 const SHELL = VERSION + "-shell";
 const OCR = VERSION + "-ocr";
 const ENTRADA = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon-192.png"];
@@ -45,7 +45,9 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   if (url.origin !== self.location.origin) {
+    const logoOriginalZoriak = url.href === "https://zoriakpharma.com/wp-content/uploads/2024/04/logo.svg";
     if (esOcr(url)) event.respondWith(primeroCache(req, OCR));
+    else if (logoOriginalZoriak) event.respondWith(primeroCache(req, SHELL));
     return;
   }
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/__")) return;
