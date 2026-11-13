@@ -63,3 +63,38 @@ test("no utiliza la fecha de expedición como nacimiento si falta etiqueta", () 
   );
   assert.equal(resultado.fecha, "");
 });
+
+test("rechaza mezcla de nombres repetidos con etiquetas mal leídas", () => {
+  const lectura = [
+    "V 11.223.344",
+    "APELLIDOS NOELIA LUCÍA NOWERES NOELIA LUCÍA E",
+    "NOMBRES NOELIA LUCÍA",
+    "10/06/1991",
+    "F. NACIMIENTO",
+  ].join("\n");
+  const resultado = extraerCedulaVenezolana(lectura);
+  assert.equal(resultado.nombre, "");
+  assert.ok(resultado.incompletos.includes("apellidos"));
+  assert.equal(resultado.cedula, "11223344");
+  assert.equal(resultado.fecha, "10/06/1991");
+});
+
+test("rechaza apellidos que copian los mismos nombres", () => {
+  const lectura = [
+    "V 11.223.344",
+    "APELLIDOS NOELIA LUCÍA",
+    "NOMBRES NOELIA LUCÍA",
+    "10/06/1991",
+    "F. NACIMIENTO",
+  ].join("\n");
+  const resultado = extraerCedulaVenezolana(lectura);
+  assert.equal(resultado.nombre, "");
+  assert.ok(resultado.incompletos.includes("nombres"));
+  assert.ok(resultado.incompletos.includes("apellidos"));
+});
+
+test("no rellena datos del paciente con una etiqueta OCR confundida", () => {
+  const lectura = "APELLIDOS N0WERES LUCÍA\nNOMBRES NOELIA LUCÍA";
+  const resultado = extraerCedulaVenezolana(lectura);
+  assert.equal(resultado.nombre, "");
+});
