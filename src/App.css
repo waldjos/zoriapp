@@ -1542,3 +1542,88 @@ button:active {
 .zori-ocr-trigger:focus-within { outline: 3px solid #b3ffb0; outline-offset: 2px; }
 .zori-ocr-message { color: #d2e5df; font-size: .88rem; line-height: 1.5; margin: .65rem 0 0; }
 .zori-registro-step { font-size: 1.02rem; color: #c3f6cc; font-weight: 750; margin: 0 0 1rem; }
+
+
+/* Corrección móvil de Registro Express: campos accesibles en 360–430 px */
+.zori-registro {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 880px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: clamp(.8rem, 3vw, 1.4rem);
+  padding-bottom: 1.5rem;
+}
+.zori-registro h1 {
+  overflow-wrap: break-word;
+  font-size: clamp(1.65rem, 6vw, 2.25rem);
+  line-height: 1.15;
+  margin: .25rem 0 .35rem;
+}
+.zori-registro > p {
+  line-height: 1.45;
+}
+.zori-registro form {
+  width: 100%;
+  min-width: 0;
+}
+.zori-registro input,
+.zori-registro textarea,
+.zori-registro select {
+  box-sizing: border-box;
+  max-width: 100%;
+  font-size: 1rem;
+}
+.zori-document-field { margin: 0 0 1rem; width: 100%; }
+.zori-field-label { display: block; margin: 0 0 .45rem; font-weight: 650; }
+.zori-document-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: .65rem;
+  width: 100%;
+  min-width: 0;
+}
+.zori-document-prefix,
+.zori-document-number { min-width: 0; width: 100%; }
+.zori-document-prefix > label,
+.zori-document-number > label {
+  display: block;
+  margin: 0 0 .3rem;
+  color: var(--text-muted);
+  font-size: .84rem;
+}
+.zori-document-prefix select {
+  display: block;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 52px;
+  padding: .7rem;
+  text-align: center;
+}
+.zori-document-number input {
+  display: block;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 52px;
+  padding: .65rem .8rem;
+}
+.zori-document-field small {
+  display: block;
+  color: var(--text-muted);
+  margin: .35rem 0 0;
+}
+.zori-ocr-progress {
+  width: 100%;
+  height: 8px;
+  margin-top: .8rem;
+  accent-color: #63d474;
+}
+@media (max-width: 700px) {
+  .zori-registro {
+    padding: .9rem .9rem 1.3rem;
+    overflow-wrap: anywhere;
+  }
+  .zori-registro form > div { max-width: 100%; }
+}

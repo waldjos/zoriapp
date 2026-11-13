@@ -5,7 +5,7 @@ import { db } from "../firebase";
 import { formatoNombre } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
 import CedulaOCR from "../components/CedulaOCR";
-import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
+import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function RegistroPaciente() {
   const [nombreCompleto, setNombreCompleto] = useState("");
@@ -107,7 +107,7 @@ export default function RegistroPaciente() {
   };
 
   return (
-    <div className="single-panel">
+    <div className="single-panel zori-registro">
       <h1>Registro de paciente</h1>
       <p>Completa los datos para registrar un nuevo paciente en la jornada.</p>
 
@@ -128,17 +128,26 @@ export default function RegistroPaciente() {
           />
         </div>
 
-        <div style={{ marginBottom: "0.75rem" }}>
-          <label style={{ display: "block", marginBottom: "0.25rem" }}>Cédula / Documento *</label>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <select value={tipoDocumento} onChange={(e) => setTipoDocumento(e.target.value)} aria-label="Tipo de documento">
-              <option value="V">V - Venezolano</option>
-              <option value="E">E - Extranjero</option>
-            </select>
-            <input type="text" inputMode="numeric" maxLength={9} placeholder="Número de cédula" required
-              value={cedula} onChange={(e) => setCedula(e.target.value.replace(/\D/g, "").slice(0, 9))}
-              style={{ flex: 1, minWidth: 0, padding: "0.5rem" }} />
+        <div className="zori-document-field">
+          <label htmlFor="zori-cedula-numero" className="zori-field-label">Cédula / Documento *</label>
+          <div className="zori-document-row">
+            <div className="zori-document-prefix">
+              <label htmlFor="zori-cedula-tipo">Tipo</label>
+              <select id="zori-cedula-tipo" value={tipoDocumento}
+                onChange={(e) => setTipoDocumento(e.target.value)}>
+                <option value="V">V</option>
+                <option value="E">E</option>
+              </select>
+            </div>
+            <div className="zori-document-number">
+              <label htmlFor="zori-cedula-numero">Número</label>
+              <input id="zori-cedula-numero" type="text" inputMode="numeric"
+                maxLength={9} placeholder="12345678" required
+                value={cedula}
+                onChange={(e) => setCedula(e.target.value.replace(/\D/g, "").slice(0, 9))} />
+            </div>
           </div>
+          <small>V: venezolano · E: extranjero</small>
         </div>
 
         {/* Teléfono */}
