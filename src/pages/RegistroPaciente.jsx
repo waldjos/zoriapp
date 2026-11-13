@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
-import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
+import { formatoNombre } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
-import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
+import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function RegistroPaciente() {
   const [nombreCompleto, setNombreCompleto] = useState("");
