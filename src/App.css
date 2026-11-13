@@ -1519,3 +1519,26 @@ button:active {
   .zori-quick-grid { grid-template-columns: 1fr; gap: 0.6rem; }
   .zori-quick-tile { min-height: 85px; padding: .95rem; }
 }
+
+
+/* Registro Express: escaneo local con una acción principal fácil de reconocer */
+.zori-ocr-capture {
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+  border: 1px solid rgba(108, 185, 128, .45);
+  border-radius: 18px;
+  background: linear-gradient(140deg, rgba(55,130,74,.18), rgba(20,46,48,.5));
+}
+.zori-ocr-heading { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .9rem; }
+.zori-ocr-heading strong { color: #f1fff3; font-size: 1.08rem; }
+.zori-ocr-heading small { color: #b3d5bf; font-size: .8rem; }
+.zori-ocr-trigger {
+  min-height: 56px; padding: .85rem 1.2rem; display: flex; gap: .65rem; align-items: center; justify-content: center;
+  border-radius: 13px; border: 1px solid #82d68a; background: #27884c; color: white; font-weight: 750;
+  cursor: pointer; text-align: center;
+}
+.zori-ocr-trigger span { font-size: 1.5rem; }
+.zori-ocr-trigger input { position: absolute; height: 1px; width: 1px; opacity: 0; overflow: hidden; }
+.zori-ocr-trigger:focus-within { outline: 3px solid #b3ffb0; outline-offset: 2px; }
+.zori-ocr-message { color: #d2e5df; font-size: .88rem; line-height: 1.5; margin: .65rem 0 0; }
+.zori-registro-step { font-size: 1.02rem; color: #c3f6cc; font-weight: 750; margin: 0 0 1rem; }
