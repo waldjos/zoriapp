@@ -1,5 +1,5 @@
 // src/pages/RegistroPaciente.jsx
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { guardarPacienteLocal } from "../utils/colaPacientesOffline";
 import { formatoNombre } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -16,6 +16,8 @@ export default function RegistroPaciente() {
   const [edad, setEdad] = useState("");
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState("");
+  const [verificado, setVerificado] = useState(false);
+  const ultimoNombreOCR = useRef("");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -24,6 +26,14 @@ export default function RegistroPaciente() {
   const { user } = useAuth();
 
   const recibirLecturaOCR = ({ cedula: numero, tipo, nombre, fecha }) => {
+    setVerificado(false);
+    // Si una lectura posterior falla, no conservar un nombre anterior que
+    // el propio OCR rellenó. Conservar correcciones introducidas manualmente.
+    if (!nombre && ultimoNombreOCR.current &&
+        nombreCompleto === ultimoNombreOCR.current) {
+      setNombreCompleto("");
+    }
+    ultimoNombreOCR.current = nombre ? formatoNombre(nombre) : "";
     if (numero) {
       try {
         const d = cedulaVE(numero, tipo || tipoDocumento);
@@ -51,6 +61,8 @@ export default function RegistroPaciente() {
     setEdad("");
     setEmail("");
     setNotas("");
+    setVerificado(false);
+    ultimoNombreOCR.current = "";
   };
 
   const handleSubmit = async (e) => {
@@ -68,6 +80,10 @@ export default function RegistroPaciente() {
         setError("Nombre completo y cédula son obligatorios.");
         setSubmitting(false);
         return;
+      }
+
+      if (!verificado) {
+        throw new Error("Confirma que verificaste los datos con la cédula antes de guardar.");
       }
 
       const documento = cedulaVE(cedula, tipoDocumento);
@@ -95,7 +111,7 @@ export default function RegistroPaciente() {
       limpiarFormulario();
     } catch (err) {
       console.error("Error guardando paciente:", err);
-      setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con|Este navegador|Debes iniciar|No se pudo abrir|Cierra las otras)/.test(err?.message || "")
+      setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con|Este navegador|Debes iniciar|No se pudo abrir|Cierra las otras|Confirma que)/.test(err?.message || "")
         ? err.message : "No se pudo guardar en el dispositivo. No cierres esta pantalla; copia los datos antes de reintentar.");
     } finally {
       setSubmitting(false);
@@ -119,7 +135,11 @@ export default function RegistroPaciente() {
           <input
             type="text"
             value={nombreCompleto}
-            onChange={(e) => setNombreCompleto(formatoNombre(e.target.value))}
+            onChange={(e) => {
+              setNombreCompleto(formatoNombre(e.target.value));
+              ultimoNombreOCR.current = "";
+              setVerificado(false);
+            }}
             required
             style={{ width: "100%", padding: "0.5rem" }}
           />
@@ -141,7 +161,10 @@ export default function RegistroPaciente() {
               <input id="zori-cedula-numero" type="text" inputMode="numeric"
                 maxLength={9} placeholder="12345678" required
                 value={cedula}
-                onChange={(e) => setCedula(e.target.value.replace(/\D/g, "").slice(0, 9))} />
+                onChange={(e) => {
+                  setCedula(e.target.value.replace(/\D/g, "").slice(0, 9));
+                  setVerificado(false);
+                }} />
             </div>
           </div>
           <small>V: venezolano · E: extranjero</small>
@@ -195,6 +218,7 @@ export default function RegistroPaciente() {
             onChange={(e) => {
               const valor = mascaraFechaRapida(e.target.value);
               setFechaNacimiento(valor);
+              setVerificado(false);
               if (valor.length === 10) {
                 try { setEdad(String(edadDesdeFecha(fechaNacimientoISO(valor)))); } catch { /* esperar corrección */ }
               }
@@ -228,6 +252,15 @@ export default function RegistroPaciente() {
             style={{ width: "100%", padding: "0.5rem", resize: "vertical" }}
           />
         </div>
+
+        <label className="zori-confirmacion-cedula">
+          <input type="checkbox" checked={verificado}
+            onChange={(e) => setVerificado(e.target.checked)} required />
+          <span>
+            <strong>He revisado los datos de la cédula.</strong>
+            <small>Comprueba especialmente los nombres, apellidos, número y fecha de nacimiento antes de guardar.</small>
+          </span>
+        </label>
 
         {error && (
           <p style={{ color: "red", marginBottom: "0.5rem" }}>{error}</p>
