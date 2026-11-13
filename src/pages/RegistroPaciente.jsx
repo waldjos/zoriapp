@@ -1,7 +1,6 @@
 // src/pages/RegistroPaciente.jsx
 import { useState } from "react";
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
+import { guardarPacienteLocal } from "../utils/colaPacientesOffline";
 import { formatoNombre } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
 import CedulaOCR from "../components/CedulaOCR";
@@ -76,12 +75,9 @@ export default function RegistroPaciente() {
       const emailNormalizado = correoNormalizado(email);
       const nacimiento = fechaNacimientoISO(fechaNacimiento);
       const edadManual = edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
-      // Validación previa para evitar la mayoría de los duplicados; la protección atómica
-      // se incorporará al backend antes de habilitar registros simultáneos.
-      const existentes = await getDocs(query(collection(db, "pacientes"), where("cedula", "==", documento.cedula)));
-      if (!existentes.empty) throw new Error("Paciente con esta cédula ya registrado. Verifica antes de continuar.");
-
-      await addDoc(collection(db, "pacientes"), {
+      // Nunca bloquear el registro por falta de conectividad.
+      // La cola cifrada conserva cada ficha hasta confirmar su subida a Firebase.
+      const datos = {
         nombreCompleto: formatoNombre(nombreCompleto),
         cedula: documento.cedula,
         tipoDocumento: documento.tipoDocumento,
@@ -91,16 +87,16 @@ export default function RegistroPaciente() {
         fechaNacimiento: nacimiento,
         email: emailNormalizado,
         notas: notas.trim(),
-        createdAt: serverTimestamp(),
-        creadoPor: user.uid,
-      });
+      };
 
-      setSuccess("Paciente registrado correctamente.");
+      await guardarPacienteLocal(datos, user.uid);
+
+      setSuccess("Ficha guardada en este dispositivo. Se sincronizará con Firebase al recuperar internet; revisa el contador de pendientes.");
       limpiarFormulario();
     } catch (err) {
       console.error("Error guardando paciente:", err);
-      setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con)/.test(err?.message || "")
-        ? err.message : "No se pudo registrar el paciente.");
+      setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con|Este navegador|Debes iniciar|No se pudo abrir|Cierra las otras)/.test(err?.message || "")
+        ? err.message : "No se pudo guardar en el dispositivo. No cierres esta pantalla; copia los datos antes de reintentar.");
     } finally {
       setSubmitting(false);
     }
@@ -110,6 +106,7 @@ export default function RegistroPaciente() {
     <div className="single-panel zori-registro">
       <h1>Registro de paciente</h1>
       <p>Completa los datos para registrar un nuevo paciente en la jornada.</p>
+      <p className="zori-offline-hint">Funciona sin internet tras preparar la app con conexión. Cada ficha queda cifrada en este teléfono hasta que Firebase confirme la sincronización.</p>
 
       <form onSubmit={handleSubmit} style={{ marginTop: "1.5rem" }}>
         <CedulaOCR onExtract={recibirLecturaOCR} />
@@ -252,7 +249,7 @@ export default function RegistroPaciente() {
             width: "100%",
           }}
         >
-          {submitting ? "Guardando..." : "Registrar paciente"}
+          {submitting ? "Guardando en el teléfono…" : "Guardar ficha del paciente"}
         </button>
       </form>
     </div>
