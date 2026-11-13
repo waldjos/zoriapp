@@ -1,15 +1,8 @@
-/**
- * Normalización de nombre y cédula para guardar y mostrar:
- * - Nombres en MAYÚSCULAS
- * - Cédula solo dígitos (sin puntos ni caracteres especiales)
- * Facilita búsqueda y evita errores en los datos.
- */
+import { nombrePropio } from "./registroExpress";
 
+/** Capitalización legible para registro y presentación, sin afectar la búsqueda normalizada. */
 export function formatoNombre(valor) {
-  if (valor == null) return "";
-  // Acepta strings o valores antiguos (por ejemplo, números) y los convierte a texto
-  const s = String(valor);
-  return s.trim().toUpperCase();
+  return nombrePropio(valor);
 }
 
 export function formatoCedula(valor) {
