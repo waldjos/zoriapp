@@ -81,13 +81,17 @@ export default function EstadoSincronizacion({ user }) {
         if (navigator.onLine) sincronizar(true);
       }
     };
-    window.addEventListener(EVENTO_COLA, refrescar);
+    const cambioCola = () => {
+      refrescar();
+      if (navigator.onLine) sincronizar(true);
+    };
+    window.addEventListener(EVENTO_COLA, cambioCola);
     window.addEventListener("online", reconectar);
     window.addEventListener("offline", refrescar);
     document.addEventListener("visibilitychange", visible);
     return () => {
       cancelado = true;
-      window.removeEventListener(EVENTO_COLA, refrescar);
+      window.removeEventListener(EVENTO_COLA, cambioCola);
       window.removeEventListener("online", reconectar);
       window.removeEventListener("offline", refrescar);
       document.removeEventListener("visibilitychange", visible);
