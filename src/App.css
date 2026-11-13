@@ -1711,3 +1711,34 @@ button:active {
   .zori-sync-preparar button { width: 100%; }
   .zori-sync-panel button:focus-visible { outline: 3px solid #bef7cf; outline-offset: 2px; }
 }
+
+
+/* Verificación humana obligatoria antes de guardar nombres leídos por OCR */
+.zori-confirmacion-cedula {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  padding: 1rem;
+  margin: 1.1rem 0;
+  border: 1px solid #5ba97b;
+  border-radius: 13px;
+  background: #102a28;
+  color: #f1fff5;
+  cursor: pointer;
+}
+.zori-confirmacion-cedula input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  margin: .05rem 0 0;
+  accent-color: #45b76c;
+}
+.zori-confirmacion-cedula span {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-width: 0;
+}
+.zori-confirmacion-cedula strong { font-size: 1rem; font-weight: 750; }
+.zori-confirmacion-cedula small { color: #c9e2d0; font-size: .85rem; line-height: 1.4; }
+.zori-confirmacion-cedula:focus-within { outline: 2px solid #b6ffce; outline-offset: 2px; }
