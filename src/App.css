@@ -1711,3 +1711,229 @@ button:active {
   .zori-sync-preparar button { width: 100%; }
   .zori-sync-panel button:focus-visible { outline: 3px solid #bef7cf; outline-offset: 2px; }
 }
+
+
+/* Verificación humana obligatoria antes de guardar nombres leídos por OCR */
+.zori-confirmacion-cedula {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  padding: 1rem;
+  margin: 1.1rem 0;
+  border: 1px solid #5ba97b;
+  border-radius: 13px;
+  background: #102a28;
+  color: #f1fff5;
+  cursor: pointer;
+}
+.zori-confirmacion-cedula input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  margin: .05rem 0 0;
+  accent-color: #45b76c;
+}
+.zori-confirmacion-cedula span {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-width: 0;
+}
+.zori-confirmacion-cedula strong { font-size: 1rem; font-weight: 750; }
+.zori-confirmacion-cedula small { color: #c9e2d0; font-size: .85rem; line-height: 1.4; }
+.zori-confirmacion-cedula:focus-within { outline: 2px solid #b6ffce; outline-offset: 2px; }
+
+
+/* ZoriApp 2026 - sistema visual aprobado. Mantener logotipos oficiales sin transformarlos. */
+.home-page {
+  --text: #112744;
+  --text-muted: #50677c;
+  --bg-soft: #eff6f9;
+  --bg-card: #ffffff;
+  --accent: #008d68;
+  background: linear-gradient(180deg,#f7fbfc 0%,#eaf5f7 100%);
+  color: #132a44;
+}
+.home-page .home-container { width: min(100%,1120px); max-width:1120px; }
+.home-page .home-card {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  color: #132a44;
+  padding: clamp(.55rem, 1.6vw, 1.4rem);
+}
+.zori-branding {
+  background: #fff;
+  border: 1px solid #d8e7ec;
+  border-radius: 24px;
+  padding: clamp(14px,2.5vw,26px);
+  box-shadow: 0 14px 32px rgba(12,56,75,.08);
+  overflow: hidden;
+}
+.zori-branding-top {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(150px,.47fr);
+  align-items: center;
+  gap: 22px;
+}
+.zori-branding-logo {
+  display: block;
+  width: min(100%,480px);
+  height: auto;
+  max-height: 118px;
+  object-fit: contain;
+  object-position: left center;
+}
+.zori-branding-sponsor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  text-decoration: none;
+  color: #172d54;
+  border-left: 1px solid #cddfe4;
+  padding-left: 14px;
+}
+.zori-branding-sponsor small { font-size: .78rem; color: #34506c; }
+.zori-branding-sponsor img {
+  width: 100%;
+  max-width: 230px;
+  max-height: 62px;
+  object-fit: contain;
+  object-position: right center;
+}
+.zori-branding-sponsor strong { color: #007b55; font-size: 1.1rem; }
+.zori-branding-sponsor span { font-style: italic; font-size: .84rem; font-weight: 600; }
+.zori-hospital-strip {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(110deg,#f0faf8,#ecf4fc);
+  border: 1px solid #d4e7e8;
+  border-radius: 18px;
+}
+.zori-hospital-strip img { width: 58px; height: 58px; flex: none; object-fit: contain; }
+.zori-hospital-strip div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.zori-hospital-strip strong { color: #122c50; font-size: clamp(1rem,2.1vw,1.3rem); line-height: 1.22; }
+.zori-hospital-strip span { font-size: .82rem; color: #456078; }
+.zori-hospital-strip .zori-hospital-eyebrow { font-weight: 700; color: #b41f2d; font-size: .7rem; }
+.zori-prosilod {
+  display: grid;
+  grid-template-columns: minmax(175px,.86fr) minmax(0,1fr);
+  min-height: 210px;
+  align-items: center;
+  gap: clamp(12px,3vw,32px);
+  margin: 16px 0 24px;
+  padding: clamp(14px,3vw,27px);
+  border: 1px solid #c7e4e1;
+  border-radius: 24px;
+  overflow: hidden;
+  background: radial-gradient(circle at 5% 4%,#d7ffe7 0,transparent 53%),
+    linear-gradient(125deg,#ffffff 30%,#e8f4fd 100%);
+  box-shadow: 0 12px 27px rgba(11,64,77,.08);
+}
+.zori-prosilod-photo {
+  min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 17px; padding: 6px;
+  background: rgba(255,255,255,.72);
+}
+.zori-prosilod-photo img { display: block; width: 100%; height: auto; max-height: 200px; object-fit: contain; }
+.zori-prosilod-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.zori-prosilod-kicker { color: #007e63; font-weight: 750; font-size: .8rem; }
+.zori-prosilod h2 { color: #10274b; margin: 0; line-height: 1.1; font-size: clamp(1.75rem,4.5vw,3rem); letter-spacing:-.04em; }
+.zori-prosilod h2 span { white-space: nowrap; }
+.zori-prosilod-generic { color: #07999c; font-size: clamp(1rem,2vw,1.35rem); font-weight: 750; margin: 0; }
+.zori-prosilod-tag { padding: 9px 13px; border-radius: 13px; color: #fff; background: linear-gradient(95deg,#543aa9,#8542c2); font-size:.88rem; font-weight: 700; line-height: 1.3; }
+.zori-prosilod-copy small { font-size: .7rem; color: #596a81; line-height: 1.45; }
+.home-page .zori-quick-heading { color: #132947; font-weight: 800; font-size: 1.18rem; }
+.home-page .zori-quick-heading--secondary { margin-top: 25px; }
+.home-page .zori-quick-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.home-page .zori-quick-tile {
+  display: flex; align-items: center; width: 100%;
+  background: #ffffff; color: #0e2543; border: 1px solid #d0e1e9;
+  box-shadow: 0 9px 22px rgba(20,66,87,.07);
+  min-height: 116px; padding: 15px;
+  text-align: left; gap: 12px; border-radius: 18px;
+}
+.home-page .zori-quick-tile--primary {
+  background: linear-gradient(135deg,#059b78,#027e59);
+  border-color: #03a875; color: #ffffff;
+}
+.home-page .zori-quick-tile--current { background: #eaf9ef; border-color: #9ddaab; }
+.home-page .zori-quick-tile--historic { background: #edf5fc; border-color: #b7d7eb; }
+.home-page .zori-quick-symbol { flex: none; color: #026a68; background:#dcf2ed; font-weight:800; }
+.home-page .zori-quick-tile--primary .zori-quick-symbol { background:rgba(255,255,255,.2); color:#fff; }
+.home-page .zori-quick-copy { display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+.home-page .zori-quick-copy strong { color: inherit; font-size:1rem; overflow-wrap:anywhere; }
+.home-page .zori-quick-copy small { color:#4e6478; font-size:.78rem; }
+.home-page .zori-quick-tile--primary .zori-quick-copy small { color:#effff5; }
+.zori-quick-chevron { font-size:2rem; font-weight:300; opacity:.65; line-height:1; }
+.zori-years-note { color:#567088; font-size:.78rem; line-height:1.5; margin: 11px 0 0; }
+.home-page .zori-quick-advanced {
+  margin-top: 16px; background:#fff; border:1px solid #cedee6; color:#183553;
+}
+.home-page .zori-quick-advanced summary { color:#15334d; }
+.home-page .zori-quick-grid--clinical .zori-quick-tile { min-height:90px; }
+.home-page .home-dashboard { color:#17314a; }
+.home-page .dashboard-title { color:#15304a; }
+.home-page .home-dashboard h3 { color:#2f526c !important; }
+.home-page .home-dashboard .dashboard-stats > div { background:#f4f9fc !important; }
+.zori-pacientes-intro {
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  gap: 14px; padding: clamp(15px,2.6vw,25px);
+  border:1px solid #b6d9d4; border-radius:18px;
+  background:linear-gradient(110deg,#0d715f,#115a76);
+  color:#fff; margin-bottom:15px;
+}
+.zori-pacientes-intro h1 { margin:0 0 7px; font-size:clamp(1.4rem,3vw,1.9rem); color:#fff; }
+.zori-pacientes-intro p { margin:0; max-width:540px; color:#def4f2; line-height:1.5; font-size:.9rem; }
+.zori-pacientes-intro button { min-height:48px; padding:12px 16px; border:1px solid #bbecce; border-radius:11px; color:#07543f; background:#fff; font-weight:750; }
+.zori-period-tabs {
+  display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px;
+}
+.zori-period-tabs button {
+  border-radius: 10px; padding:11px 13px; min-height:43px;
+  background:#22394f; color:#f4fbff; border:1px solid #436175;
+  font-weight:650; font-size:.84rem;
+}
+.zori-period-tabs button.is-active { background:#087d61; border-color:#72d2a9; color:#fff; }
+@media (max-width:720px) {
+  .home-page .home-container { padding:0; }
+  .home-page .home-card { padding:9px; }
+  .zori-branding { padding:13px; border-radius:17px; }
+  .zori-branding-top { gap:9px; grid-template-columns: minmax(0,1fr) minmax(112px,.5fr); }
+  .zori-branding-logo { max-height:88px; }
+  .zori-branding-sponsor { padding-left:8px; }
+  .zori-branding-sponsor img { max-height:38px; }
+  .zori-branding-sponsor small { font-size:.66rem; }
+  .zori-branding-sponsor span { font-size:.65rem; }
+  .zori-hospital-strip { padding:9px 10px; margin-top:10px; gap:10px; }
+  .zori-hospital-strip img { width:43px; height:43px; }
+  .zori-hospital-strip strong { font-size:.95rem; }
+  .zori-hospital-strip span { font-size:.7rem; }
+  .zori-prosilod { min-height:0; grid-template-columns:minmax(120px,.87fr) minmax(0,1fr); padding:12px; gap:9px; margin:11px 0 17px; border-radius:17px; }
+  .zori-prosilod-photo img { max-height:145px; }
+  .zori-prosilod h2 { font-size:1.4rem; }
+  .zori-prosilod-kicker { font-size:.66rem; }
+  .zori-prosilod-generic { font-size:.87rem; }
+  .zori-prosilod-tag { padding:6px 8px; font-size:.68rem; }
+  .zori-prosilod-copy small { font-size:.6rem; }
+  .home-page .zori-quick-grid { gap:8px; }
+  .home-page .zori-quick-tile { min-height:100px; padding:10px; gap:8px; border-radius:13px; }
+  .home-page .zori-quick-symbol { width:37px; height:37px; font-size:1.24rem; }
+  .home-page .zori-quick-copy strong { font-size:.85rem; }
+  .home-page .zori-quick-copy small { font-size:.71rem; line-height:1.25; }
+  .zori-quick-chevron { font-size:1.55rem; }
+  .zori-pacientes-intro button { width:100%; }
+  .zori-period-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .zori-period-tabs button { padding:10px 7px; }
+}
+@media (max-width:370px) {
+  .zori-branding-top { grid-template-columns: 1fr; }
+  .zori-branding-sponsor { border-left:0; border-top:1px solid #dbe7ed; padding:8px 0 0; align-items:flex-start; }
+  .zori-branding-sponsor img { object-position:left center; }
+  .zori-prosilod { grid-template-columns:1fr; }
+  .zori-prosilod-photo img { max-height:110px; }
+}

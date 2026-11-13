@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logo from "../assets/logo.png"; // ajusta el nombre si tu logo se llama distinto
+
 
 export default function Login() {
   const { login } = useAuth();
@@ -35,11 +35,11 @@ export default function Login() {
         {/* Columna izquierda: branding y beneficios */}
         <div className="login-left">
           <div className="login-logo-row">
-            <img src={logo} alt="Zoriapp" className="login-logo" />
-            <span className="login-logo-text">Zoriapp</span>
+            <img src="/branding/zoriapp-icon-2026.svg" alt="ZoriApp" className="login-logo" />
+            <span className="login-logo-text">ZoriApp</span>
           </div>
 
-          <h1 className="login-title">Ingreso a Zoriapp</h1>
+          <h1 className="login-title">Ingreso a ZoriApp</h1>
           <p className="login-subtitle">
             Plataforma médica para jornadas de urología, diseñada para que
             registres, evalúes y valides resultados en minutos.
@@ -47,14 +47,13 @@ export default function Login() {
 
           <div className="login-badges">
             <span className="login-badge">✅ Registro rápido de pacientes</span>
-            <span className="login-badge">✅ Evaluación táctica guiada</span>
+            <span className="login-badge">✅ Evaluación de tacto guiada</span>
             <span className="login-badge">✅ PDFs de laboratorio centralizados</span>
             <span className="login-badge">✅ Dashboard de resultados</span>
           </div>
 
           <p className="login-footer-text">
-            Acceso exclusivo para médicos autorizados. Tus datos y los del
-            paciente se almacenan de forma segura en la nube.
+            Acceso exclusivo para médicos autorizados. Los registros pueden quedar pendientes en el teléfono y se envían a Firebase cuando vuelva la conexión.
           </p>
         </div>
 

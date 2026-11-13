@@ -1,0 +1,22 @@
+name: Validar ZoriApp
+on:
+  push:
+    branches:
+      - feature/identidad-jornada-2026-ocr-integrado
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

@@ -11,7 +11,8 @@ import ProsilodBanner from "../components/ProsilodBanner";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logo from "../assets/logo.png";
+import IdentidadJornada from "../components/IdentidadJornada";
+import { filtroJornada } from "../utils/jornada";
 import HomeQuickActions from "../components/HomeQuickActions";
 
 export default function Home() {
@@ -172,7 +173,7 @@ export default function Home() {
     const unsubscribe = onSnapshot(
       collection(db, "pacientes"),
       (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => filtroJornada(p, "2026"));
         setPacientesList(list);
         const atendidos = list.filter((p) => p.tacto).length;
         const entregados = list.filter((p) => p.entregaResultados === "entregado").length;
@@ -257,15 +258,8 @@ export default function Home() {
     <div className="page home-page">
       <div className="home-container">
       <div className="home-card">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem" }}>
-          <img
-            src={logo}
-            alt="Zoriapp"
-            style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }}
-          />
-          <h1 className="home-title" style={{ margin: 0 }}>Zoriapp</h1>
-        </div>
-        <p className="home-subtitle">Panel principal de la jornada</p>
+        <IdentidadJornada />
+        <ProsilodBanner />
 
         <HomeQuickActions />
 
@@ -273,9 +267,9 @@ export default function Home() {
           <summary>Consultar estadísticas y exportar informes</summary>
           <div className="home-export-card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '1rem', marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(255,255,255,0.05)', borderRadius: '22px', border: '1px solid rgba(148,163,184,0.18)' }}>
           <div style={{ minWidth: '240px', flex: '1 1 360px' }}>
-            <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Exportar todos los pacientes</h2>
+            <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Exportar pacientes de la jornada 2026</h2>
             <p style={{ margin: '0.5rem 0 0', color: '#cbd5e1', maxWidth: '640px', lineHeight: 1.6 }}>
-              Descarga un informe completo con todos los datos de cada paciente, incluyendo datos de tacto y PSA para una base 100% organizada.
+              Descarga los registros identificados como jornada 2026, incluidos los datos de evaluación y PSA. Los años anteriores permanecen en el histórico.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -290,7 +284,7 @@ export default function Home() {
 
         {/* Dashboard */}
         <div className="home-dashboard">
-          <h2 className="dashboard-title">Dashboard</h2>
+          <h2 className="dashboard-title">Indicadores de la jornada 2026</h2>
           {cargandoStats ? (
             <p className="dashboard-text">Cargando estadísticas...</p>
           ) : (
@@ -417,8 +411,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Banner Prosilod (fuera del dashboard, mejor disposición) */}
-        <ProsilodBanner />
+
       </div>
       </div>
     </div>
