@@ -17,7 +17,7 @@ export default function RegistroPaciente() {
   const [email, setEmail] = useState("");
   const [notas, setNotas] = useState("");
   const [verificado, setVerificado] = useState(false);
-  const ultimoNombreOCR = useRef("");
+  const ultimoOCR = useRef({ nombre: "", cedula: "", fecha: "" });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -27,27 +27,39 @@ export default function RegistroPaciente() {
 
   const recibirLecturaOCR = ({ cedula: numero, tipo, nombre, fecha }) => {
     setVerificado(false);
-    // Si una lectura posterior falla, no conservar un nombre anterior que
-    // el propio OCR rellenó. Conservar correcciones introducidas manualmente.
-    if (!nombre && ultimoNombreOCR.current &&
-        nombreCompleto === ultimoNombreOCR.current) {
-      setNombreCompleto("");
+    const anterior = ultimoOCR.current;
+
+    // Nunca conservar automáticamente información de una lectura anterior
+    // si el nuevo documento no produjo un resultado válido para ese campo.
+    if (anterior.nombre && nombreCompleto === anterior.nombre) setNombreCompleto("");
+    if (anterior.cedula && cedula === anterior.cedula) setCedula("");
+    if (anterior.fecha && fechaNacimiento === anterior.fecha) {
+      setFechaNacimiento("");
+      setEdad("");
     }
-    ultimoNombreOCR.current = nombre ? formatoNombre(nombre) : "";
+    ultimoOCR.current = { nombre: "", cedula: "", fecha: "" };
+
     if (numero) {
       try {
         const d = cedulaVE(numero, tipo || tipoDocumento);
         setCedula(d.cedula);
+        ultimoOCR.current.cedula = d.cedula;
         if (d.tipoDocumento) setTipoDocumento(d.tipoDocumento);
       } catch { /* El registrador completa la cédula manualmente. */ }
     }
-    if (nombre) setNombreCompleto(formatoNombre(nombre));
+    if (nombre) {
+      const normalizado = formatoNombre(nombre);
+      setNombreCompleto(normalizado);
+      ultimoOCR.current.nombre = normalizado;
+    }
     if (fecha) {
       try {
         const iso = fechaNacimientoISO(fecha);
-        setFechaNacimiento(fechaParaFormulario(iso));
+        const enPantalla = fechaParaFormulario(iso);
+        setFechaNacimiento(enPantalla);
         setEdad(String(edadDesdeFecha(iso)));
-      } catch { /* Se requiere verificación de fecha. */ }
+        ultimoOCR.current.fecha = enPantalla;
+      } catch { /* Fecha ilegible: revisión manual obligatoria. */ }
     }
   };
 
@@ -62,7 +74,7 @@ export default function RegistroPaciente() {
     setEmail("");
     setNotas("");
     setVerificado(false);
-    ultimoNombreOCR.current = "";
+    ultimoOCR.current = { nombre: "", cedula: "", fecha: "" };
   };
 
   const handleSubmit = async (e) => {
@@ -137,7 +149,7 @@ export default function RegistroPaciente() {
             value={nombreCompleto}
             onChange={(e) => {
               setNombreCompleto(formatoNombre(e.target.value));
-              ultimoNombreOCR.current = "";
+              ultimoOCR.current.nombre = "";
               setVerificado(false);
             }}
             required
@@ -163,6 +175,7 @@ export default function RegistroPaciente() {
                 value={cedula}
                 onChange={(e) => {
                   setCedula(e.target.value.replace(/\D/g, "").slice(0, 9));
+                  ultimoOCR.current.cedula = "";
                   setVerificado(false);
                 }} />
             </div>
@@ -218,6 +231,7 @@ export default function RegistroPaciente() {
             onChange={(e) => {
               const valor = mascaraFechaRapida(e.target.value);
               setFechaNacimiento(valor);
+              ultimoOCR.current.fecha = "";
               setVerificado(false);
               if (valor.length === 10) {
                 try { setEdad(String(edadDesdeFecha(fechaNacimientoISO(valor)))); } catch { /* esperar corrección */ }
