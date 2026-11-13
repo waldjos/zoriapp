@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { EVENTO_COLA, pendientesLocales } from "../utils/colaPacientesOffline";
 import { sincronizarPendientes } from "../utils/sincronizarPacientes";
+import { comprobarPreparacionOffline, prepararOffline } from "../utils/prepararOffline";
 
 /** Visibilidad local de registros pendientes; otros dispositivos no pueden verlos sin conexión. */
 export default function EstadoSincronizacion({ user }) {
@@ -10,7 +11,26 @@ export default function EstadoSincronizacion({ user }) {
   const [mensaje, setMensaje] = useState("");
   const [verLista, setVerLista] = useState(false);
   const [inicializado, setInicializado] = useState(false);
+  const [archivosOffline, setArchivosOffline] = useState(false);
+  const [preparando, setPreparando] = useState(false);
+  const [avanceDescarga, setAvanceDescarga] = useState(0);
   const uid = user?.uid;
+
+  const preparar = async () => {
+    setPreparando(true);
+    setAvanceDescarga(0);
+    setMensaje("Descargando motor OCR, idioma español y aplicación para uso sin internet…");
+    try {
+      await prepararOffline(setAvanceDescarga);
+      setArchivosOffline(true);
+      setMensaje("Archivos descargados. Cierra y abre ZoriApp, y realiza una prueba en modo avión antes de la jornada.");
+    } catch (error) {
+      setArchivosOffline(false);
+      setMensaje(error?.message || "No se pudo preparar el modo offline. Comprueba tu conexión.");
+    } finally {
+      setPreparando(false);
+    }
+  };
 
   const actualizar = useCallback(async () => {
     if (!uid) return;
@@ -43,6 +63,7 @@ export default function EstadoSincronizacion({ user }) {
   useEffect(() => {
     if (!uid) return undefined;
     let cancelado = false;
+    comprobarPreparacionOffline().then(setArchivosOffline).catch(() => setArchivosOffline(false));
     actualizar().then(() => {
       if (!cancelado && navigator.onLine) sincronizar(true);
     });
@@ -96,6 +117,15 @@ export default function EstadoSincronizacion({ user }) {
             disabled={!enLinea || enviando || pendientes.length === 0}
             onClick={() => sincronizar(false)}>{enviando ? "Sincronizando…" : "Sincronizar ahora"}</button>
         </div>
+      </div>
+      <div className="zori-sync-preparar">
+        {archivosOffline
+          ? <span className="zori-sync-ready">✓ Archivos de la app y OCR descargados para uso offline</span>
+          : <span className="zori-sync-ready">Prepara este teléfono con internet antes de la jornada.</span>}
+        <button type="button" className="zori-sync-toggle" onClick={preparar}
+          disabled={!enLinea || preparando}>
+          {preparando ? "Descargando " + avanceDescarga + "%" : archivosOffline ? "Actualizar archivos offline" : "Preparar modo offline"}
+        </button>
       </div>
       {mensaje && <p role="status" className="zori-sync-message">{mensaje}</p>}
       {verLista && pendientes.length > 0 && (
