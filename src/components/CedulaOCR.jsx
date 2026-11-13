@@ -1,56 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createWorker } from "tesseract.js";
+import { extraerCedulaVenezolana } from "../utils/cedulaVenezolanaOCR";
 
 /**
  * OCR en el dispositivo: no guarda la foto ni la envía al servidor.
  * Los valores extraídos siempre requieren confirmación de la persona que registra.
  */
-export function extraerCedula(texto) {
-  const lineas = String(texto || "")
-    .replace(/\r/g, "")
-    .split(/\n/)
-    .map((linea) => linea.replace(/\s+/g, " ").trim())
-    .filter(Boolean);
-
-  const lineaIdentificacion = lineas.find((linea) =>
-    /c[eé]dula|identidad|(?:^|\s)[VE]\s*[-.:]?\s*\d[\d.\s-]{5,14}/i.test(linea)
-  );
-
-  const candidatos = [lineaIdentificacion, ...lineas].filter(Boolean);
-  let tipo = null;
-  let cedula = "";
-
-  for (const linea of candidatos) {
-    const match = linea.match(/(?:^|\s)([VE])\s*[-.:]?\s*(\d[\d.\s-]{5,14})/i) ||
-      linea.match(/(?:c[eé]dula|n[uú]mero|identidad)\s*[:.\-]?\s*(\d[\d.\s-]{5,14})/i);
-    if (!match) continue;
-    const numero = (match[2] || match[1] || "").replace(/\D/g, "");
-    if (numero.length < 6 || numero.length > 9) continue;
-    cedula = numero;
-    tipo = match[2] ? match[1].toUpperCase() : null;
-    break;
-  }
-
-  // Si no reconoce la nacionalidad, prefiere dejar el campo sin inferir.
-  // El texto OCR no sustituye la revisión visual del documento.
-  const lineasNombre = lineas.filter((linea) =>
-    !/rep[uú]blica|venezuela|bolivariana|identidad|c[eé]dula|nacionalidad|fecha|nacimiento|sexo|firma|expedici[oó]n|vencimiento|fotograf[ií]a|documento|autoridad|estado|\d{4}/i.test(linea)
-  );
-  const nombre = lineasNombre
-    .map((linea) => linea.replace(/[^\p{L}\s'’-]/gu, " ").replace(/\s+/g, " ").trim())
-    .find((linea) => linea.split(" ").length >= 2 && linea.length >= 7) || "";
-
-  // Una fecha cualquiera podría ser la expedición o vencimiento.
-  // Solo prellenar si está claramente asociada con "nacimiento".
-  let fecha = "";
-  const idxNacimiento = lineas.findIndex((l) => /nacimiento|f\.\s*nac/i.test(l));
-  if (idxNacimiento >= 0) {
-    const cercano = lineas.slice(idxNacimiento, idxNacimiento + 2).join(" ");
-    fecha = cercano.match(/\b\d{2}[/-]\d{2}[/-]\d{4}\b/)?.[0] || "";
-  }
-  return { tipo, cedula, nombre, fecha };
-}
-
 async function reducirFotografia(archivo) {
   if (typeof createImageBitmap !== "function") return archivo;
   let imagen;
@@ -108,6 +63,10 @@ export default function CedulaOCR({ onExtract }) {
       // En Tesseract.js v4 createWorker devuelve una promesa.
       // Es imprescindible esperar al worker antes de invocar load().
       trabajador = await createWorker({
+        workerPath: "/ocr/worker.min.js",
+        corePath: "/ocr/core",
+        langPath: "/ocr/lang",
+        cacheMethod: "write",
         logger: (evento) => {
           if (!activo.current) return;
           if (evento.status === "recognizing text" && Number.isFinite(evento.progress)) {
@@ -122,13 +81,15 @@ export default function CedulaOCR({ onExtract }) {
       await trabajador.initialize("spa");
       etapa = "lectura";
       const resultado = await trabajador.recognize(procesada);
-      const extraido = extraerCedula(resultado.data?.text || "");
+      const extraido = extraerCedulaVenezolana(resultado.data?.text || "");
 
       if (activo.current) {
         onExtract(extraido);
         setProgreso(100);
         setMensaje(extraido.cedula || extraido.nombre
-          ? "Lectura terminada. Revisa los datos detectados y completa los que falten."
+          ? extraido.incompletos.length
+            ? "Se reconocieron algunos datos. Revisa los campos y completa: " + extraido.incompletos.join(", ") + "."
+            : "Se reconocieron cédula, nombres, apellidos y nacimiento. Confirma los valores antes de guardar."
           : "La fotografía se procesó, pero no se distinguieron los datos. Prueba con más luz, sin reflejos y acercando la cédula.");
       }
     } catch (error) {
