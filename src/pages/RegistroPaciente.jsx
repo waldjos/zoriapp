@@ -1,13 +1,16 @@
 // src/pages/RegistroPaciente.jsx
 import { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
+import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function RegistroPaciente() {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [cedula, setCedula] = useState("");
+  const [tipoDocumento, setTipoDocumento] = useState("V");
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [telefono, setTelefono] = useState("");
   const [localidad, setLocalidad] = useState("");
   const [edad, setEdad] = useState("");
@@ -23,6 +26,8 @@ export default function RegistroPaciente() {
   const limpiarFormulario = () => {
     setNombreCompleto("");
     setCedula("");
+    setTipoDocumento("V");
+    setFechaNacimiento("");
     setTelefono("");
     setLocalidad("");
     setEdad("");
@@ -47,22 +52,25 @@ export default function RegistroPaciente() {
         return;
       }
 
-      if (email.trim() && !email.includes("@")) {
-        setError("El correo electrónico no es válido.");
-        setSubmitting(false);
-        return;
-      }
-
-      const edadNumero =
-        edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
+      const documento = cedulaVE(cedula, tipoDocumento);
+      const telefonoNormalizado = telefonoE164VE(telefono);
+      const emailNormalizado = correoNormalizado(email);
+      const nacimiento = fechaNacimientoISO(fechaNacimiento);
+      const edadManual = edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
+      // Validación previa para evitar la mayoría de los duplicados; la protección atómica
+      // se incorporará al backend antes de habilitar registros simultáneos.
+      const existentes = await getDocs(query(collection(db, "pacientes"), where("cedula", "==", documento.cedula)));
+      if (!existentes.empty) throw new Error("Paciente con esta cédula ya registrado. Verifica antes de continuar.");
 
       await addDoc(collection(db, "pacientes"), {
         nombreCompleto: formatoNombre(nombreCompleto),
-        cedula: formatoCedula(cedula),
-        telefono: telefono.trim(),
+        cedula: documento.cedula,
+        tipoDocumento: documento.tipoDocumento,
+        telefono: telefonoNormalizado,
         localidad: localidad.trim(),
-        edad: isNaN(edadNumero) ? null : edadNumero,
-        email: email.trim(),
+        edad: edadDesdeFecha(nacimiento) ?? (Number.isNaN(edadManual) ? null : edadManual),
+        fechaNacimiento: nacimiento,
+        email: emailNormalizado,
         notas: notas.trim(),
         createdAt: serverTimestamp(),
         creadoPor: user.uid,
@@ -72,7 +80,8 @@ export default function RegistroPaciente() {
       limpiarFormulario();
     } catch (err) {
       console.error("Error guardando paciente:", err);
-      setError("No se pudo registrar el paciente.");
+      setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con)/.test(err?.message || "")
+        ? err.message : "No se pudo registrar el paciente.");
     } finally {
       setSubmitting(false);
     }
@@ -92,24 +101,23 @@ export default function RegistroPaciente() {
           <input
             type="text"
             value={nombreCompleto}
-            onChange={(e) => setNombreCompleto(e.target.value)}
+            onChange={(e) => setNombreCompleto(formatoNombre(e.target.value))}
             required
             style={{ width: "100%", padding: "0.5rem" }}
           />
         </div>
 
-        {/* Cédula */}
         <div style={{ marginBottom: "0.75rem" }}>
-          <label style={{ display: "block", marginBottom: "0.25rem" }}>
-            Cédula / Documento *
-          </label>
-          <input
-            type="text"
-            value={cedula}
-            onChange={(e) => setCedula(e.target.value)}
-            required
-            style={{ width: "100%", padding: "0.5rem" }}
-          />
+          <label style={{ display: "block", marginBottom: "0.25rem" }}>Cédula / Documento *</label>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <select value={tipoDocumento} onChange={(e) => setTipoDocumento(e.target.value)} aria-label="Tipo de documento">
+              <option value="V">V - Venezolano</option>
+              <option value="E">E - Extranjero</option>
+            </select>
+            <input type="text" inputMode="numeric" maxLength={9} placeholder="Número de cédula" required
+              value={cedula} onChange={(e) => setCedula(e.target.value.replace(/\D/g, "").slice(0, 9))}
+              style={{ flex: 1, minWidth: 0, padding: "0.5rem" }} />
+          </div>
         </div>
 
         {/* Teléfono */}
@@ -117,12 +125,11 @@ export default function RegistroPaciente() {
           <label style={{ display: "block", marginBottom: "0.25rem" }}>
             Teléfono
           </label>
-          <input
-            type="tel"
-            value={telefono}
+          <input type="tel" inputMode="tel" value={telefono} placeholder="0412-123.45.67"
             onChange={(e) => setTelefono(e.target.value)}
-            style={{ width: "100%", padding: "0.5rem" }}
-          />
+            onBlur={() => { try { if (telefono.trim()) setTelefono(telefonoE164VE(telefono)); } catch { /* corregir al guardar */ } }}
+            style={{ width: "100%", padding: "0.5rem" }} />
+          <small>Automáticamente se guarda con +58 para mensajería.</small>
         </div>
 
         {/* Email */}
@@ -134,6 +141,7 @@ export default function RegistroPaciente() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmail(email.trim().toLowerCase())}
             placeholder="paciente@correo.com"
             style={{ width: "100%", padding: "0.5rem" }}
           />
@@ -151,6 +159,19 @@ export default function RegistroPaciente() {
             placeholder="Ciudad / Hospital / Estado"
             style={{ width: "100%", padding: "0.5rem" }}
           />
+        </div>
+
+        <div style={{ marginBottom: "0.75rem" }}>
+          <label style={{ display: "block", marginBottom: "0.25rem" }}>Fecha de nacimiento (DD/MM/AAAA)</label>
+          <input type="text" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10}
+            value={fechaNacimiento}
+            onChange={(e) => {
+              const valor = mascaraFechaRapida(e.target.value);
+              setFechaNacimiento(valor);
+              if (valor.length === 10) {
+                try { setEdad(String(edadDesdeFecha(fechaNacimientoISO(valor)))); } catch { /* esperar corrección */ }
+              }
+            }} style={{ width: "100%", padding: "0.5rem" }} />
         </div>
 
         {/* Edad */}
