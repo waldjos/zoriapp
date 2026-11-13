@@ -42,3 +42,24 @@ test("no rellena nombres con texto genérico o de mala calidad", () => {
   assert.equal(resultado.nombre, "");
   assert.ok(resultado.incompletos.includes("nombres"));
 });
+
+test("interpreta etiquetas con letras espaciadas y dígitos confundidos", () => {
+  const datos = [
+    "V 12.345.678",
+    "A P E L L I D 0 S  GARCÍA PÉREZ",
+    "N0M8RE5 MARÍA ELENA",
+    "04/09/1988",
+    "F. NACIMIENTO",
+    "23/08/2025 F. EXPEDICION",
+  ].join("\n");
+  const resultado = extraerCedulaVenezolana(datos);
+  assert.equal(resultado.nombre, "MARÍA ELENA GARCÍA PÉREZ");
+  assert.equal(resultado.fecha, "04/09/1988");
+});
+
+test("no utiliza la fecha de expedición como nacimiento si falta etiqueta", () => {
+  const resultado = extraerCedulaVenezolana(
+    "V 12.345.678\nAPELLIDOS GARCÍA PÉREZ\nNOMBRES MARÍA ELENA\n23/08/2025\nF. EXPEDICIÓN"
+  );
+  assert.equal(resultado.fecha, "");
+});

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createWorker } from "tesseract.js";
 import { extraerCedulaVenezolana } from "../utils/cedulaVenezolanaOCR";
+import { prepararLecturasAdicionales } from "../utils/mejorarFotoCedula";
 
 /**
  * OCR en el dispositivo: no guarda la foto ni la envía al servidor.
@@ -82,6 +83,41 @@ export default function CedulaOCR({ onExtract }) {
       etapa = "lectura";
       const resultado = await trabajador.recognize(procesada);
       const extraido = extraerCedulaVenezolana(resultado.data?.text || "");
+
+      // La primera lectura se conserva; si fallan nombres o apellidos, realizar
+      // otra(s) lectura(s) del área de texto con contraste mejorado.
+      if (!extraido.nombres || !extraido.apellidos) {
+        if (activo.current) setMensaje("Mejorando el contraste y revisando nombres y apellidos…");
+        const variantes = await prepararLecturasAdicionales(
+          procesada, resultado.data?.words, extraido.cedula, extraido.fecha
+        );
+
+        try { await trabajador.setParameters({ tessedit_pageseg_mode: "6" }); }
+        catch { /* La segunda pasada mantiene el modo original si no se admite. */ }
+
+        for (const variante of variantes) {
+          if (extraido.nombres && extraido.apellidos) break;
+          const adicional = await trabajador.recognize(variante);
+          const recuperado = extraerCedulaVenezolana(adicional.data?.text || "");
+          if (!extraido.nombres && recuperado.nombres) extraido.nombres = recuperado.nombres;
+          if (!extraido.apellidos && recuperado.apellidos) extraido.apellidos = recuperado.apellidos;
+          // No reemplazar una cédula o fecha ya reconocida en la primera pasada.
+          if (!extraido.cedula && recuperado.cedula) {
+            extraido.cedula = recuperado.cedula;
+            extraido.tipo = recuperado.tipo;
+          }
+          if (!extraido.fecha && recuperado.fecha) extraido.fecha = recuperado.fecha;
+        }
+
+        extraido.nombre = extraido.nombres && extraido.apellidos
+          ? extraido.nombres + " " + extraido.apellidos : "";
+        extraido.incompletos = [
+          !extraido.cedula && "cédula",
+          !extraido.nombres && "nombres",
+          !extraido.apellidos && "apellidos",
+          !extraido.fecha && "nacimiento",
+        ].filter(Boolean);
+      }
 
       if (activo.current) {
         onExtract(extraido);
