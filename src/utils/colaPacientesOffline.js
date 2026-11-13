@@ -47,23 +47,41 @@ async function leer(almacen, id) {
 }
 async function guardar(almacen, objeto) {
   const db = await abrir();
-  return solicitud(db.transaction(almacen, "readwrite").objectStore(almacen).put(objeto));
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(almacen, "readwrite", { durability: "strict" });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Error al guardar la ficha local."));
+    tx.onabort = () => reject(tx.error || new Error("La escritura local fue cancelada."));
+    tx.objectStore(almacen).put(objeto);
+  });
 }
 async function quitar(almacen, id) {
   const db = await abrir();
-  return solicitud(db.transaction(almacen, "readwrite").objectStore(almacen).delete(id));
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(almacen, "readwrite", { durability: "strict" });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Error al borrar registro ya confirmado."));
+    tx.onabort = () => reject(tx.error || new Error("La eliminación local fue cancelada."));
+    tx.objectStore(almacen).delete(id);
+  });
 }
 
 async function llave() {
   if (!llavePendiente) {
     llavePendiente = (async () => {
-      const anterior = await leer("meta", "clave");
-      if (anterior?.clave) return anterior.clave;
-      const nueva = await crypto.subtle.generateKey(
-        { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
-      );
-      await guardar("meta", { id: "clave", clave: nueva });
-      return nueva;
+      const crearOLocalizar = async () => {
+        const anterior = await leer("meta", "clave");
+        if (anterior?.clave) return anterior.clave;
+        const nueva = await crypto.subtle.generateKey(
+          { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+        );
+        await guardar("meta", { id: "clave", clave: nueva });
+        return nueva;
+      };
+      // Impedir generar llaves distintas cuando se abre la misma app en dos pestañas.
+      return navigator.locks?.request
+        ? navigator.locks.request("zoriapp-offline-clave", crearOLocalizar)
+        : crearOLocalizar();
     })().catch((error) => { llavePendiente = null; throw error; });
   }
   return llavePendiente;
