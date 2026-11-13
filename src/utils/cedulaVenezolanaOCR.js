@@ -31,7 +31,8 @@ function distanciaEdicion(a, b) {
 }
 
 function esPalabraDeEtiqueta(palabra) {
-  const p = String(palabra).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  const p = String(palabra).normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase().replace(/0/g, "O").replace(/8/g, "B").replace(/5/g, "S");
   const etiquetas = ["NOMBRES", "APELLIDOS", "NACIMIENTO", "VENEZOLANO",
     "IDENTIDAD", "SOLTERA", "SOLTERO", "EXPEDICION", "VENCIMIENTO", "CEDULA", "CIVIL"];
   return etiquetas.some((e) => p === e || (p.length >= 6 && distanciaEdicion(p, e) <= 2));
