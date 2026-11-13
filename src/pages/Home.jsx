@@ -12,6 +12,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from "../assets/logo.png";
+import HomeQuickActions from "../components/HomeQuickActions";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -266,38 +267,11 @@ export default function Home() {
         </div>
         <p className="home-subtitle">Panel principal de la jornada</p>
 
-        {/* Botones principales */}
-        <div className="home-buttons-grid">
-          <button className="home-button home-button-primary" onClick={() => navigate("/registro")}>
-            Registro
-          </button>
+        <HomeQuickActions />
 
-          <button className="home-button" onClick={() => navigate("/tacto")}>
-            Tacto
-          </button>
-
-          <button className="home-button" onClick={() => navigate("/mini-jornada")}>
-            Mini Jornada
-          </button>
-
-          <button className="home-button" onClick={() => navigate("/pacientes")}>
-            Pacientes
-          </button>
-
-          <button className="home-button" onClick={() => navigate("/laboratorio")}>
-            Laboratorio
-          </button>
-
-          <button className="home-button" onClick={() => navigate("/validar-resultados")}>
-            Validar resultados
-          </button>
-
-          <button className="home-button" onClick={() => navigate("/importar-psa")}>
-            Importar PSA (.txt)
-          </button>
-        </div>
-
-        <div className="home-export-card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '1rem', marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(255,255,255,0.05)', borderRadius: '22px', border: '1px solid rgba(148,163,184,0.18)' }}>
+        <details className="zori-quick-advanced zori-home-reports">
+          <summary>Consultar estadísticas y exportar informes</summary>
+          <div className="home-export-card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '1rem', marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(255,255,255,0.05)', borderRadius: '22px', border: '1px solid rgba(148,163,184,0.18)' }}>
           <div style={{ minWidth: '240px', flex: '1 1 360px' }}>
             <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Exportar todos los pacientes</h2>
             <p style={{ margin: '0.5rem 0 0', color: '#cbd5e1', maxWidth: '640px', lineHeight: 1.6 }}>
@@ -397,6 +371,8 @@ export default function Home() {
             </>
           )}
         </div>
+
+        </details>
 
         {/* Modal: listado de pacientes con resultados entregados */}
         {showModalEntregados && (
