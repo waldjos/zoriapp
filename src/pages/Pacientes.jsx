@@ -21,11 +21,13 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
+import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function Pacientes() {
   // Campos del formulario
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [cedula, setCedula] = useState("");
+  const [tipoDocumento, setTipoDocumento] = useState("V");
   const [telefono, setTelefono] = useState("");
   const [localidad, setLocalidad] = useState("");
   const [edad, setEdad] = useState("");
@@ -332,6 +334,7 @@ export default function Pacientes() {
   const limpiarFormulario = () => {
     setNombreCompleto("");
     setCedula("");
+    setTipoDocumento("V");
     setTelefono("");
     setLocalidad("");
     setEdad("");
@@ -360,24 +363,25 @@ export default function Pacientes() {
         return;
       }
 
-      // Validación simple de email si se envía
-      if (email.trim() && !email.includes("@")) {
-        setError("El correo electrónico no es válido.");
-        setSubmitting(false);
-        return;
+      const documento = cedulaVE(cedula, tipoDocumento);
+      const nacimiento = fechaNacimientoISO(fechaNacimiento);
+      const edadManual = edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
+      const edadCalculada = edadDesdeFecha(nacimiento);
+      // Comprobación previa con la lista cargada. Para prevenir carreras entre operadores,
+      // la protección definitiva debe usar una transacción con índice único de cédula.
+      if (pacientes.some((p) => p.id !== editingId && formatoCedula(p.cedula) === documento.cedula)) {
+        throw new Error("Paciente con esta cédula ya registrado. Verifica antes de continuar.");
       }
-
-      const edadNumero =
-        edad.trim() === "" ? null : Number.parseInt(edad.trim(), 10);
 
       const dataPaciente = {
         nombreCompleto: formatoNombre(nombreCompleto),
-        cedula: formatoCedula(cedula),
-        telefono: telefono.trim(),
+        cedula: documento.cedula,
+        tipoDocumento: documento.tipoDocumento,
+        telefono: telefonoE164VE(telefono),
         localidad: localidad.trim(),
-        edad: isNaN(edadNumero) ? null : edadNumero,
-        fechaNacimiento: fechaNacimiento.trim(),
-        email: email.trim(),
+        edad: edadCalculada ?? (Number.isNaN(edadManual) ? null : edadManual),
+        fechaNacimiento: nacimiento,
+        email: correoNormalizado(email),
         notas: notas.trim(),
         psaTotal: psaTotal.trim() || null,
         psaLibre: psaLibre.trim() || null,
@@ -404,7 +408,8 @@ export default function Pacientes() {
       limpiarFormulario();
     } catch (err) {
       console.error("Error guardando paciente:", err);
-      setError("No se pudo registrar el paciente.");
+      setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con)/.test(err?.message || "")
+        ? err.message : "No se pudo guardar el paciente.");
     } finally {
       setSubmitting(false);
     }
@@ -416,10 +421,12 @@ export default function Pacientes() {
 
   const empezarEdicion = (paciente) => {
     setNombreCompleto(paciente.nombreCompleto || "");
-    setCedula(paciente.cedula || "");
+    setCedula(formatoCedula(paciente.cedula || ""));
+    setTipoDocumento(paciente.tipoDocumento || (/^E/i.test(String(paciente.cedula || "")) ? "E" : "V"));
     setTelefono(paciente.telefono || "");
     setLocalidad(paciente.localidad || "");
     setEdad(paciente.edad != null ? String(paciente.edad) : "");
+    setFechaNacimiento(fechaParaFormulario(paciente.fechaNacimiento || ""));
     setEmail(paciente.email || "");
     setNotas(paciente.notas || "");
     setEstadoResultado(paciente.estadoResultado || "pendiente");
@@ -673,30 +680,32 @@ export default function Pacientes() {
             <input
               type="text"
               value={nombreCompleto}
-              onChange={(e) => setNombreCompleto(e.target.value)}
+              onChange={(e) => setNombreCompleto(formatoNombre(e.target.value))}
               required
             />
           </div>
 
-          {/* Cédula */}
+          {/* Nacionalidad y documento: conservar cédula numérica para expedientes antiguos. */}
           <div style={{ marginBottom: "0.75rem" }}>
             <label>Cédula / Documento *</label>
-            <input
-              type="text"
-              value={cedula}
-              onChange={(e) => setCedula(e.target.value)}
-              required
-            />
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <select value={tipoDocumento} onChange={(e) => setTipoDocumento(e.target.value)} aria-label="Tipo de documento" style={{ maxWidth: "9rem" }}>
+                <option value="V">V - Venezolano</option>
+                <option value="E">E - Extranjero</option>
+              </select>
+              <input type="text" inputMode="numeric" placeholder="Número" maxLength={9} required
+                value={cedula} onChange={(e) => setCedula(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                style={{ flex: 1, minWidth: 0 }} />
+            </div>
           </div>
 
-          {/* Teléfono */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label>Teléfono</label>
-            <input
-              type="tel"
-              value={telefono}
+            <label>Teléfono móvil venezolano</label>
+            <input type="tel" inputMode="tel" autoComplete="tel" value={telefono}
+              placeholder="0412-123.45.67 o +58 412 1234567"
               onChange={(e) => setTelefono(e.target.value)}
-            />
+              onBlur={() => { try { if (telefono.trim()) setTelefono(telefonoE164VE(telefono)); } catch { /* corregir al guardar */ } }} />
+            <small>Se guarda con +58 para facilitar mensajes y llamadas.</small>
           </div>
 
           {/* Email */}
@@ -706,6 +715,7 @@ export default function Pacientes() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => setEmail(email.trim().toLowerCase())}
               placeholder="paciente@correo.com"
             />
           </div>
@@ -732,14 +742,16 @@ export default function Pacientes() {
               onChange={(e) => setEdad(e.target.value)}
             />
           </div>
-          {/* Fecha de nacimiento */}
           <div style={{ marginBottom: "0.75rem" }}>
-            <label>Fecha de nacimiento</label>
-            <input
-              type="date"
-              value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
-            />
+            <label>Fecha de nacimiento (DD/MM/AAAA)</label>
+            <input type="text" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10}
+              value={fechaNacimiento} onChange={(e) => {
+                const valor = mascaraFechaRapida(e.target.value);
+                setFechaNacimiento(valor);
+                if (valor.length === 10) {
+                  try { setEdad(String(edadDesdeFecha(fechaNacimientoISO(valor)))); } catch { /* esperar corrección */ }
+                }
+              }} />
           </div>
 
           {/* Estado del resultado */}
