@@ -4,6 +4,7 @@ import { collection, addDoc, getDocs, query, where, serverTimestamp } from "fire
 import { db } from "../firebase";
 import { formatoNombre } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
+import CedulaOCR from "../components/CedulaOCR";
 import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function RegistroPaciente() {
@@ -22,6 +23,24 @@ export default function RegistroPaciente() {
   const [success, setSuccess] = useState("");
 
   const { user } = useAuth();
+
+  const recibirLecturaOCR = ({ cedula: numero, tipo, nombre, fecha }) => {
+    if (numero) {
+      try {
+        const d = cedulaVE(numero, tipo || tipoDocumento);
+        setCedula(d.cedula);
+        if (d.tipoDocumento) setTipoDocumento(d.tipoDocumento);
+      } catch { /* El registrador completa la cédula manualmente. */ }
+    }
+    if (nombre) setNombreCompleto(formatoNombre(nombre));
+    if (fecha) {
+      try {
+        const iso = fechaNacimientoISO(fecha);
+        setFechaNacimiento(fechaParaFormulario(iso));
+        setEdad(String(edadDesdeFecha(iso)));
+      } catch { /* Se requiere verificación de fecha. */ }
+    }
+  };
 
   const limpiarFormulario = () => {
     setNombreCompleto("");
@@ -93,6 +112,8 @@ export default function RegistroPaciente() {
       <p>Completa los datos para registrar un nuevo paciente en la jornada.</p>
 
       <form onSubmit={handleSubmit} style={{ marginTop: "1.5rem" }}>
+        <CedulaOCR onExtract={recibirLecturaOCR} />
+        <p className="zori-registro-step">2. Confirmar datos del paciente</p>
         {/* Nombre */}
         <div style={{ marginBottom: "0.75rem" }}>
           <label style={{ display: "block", marginBottom: "0.25rem" }}>
