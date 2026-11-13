@@ -106,6 +106,8 @@ export default function RegistroPaciente() {
       // Nunca bloquear el registro por falta de conectividad.
       // La cola cifrada conserva cada ficha hasta confirmar su subida a Firebase.
       const datos = {
+        jornadaAnio: 2026,
+        jornadaId: "domingo-luciani-2026",
         nombreCompleto: formatoNombre(nombreCompleto),
         cedula: documento.cedula,
         tipoDocumento: documento.tipoDocumento,
