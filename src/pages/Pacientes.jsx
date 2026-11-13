@@ -38,6 +38,7 @@ export default function Pacientes() {
   const [psaTotal, setPsaTotal] = useState("");
   const [psaLibre, setPsaLibre] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [permitirOcrExterno, setPermitirOcrExterno] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [ocrProgress, setOcrProgress] = useState(0);
   const workerRef = useRef(null);
@@ -226,14 +227,24 @@ export default function Pacientes() {
     setOcrError("");
     setOcrProgress(0);
     setOcrLoading(true);
+    let tieneCedula = Boolean(cedula), tieneNombre = Boolean(nombreCompleto);
     try {
-      // intentar servidor primero
-      try {
+      // Solo enviar la fotografía a proveedor externo si se marca el consentimiento.
+      if (permitirOcrExterno) try {
         const serverRes = await callOcrSpaceServer(file);
         if (serverRes) {
-          if (serverRes.cedula) setCedula(serverRes.cedula);
-          if (serverRes.nombre) setNombreCompleto(serverRes.nombre);
-          if (serverRes.fecha) setFechaNacimiento(serverRes.fecha);
+          if (serverRes.cedula && !tieneCedula) {
+            try { const d = cedulaVE(serverRes.cedula, tipoDocumento);
+              setCedula(d.cedula); setTipoDocumento(d.tipoDocumento); tieneCedula = true;
+            } catch { /* requiere verificación */ }
+          }
+          if (serverRes.nombre && !tieneNombre) {
+            setNombreCompleto(formatoNombre(serverRes.nombre)); tieneNombre = true;
+          }
+          if (serverRes.fecha && !fechaNacimiento) {
+            try { setFechaNacimiento(fechaParaFormulario(fechaNacimientoISO(serverRes.fecha))); }
+            catch { /* requiere verificación */ }
+          }
           if (serverRes.text) setOcrRaw(serverRes.text);
           setExtractedNotice({ source: 'OCR.space', ...serverRes });
         }
@@ -242,7 +253,7 @@ export default function Pacientes() {
       }
 
       // si no se detectó cédula o nombre, intentar local
-      if (!cedula || !nombreCompleto) {
+      if (!tieneCedula || !tieneNombre) {
         if (!workerRef.current) {
           const worker = createWorker({
             logger: (m) => {
@@ -266,9 +277,18 @@ export default function Pacientes() {
         try {
           const best = await runOcrWithRetries(file);
           if (best) {
-            if (best.cedula && !cedula) setCedula(best.cedula);
-            if (best.nombre && !nombreCompleto) setNombreCompleto(best.nombre);
-            if (best.fecha && !fechaNacimiento) setFechaNacimiento(best.fecha);
+            if (best.cedula && !tieneCedula) {
+              try { const d = cedulaVE(best.cedula, tipoDocumento);
+                setCedula(d.cedula); setTipoDocumento(d.tipoDocumento); tieneCedula = true;
+              } catch { /* requiere verificación */ }
+            }
+            if (best.nombre && !tieneNombre) {
+              setNombreCompleto(formatoNombre(best.nombre)); tieneNombre = true;
+            }
+            if (best.fecha && !fechaNacimiento) {
+              try { setFechaNacimiento(fechaParaFormulario(fechaNacimientoISO(best.fecha))); }
+              catch { /* requiere verificación */ }
+            }
             if (best.text) setOcrRaw((prev) => (prev ? prev + '\n\n--- Tesseract ---\n' + best.text : best.text));
             setExtractedNotice((prev) => prev ? ({ ...prev, tesseract: best }) : ({ source: 'Tesseract', ...best }));
           }
@@ -673,6 +693,12 @@ export default function Pacientes() {
             />
             {ocrLoading && <p style={{ color: "#5CC52E" }}>Procesando imagen...</p>}
             {ocrError && <p style={{ color: "red" }}>{ocrError}</p>}
+            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <input type="checkbox" checked={permitirOcrExterno}
+                onChange={(e) => setPermitirOcrExterno(e.target.checked)} />
+              Autorizar OCR externo (envía la fotografía al proveedor para su lectura).
+            </label>
+            <small>Por defecto se procesa en el dispositivo. Siempre confirma los datos leídos.</small>
           </div>
           {/* Nombre */}
           <div style={{ marginBottom: "0.75rem" }}>
