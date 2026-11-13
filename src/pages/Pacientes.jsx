@@ -14,8 +14,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
-import ProsilodBanner from "../components/ProsilodBanner";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { filtroJornada } from "../utils/jornada";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -324,6 +324,8 @@ export default function Pacientes() {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const periodo = searchParams.get("periodo") || "2026";
 
   // Escuchar en tiempo real la colección "pacientes"
   useEffect(() => {
@@ -465,6 +467,7 @@ export default function Pacientes() {
 
   // Filtrado por búsqueda (nombre o cédula) — comparación normalizada y sin acentos
   const pacientesFiltrados = pacientes.filter((p) => {
+    if (!filtroJornada(p, periodo)) return false;
     const termino = searchTerm.trim();
     if (!termino) return true;
 
@@ -482,7 +485,7 @@ export default function Pacientes() {
   });
 
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
-  const getExportList = () => (searchTerm ? pacientesFiltrados : pacientes);
+  const getExportList = () => pacientesFiltrados;
 
   // Columnas a mostrar/exportar: clave y etiqueta en español
   const exportColumns = [
@@ -673,33 +676,20 @@ export default function Pacientes() {
 
   return (
     <div className="page pacientes-page pacientes-card">
-      {/* FORMULARIO DE REGISTRO / EDICIÓN */}
+      <header className="zori-pacientes-intro">
+        <div>
+          <h1>Buscar pacientes</h1>
+          <p>Consulta y corrige expedientes. El escaneo de cédulas y el nuevo ingreso se hacen únicamente desde Registrar.</p>
+        </div>
+        <button type="button" onClick={() => navigate("/registro")}>+ Registrar nuevo paciente</button>
+      </header>
+      {/* Solo se muestra este formulario al seleccionar Editar en un registro existente. */}
+      {editingId && (
       <section className="form-card">
-        <h1 className="page-header-title">Pacientes</h1>
-        <p className="page-header-subtitle">Registra y administra los pacientes de la jornada.</p>
+        <h2 className="page-header-title">Editar datos del paciente</h2>
+        <p className="page-header-subtitle">Modifica únicamente la ficha seleccionada.</p>
 
         <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-          {/* Captura de documento de identidad */}
-          <div style={{ marginBottom: "0.75rem" }}>
-            <label>Capturar foto de documento de identidad</label>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                const file = e.target.files && e.target.files[0];
-                if (file) handleFileInput(file);
-              }}
-            />
-            {ocrLoading && <p style={{ color: "#5CC52E" }}>Procesando imagen...</p>}
-            {ocrError && <p style={{ color: "red" }}>{ocrError}</p>}
-            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <input type="checkbox" checked={permitirOcrExterno}
-                onChange={(e) => setPermitirOcrExterno(e.target.checked)} />
-              Autorizar OCR externo (envía la fotografía al proveedor para su lectura).
-            </label>
-            <small>Por defecto se procesa en el dispositivo. Siempre confirma los datos leídos.</small>
-          </div>
           {/* Nombre */}
           <div style={{ marginBottom: "0.75rem" }}>
             <label>Nombre completo *</label>
@@ -834,14 +824,6 @@ export default function Pacientes() {
           {error && <p className="status-error">{error}</p>}
           {success && <p className="status-ok">{success}</p>}
 
-          {/* Mostrar texto OCR bruto para depuración y permitir reintento */}
-          {ocrRaw && (
-            <div style={{ marginTop: '0.6rem' }}>
-              <label>Texto OCR detectado (revisa y corrige si hace falta)</label>
-              <textarea value={ocrRaw} readOnly rows={6} style={{ width: '100%', marginTop: '0.35rem' }} />
-            </div>
-          )}
-
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
             <button
               type="submit"
@@ -859,6 +841,7 @@ export default function Pacientes() {
           </div>
         </form>
       </section>
+      )}
 
       {/* Cuadro / modal simple con la lista filtrada */}
       {showListBox && (
@@ -881,7 +864,7 @@ export default function Pacientes() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(searchTerm ? pacientesFiltrados : pacientes).map((p) => (
+                  {pacientesFiltrados.map((p) => (
                     <tr key={p.id}>
                       {exportColumns.map((c) => (
                         <td key={c.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6' }}>{getValue(p, c.key)}</td>
@@ -897,13 +880,26 @@ export default function Pacientes() {
 
       {/* LISTADO DE PACIENTES */}
       <section className="list-card" style={{ marginTop: "1rem" }}>
+        <div className="zori-period-tabs" aria-label="Seleccionar jornada">
+          {[
+            ["2026", "Jornada 2026"],
+            ["2025", "Histórico 2025"],
+            ["sin-fecha", "Sin clasificar"],
+            ["todos", "Todas"]
+          ].map(([valor, titulo]) => (
+            <button key={valor} type="button"
+              className={periodo === valor ? "is-active" : ""}
+              aria-pressed={periodo === valor}
+              onClick={() => setSearchParams({periodo: valor})}>{titulo}</button>
+          ))}
+        </div>
         <div className="list-header">
           <div className="list-header-top">
             <div>
               <h2 className="list-title">Lista de pacientes</h2>
               {!cargandoPacientes && (
                 <p className="page-header-subtitle" style={{ marginTop: "6px" }}>
-                  Total de pacientes registrados: <strong>{pacientes.length}</strong>
+                  Registros de {periodo === "sin-fecha" ? "fecha desconocida" : periodo === "todos" ? "todos los años" : periodo}: <strong>{pacientesFiltrados.length}</strong>
                   {searchTerm && (<> | Coincidencias: <strong>{pacientesFiltrados.length}</strong></>)}
                 </p>
               )}
@@ -998,7 +994,7 @@ export default function Pacientes() {
         )}
       </section>
 
-      <ProsilodBanner />
+
     </div>
   );
 }
