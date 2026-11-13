@@ -3,8 +3,10 @@
  * APellidos, NOMBRES y F. NACIMIENTO pueden aparecer en líneas distintas
  * de los valores; fecha de expedición/vencimiento JAMÁS es nacimiento.
  */
-const etiquetaApellidos = /\bAP[EÉ]LL[IÍ]D[O0]S?\b/i;
-const etiquetaNombres = /\bN[O0]MBR[E3]S?\b/i;
+// Algunas letras se confunden con números: 0/O, 1/I, 8/B y 5/S.
+// Permitir letras separadas por espacios mejora la lectura de documentos laminados.
+const etiquetaApellidos = /A\s*P\s*[EÉ3]\s*L\s*L\s*[IÍ1]\s*D\s*[O0]\s*[S5]/i;
+const etiquetaNombres = /N\s*[O0]\s*M\s*[B8]\s*R\s*[E3]\s*[S5]/i;
 const etiquetaNacimiento = /(?:F[.\s]*NAC(?:IMIENTO)?|FECHA\s*DE?\s*NAC(?:IMIENTO)?|NACIMIENTO)/i;
 const etiquetaFechasExcluidas = /EXPEDICION|EXPEDICI[OÓ]N|VENCIMIENTO|EMISI[OÓ]N/i;
 const fechaRegex = /\b([0-3]?\d)[\/.\-]([01]?\d)[\/.\-]((?:19|20)\d{2})\b/g;
