@@ -1,0 +1,125 @@
+import { useCallback, useEffect, useState } from "react";
+import { EVENTO_COLA, pendientesLocales } from "../utils/colaPacientesOffline";
+import { sincronizarPendientes } from "../utils/sincronizarPacientes";
+
+/** Visibilidad local de registros pendientes; otros dispositivos no pueden verlos sin conexión. */
+export default function EstadoSincronizacion({ user }) {
+  const [pendientes, setPendientes] = useState([]);
+  const [enLinea, setEnLinea] = useState(navigator.onLine);
+  const [enviando, setEnviando] = useState(false);
+  const [mensaje, setMensaje] = useState("");
+  const [verLista, setVerLista] = useState(false);
+  const [inicializado, setInicializado] = useState(false);
+  const uid = user?.uid;
+
+  const actualizar = useCallback(async () => {
+    if (!uid) return;
+    try {
+      setPendientes(await pendientesLocales(uid));
+      setInicializado(true);
+    } catch {
+      setMensaje("Este dispositivo no pudo acceder al almacenamiento local seguro.");
+      setInicializado(true);
+    }
+  }, [uid]);
+
+  const sincronizar = useCallback(async (automatico = false) => {
+    if (!uid || !navigator.onLine) return;
+    setEnviando(true);
+    if (!automatico) setMensaje("Enviando pendientes a Firebase…");
+    try {
+      const resultado = await sincronizarPendientes(uid, () => { actualizar(); });
+      await actualizar();
+      if (resultado.errores.length) setMensaje(resultado.errores[0]);
+      else if (resultado.enviados) setMensaje(String(resultado.enviados) + " registro(s) confirmado(s) en Firebase.");
+      else if (!automatico) setMensaje("No hay registros pendientes para enviar.");
+    } catch {
+      setMensaje("La sincronización no se completó. Los registros siguen en este dispositivo.");
+    } finally {
+      setEnviando(false);
+    }
+  }, [uid, actualizar]);
+
+  useEffect(() => {
+    if (!uid) return undefined;
+    let cancelado = false;
+    actualizar().then(() => {
+      if (!cancelado && navigator.onLine) sincronizar(true);
+    });
+    const refrescar = () => {
+      setEnLinea(navigator.onLine);
+      actualizar();
+    };
+    const reconectar = () => {
+      setEnLinea(true);
+      sincronizar(true);
+    };
+    const visible = () => {
+      if (document.visibilityState === "visible") {
+        refrescar();
+        if (navigator.onLine) sincronizar(true);
+      }
+    };
+    window.addEventListener(EVENTO_COLA, refrescar);
+    window.addEventListener("online", reconectar);
+    window.addEventListener("offline", refrescar);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      cancelado = true;
+      window.removeEventListener(EVENTO_COLA, refrescar);
+      window.removeEventListener("online", reconectar);
+      window.removeEventListener("offline", refrescar);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, [uid, actualizar, sincronizar]);
+
+  if (!uid) return null;
+
+  return (
+    <section className="zori-sync-panel" aria-label="Estado de los registros sin conexión">
+      <div className="zori-sync-top">
+        <div>
+          <strong className="zori-sync-title">
+            {enLinea ? "● Con conexión" : "● Sin internet"} · {inicializado ? pendientes.length : "…"} pendientes
+          </strong>
+          <span className="zori-sync-note">
+            {enLinea ? "Enviado solo cuando Firebase confirma la recepción." :
+              "Puedes seguir registrando: los datos quedarán en este teléfono."}
+          </span>
+        </div>
+        <div className="zori-sync-actions">
+          {pendientes.length > 0 && (
+            <button type="button" className="zori-sync-toggle" onClick={() => setVerLista(!verLista)}
+              aria-expanded={verLista}>{verLista ? "Ocultar" : "Ver pendientes"}</button>
+          )}
+          <button className="zori-sync-button" type="button"
+            disabled={!enLinea || enviando || pendientes.length === 0}
+            onClick={() => sincronizar(false)}>{enviando ? "Sincronizando…" : "Sincronizar ahora"}</button>
+        </div>
+      </div>
+      {mensaje && <p role="status" className="zori-sync-message">{mensaje}</p>}
+      {verLista && pendientes.length > 0 && (
+        <ol className="zori-sync-list">
+          {pendientes.map((registro) => (
+            <li key={registro.id}>
+              <span>
+                {registro.datos?.nombreCompleto || "Ficha pendiente de revisión"}
+                <small>
+                  Cédula: •••{registro.datos?.cedula?.slice(-4) || "----"} ·
+                  {" "}{new Date(registro.fechaLocal).toLocaleString("es-VE")}
+                </small>
+              </span>
+              <strong>{registro.error ? "Revisión" : "Pendiente"}</strong>
+            </li>
+          ))}
+        </ol>
+      )}
+      {pendientes.length > 0 && (
+        <small className="zori-sync-warning">
+          No desinstales la app ni borres sus datos hasta tener 0 pendientes.
+          Las fichas sin internet solo están en este teléfono; otro dispositivo no puede verlas.
+        </small>
+      )}
+    </section>
+  );
+}
