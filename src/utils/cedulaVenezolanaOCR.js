@@ -16,28 +16,73 @@ function normalizarLineas(texto) {
     .map((l) => l.normalize("NFC").replace(/\s+/g, " ").trim()).filter(Boolean);
 }
 
+/** Evita aceptar como persona una etiqueta mal reconocida por OCR. */
+function distanciaEdicion(a, b) {
+  const anterior = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const actual = [i];
+    for (let j = 1; j <= b.length; j++) {
+      actual[j] = Math.min(actual[j - 1] + 1, anterior[j] + 1,
+        anterior[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    anterior.splice(0, anterior.length, ...actual);
+  }
+  return anterior[b.length];
+}
+
+function esPalabraDeEtiqueta(palabra) {
+  const p = String(palabra).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  const etiquetas = ["NOMBRES", "APELLIDOS", "NACIMIENTO", "VENEZOLANO",
+    "IDENTIDAD", "SOLTERA", "SOLTERO", "EXPEDICION", "VENCIMIENTO", "CEDULA", "CIVIL"];
+  return etiquetas.some((e) => p === e || (p.length >= 6 && distanciaEdicion(p, e) <= 2));
+}
+
 function limpiarPersona(texto) {
   const valor = String(texto || "")
     .replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'’-]/g, " ")
     .replace(/\s+/g, " ").trim();
-  if (valor.length < 3 || valor.length > 85) return "";
-  if (/\b(REPUBLICA|VENEZUELA|SOLTERO|CASADO|IDENTIDAD|CIVIL|DIRECTOR|DR)\b/i.test(valor)) return "";
+  if (valor.length < 3 || valor.length > 75) return "";
+  const palabras = valor.split(" ");
+  if (palabras.length < 1 || palabras.length > 5) return "";
+  if (palabras.some((p) => p.length > 22 || esPalabraDeEtiqueta(p))) return "";
+  if (palabras.some((p) => p.length < 2 && !/^[Yy]$/.test(p))) return "";
+  // Repeticiones introducidas por unir dos líneas no son nombres confiables.
+  const normalizadas = palabras.map((p) => p.toUpperCase());
+  if (normalizadas.length > 1 && new Set(normalizadas).size !== normalizadas.length) return "";
   return valor;
 }
 
 function extraerEtiqueta(lineas, patron) {
   const i = lineas.findIndex((l) => patron.test(l));
   if (i < 0) return "";
-  const resto = lineas[i].replace(new RegExp(patron.source, "i"), "").replace(/^[:.\s-]+/, "");
+  const original = lineas[i];
+  const match = original.match(patron);
+  if (!match) return "";
+  let resto = original.slice(match.index + match[0].length).replace(/^[:.\s-]+/, "");
+  // Nunca absorber la otra etiqueta o su contenido dentro de un apellido/nombre.
+  if (etiquetaNombres.test(resto) || etiquetaApellidos.test(resto) ||
+      etiquetaNacimiento.test(resto)) return "";
   const limpio = limpiarPersona(resto);
-  if (limpio && limpio.split(" ").length <= 5 && !etiquetaNombres.test(limpio) && !etiquetaApellidos.test(limpio)) return limpio;
+  if (limpio) return limpio;
+  // Cuando la etiqueta está aislada, la respuesta suele ir en la siguiente línea.
+  if (resto.trim()) return "";
+  const siguiente = lineas[i + 1] || "";
+  if (etiquetaNombres.test(siguiente) || etiquetaApellidos.test(siguiente) ||
+      etiquetaNacimiento.test(siguiente) || etiquetaFechasExcluidas.test(siguiente)) return "";
+  return limpiarPersona(siguiente);
+}
 
-  for (const siguiente of lineas.slice(i + 1, i + 3)) {
-    if (etiquetaNombres.test(siguiente) || etiquetaApellidos.test(siguiente) || etiquetaNacimiento.test(siguiente) || etiquetaFechasExcluidas.test(siguiente)) break;
-    const persona = limpiarPersona(siguiente);
-    if (persona && persona.split(" ").length <= 5) return persona;
+function coherenciaPersonas(nombres, apellidos) {
+  if (!nombres || !apellidos) return { nombres: "", apellidos: "" };
+  const a = nombres.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  const b = apellidos.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  if (a === b || a.includes(b) || b.includes(a)) return { nombres: "", apellidos: "" };
+  const wa = a.split(" "), wb = b.split(" ");
+  if (wa.length >= 2 && wb.length >= 2 &&
+      wa.some((p, i) => i < wa.length - 1 && wb.join(" ").includes(p + " " + wa[i + 1]))) {
+    return { nombres: "", apellidos: "" };
   }
-  return "";
+  return { nombres, apellidos };
 }
 
 function fechaValida(valor) {
@@ -88,8 +133,11 @@ function obtenerDocumento(lineas) {
 
 export function extraerCedulaVenezolana(texto) {
   const lineas = normalizarLineas(texto);
-  const apellidos = extraerEtiqueta(lineas, etiquetaApellidos);
-  const nombres = extraerEtiqueta(lineas, etiquetaNombres);
+  const personas = coherenciaPersonas(
+    extraerEtiqueta(lineas, etiquetaNombres),
+    extraerEtiqueta(lineas, etiquetaApellidos)
+  );
+  const { nombres, apellidos } = personas;
   const documento = obtenerDocumento(lineas);
   const fecha = obtenerNacimiento(lineas);
   return {
