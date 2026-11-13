@@ -916,28 +916,6 @@ export default function Pacientes() {
                 <button type="button" onClick={() => setShowListBox(true)} className="btn-secondary">
                   Ver lista
                 </button>
-                <button
-                  type="button"
-                  onClick={enviarSMSLote}
-                  disabled={enviandoSMS}
-                  className="btn-sms"
-                >
-                  {enviandoSMS ? 'Enviando SMS...' : 'Enviar SMS'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const now = new Date();
-                    const daysToAdd = ((8 - now.getDay()) % 7) || 7;
-                    const nextMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToAdd);
-                    const pad = (n) => String(n).padStart(2, '0');
-                    const dateStr = `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth()+1)}-${pad(nextMonday.getDate())}`;
-                    window.open(`/whatsapp-link?date=${encodeURIComponent(dateStr)}`, '_blank');
-                  }}
-                  className="btn-whatsapp"
-                >
-                  WhatsApp
-                </button>
               </div>
           </div>
         </div>
