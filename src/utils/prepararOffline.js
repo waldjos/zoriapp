@@ -3,6 +3,12 @@
  * locales y debe descargarse antes de trabajar sin red.
  */
 const PAQUETE = "zoriapp-offline-paciente-v1";
+const RECURSOS_MARCA = [
+  "/branding/zoriapp-2026.svg",
+  "/branding/zoriapp-icon-2026.svg",
+  "/branding/ivss-original.svg",
+  "/PROSILOD.jpg",
+];
 const RECURSOS_OCR = [
   "/ocr/worker.min.js",
   "/ocr/core/tesseract-core.wasm.js",
@@ -21,7 +27,7 @@ async function rutasDeInterfaz() {
 
 export async function comprobarPreparacionOffline() {
   if (!("caches" in window) || !("serviceWorker" in navigator)) return false;
-  const rutas = [...RECURSOS_OCR, ...await rutasDeInterfaz()];
+  const rutas = [...RECURSOS_MARCA, ...RECURSOS_OCR, ...await rutasDeInterfaz()];
   for (const ruta of rutas) {
     if (!await caches.match(ruta)) return false;
   }
@@ -35,7 +41,7 @@ export async function prepararOffline(alAvanzar = () => {}) {
   }
   await navigator.serviceWorker.register("/sw.js");
   const cache = await caches.open(PAQUETE);
-  const rutas = [...RECURSOS_OCR, ...await rutasDeInterfaz()];
+  const rutas = [...RECURSOS_MARCA, ...RECURSOS_OCR, ...await rutasDeInterfaz()];
   let completados = 0;
   for (const ruta of rutas) {
     const respuesta = await fetch(ruta, { cache: "reload" });
