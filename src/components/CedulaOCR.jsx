@@ -34,7 +34,7 @@ export function extraerCedula(texto) {
   // Si no reconoce la nacionalidad, prefiere dejar el campo sin inferir.
   // El texto OCR no sustituye la revisión visual del documento.
   const lineasNombre = lineas.filter((linea) =>
-    !/rep[uú]blica|venezuela|bolivariana|identidad|c[eé]dula|nacionalidad|fecha|nacimiento|sexo|firma|expedici[oó]n|vencimiento|fotograf[ií]a|documento|autoridad|estado|\\d{4}/i.test(linea)
+    !/rep[uú]blica|venezuela|bolivariana|identidad|c[eé]dula|nacionalidad|fecha|nacimiento|sexo|firma|expedici[oó]n|vencimiento|fotograf[ií]a|documento|autoridad|estado|\d{4}/i.test(linea)
   );
   const nombre = lineasNombre
     .map((linea) => linea.replace(/[^\p{L}\s'’-]/gu, " ").replace(/\s+/g, " ").trim())
