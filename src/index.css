@@ -12,7 +12,7 @@
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0; // Evitar desbordes en webviews angostas y pantalla dividida
 }
 
 a {
