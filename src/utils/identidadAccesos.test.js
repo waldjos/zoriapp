@@ -26,12 +26,11 @@ test("Evaluación de tacto se destaca debajo de las cuatro tarjetas", () => {
 
 test("foto del hospital usa JPEG nativo, marcas oficiales y composición aprobada", () => {
   const identidad = leer("src/components/IdentidadJornada.jsx");
-  const foto = leer("src/assets/hospitalFoto.js");
   const css = leer("src/zori-design-fidelidad.css");
-  assert.match(identidad, /HOSPITAL_FOTO_JPEG/);
-  assert.match(identidad, /zori-design-hospital-photo/);
-  assert.match(identidad, /zoriak-logo-oficial\.svg/);
-  assert.match(foto, /data:image\/jpeg;base64,/);
+  assert.match(identidad, /src="\\/branding\\/hospital-domingo-luciani\\.jpg"/);
+  assert.match(identidad, /zori-design-hospital-photo-fallback/);
+  assert.match(identidad, /onError=\\{\\(\\) => setFotoDisponible\\(false\\)\\}/);
+  assert.match(identidad, /zoriak-logo-oficial\\.svg/);
   assert.match(css, /--zori-lime: #78c82d/);
   assert.match(css, /zori-design-hospital-head/);
 });
