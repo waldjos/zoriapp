@@ -17,7 +17,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
-import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
+import { formatoNombre, formatoNombreEnEdicion, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
 import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function Pacientes() {
@@ -437,7 +437,8 @@ export default function Pacientes() {
             <input
               type="text"
               value={nombreCompleto}
-              onChange={(e) => setNombreCompleto(formatoNombre(e.target.value))}
+              onChange={(e) => setNombreCompleto(formatoNombreEnEdicion(e.target.value))}
+              onBlur={() => setNombreCompleto((anterior) => formatoNombre(anterior))}
               required
             />
           </div>
