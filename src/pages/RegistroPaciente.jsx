@@ -1,10 +1,10 @@
 // src/pages/RegistroPaciente.jsx
 import { useRef, useState } from "react";
 import { guardarPacienteLocal } from "../utils/colaPacientesOffline";
-import { formatoNombre } from "../utils/formatoPaciente";
+import { formatoNombre, formatoNombreEnEdicion } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
 import CedulaOCR from "../components/CedulaOCR";
-import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
+import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha, nombreCompletoValido } from "../utils/registroExpress";
 
 export default function RegistroPaciente() {
   const [nombreCompleto, setNombreCompleto] = useState("");
@@ -94,6 +94,9 @@ export default function RegistroPaciente() {
         return;
       }
 
+      if (!nombreCompletoValido(nombreCompleto)) {
+        throw new Error("Escribe el nombre y al menos un apellido separados por espacios.");
+      }
       if (!verificado) {
         throw new Error("Confirma que verificaste los datos con la cédula antes de guardar.");
       }
@@ -148,15 +151,20 @@ export default function RegistroPaciente() {
           </label>
           <input
             type="text"
+            autoCapitalize="words"
+            autoComplete="name"
+            placeholder="Ej.: María Elena García Pérez"
             value={nombreCompleto}
             onChange={(e) => {
-              setNombreCompleto(formatoNombre(e.target.value));
+              setNombreCompleto(formatoNombreEnEdicion(e.target.value));
               ultimoOCR.current.nombre = "";
               setVerificado(false);
             }}
+            onBlur={() => setNombreCompleto((actual) => formatoNombre(actual))}
             required
             style={{ width: "100%", padding: "0.5rem" }}
           />
+          <small className="zori-nombre-ayuda">Separa nombre y apellidos con espacios. Las iniciales se colocan en mayúscula automáticamente.</small>
         </div>
 
         <div className="zori-document-field">
