@@ -2090,3 +2090,141 @@ button:active {
   .zori-sync-panel--compact .zori-sync-title { font-size: .82rem; }
   .zori-sync-expand { white-space: nowrap; }
 }
+
+
+/* Ajuste final de marca y legibilidad en dispositivos compactos. */
+.home-page .home-container {
+  padding-bottom: 24px;
+}
+.home-page .zori-quick-section {
+  margin-top: 12px;
+}
+.home-page .zori-quick-heading--secondary {
+  margin-top: 19px;
+}
+.home-page .zori-quick-advanced {
+  margin-top: 12px;
+}
+.zori-branding-sponsor-identity {
+  width: 100%;
+}
+.zori-branding-sponsor-identity img {
+  display: block;
+  width: min(100%, 190px);
+  max-width: 190px;
+  height: auto;
+  max-height: 65px;
+  object-fit: contain;
+  object-position: right center;
+}
+.zori-prosilod-copy small {
+  line-height: 1.5;
+}
+@media (max-width: 420px) {
+  .home-page .home-container {
+    padding: 7px 8px 22px;
+  }
+  .zori-branding-top {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    align-items: center;
+    gap: 12px;
+  }
+  .zori-branding-logo {
+    width: 100%;
+    max-width: 165px;
+    max-height: 67px;
+  }
+  .zori-branding-sponsor {
+    min-width: 0;
+    border-top: 0;
+    border-left: 1px solid #d7e5ea;
+    padding: 0 0 0 10px;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .zori-branding-sponsor-identity {
+    align-items: flex-start;
+  }
+  .zori-branding-sponsor-identity img {
+    width: 100%;
+    max-width: 145px;
+    max-height: 49px;
+    object-position: left center;
+  }
+  .zori-branding-sponsor small {
+    font-size: .72rem;
+  }
+  .zori-branding-sponsor-tagline {
+    font-size: .71rem !important;
+    line-height: 1.25;
+  }
+  .zori-hospital-strip {
+    margin-top: 10px;
+    padding: 11px 9px;
+    gap: 9px;
+  }
+  .zori-hospital-strip strong {
+    font-size: 1rem;
+  }
+  .zori-hospital-strip span {
+    font-size: .74rem;
+    line-height: 1.3;
+  }
+  .zori-prosilod {
+    grid-template-columns: minmax(0,1fr);
+    gap: 7px;
+    padding: 13px 14px 15px;
+    margin: 11px 0 17px;
+  }
+  .zori-prosilod-photo {
+    width: 100%;
+    padding: 0;
+    background: transparent;
+  }
+  .zori-prosilod-photo img {
+    width: min(100%, 250px);
+    max-height: 122px;
+    object-fit: contain;
+  }
+  .zori-prosilod-copy {
+    gap: 5px;
+    align-items: center;
+    text-align: center;
+  }
+  .zori-prosilod-kicker {
+    font-size: .78rem;
+  }
+  .zori-prosilod h2 {
+    font-size: 1.7rem;
+    line-height: 1.15;
+  }
+  .zori-prosilod-generic {
+    font-size: 1.01rem;
+  }
+  .zori-prosilod-tag {
+    padding: 7px 10px;
+    font-size: .81rem;
+  }
+  .zori-prosilod-copy small {
+    font-size: .74rem;
+    line-height: 1.35;
+  }
+  .home-page .zori-quick-tile {
+    min-height: 106px;
+  }
+  .home-page .zori-quick-copy strong {
+    font-size: .95rem;
+  }
+  .home-page .zori-quick-copy small {
+    font-size: .76rem;
+  }
+}
+@media (max-width: 335px) {
+  .zori-branding-top { grid-template-columns: 1fr; }
+  .zori-branding-sponsor {
+    border-top: 1px solid #d7e5ea;
+    border-left: 0;
+    padding: 8px 0 0;
+  }
+}
