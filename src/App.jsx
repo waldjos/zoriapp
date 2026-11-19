@@ -41,14 +41,7 @@ function AppShell() {
   };
   return (
     <div className="app-shell">
-      <header className="app-header">
-        {user && (
-          <button onClick={salir} style={{ backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "999px", padding: "0.5rem 1.1rem", fontWeight: 600, cursor: "pointer" }}>
-            Cerrar sesión
-          </button>
-        )}
-      </header>
-      {user && <MainNav />}
+      {user && <MainNav onLogout={salir} />}
       {user && pathname !== "/" && <EstadoSincronizacion user={user} />}
       <main className="app-main">
         <Routes>
