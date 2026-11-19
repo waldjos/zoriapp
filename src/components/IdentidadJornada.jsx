@@ -14,10 +14,9 @@ export default function IdentidadJornada() {
           target="_blank" rel="noopener noreferrer" aria-label="Zoriak Pharma, patrocinante">
           <small>Con el apoyo de</small>
           <span className="zori-branding-sponsor-identity">
-            {logoDisponible
-              ? <img src={LOGO_OFICIAL_ZORIAK} alt="Zoriak Pharma"
-                  onError={() => setLogoDisponible(false)} />
-              : <strong>Zoriak Pharma</strong>}
+            {logoDisponible && <img src={LOGO_OFICIAL_ZORIAK} alt=""
+              aria-hidden="true" onError={() => setLogoDisponible(false)} />}
+            <strong className="zori-sponsor-name">Zoriak Pharma</strong>
           </span>
           <span className="zori-branding-sponsor-tagline">Tu círculo de confianza</span>
         </a>
