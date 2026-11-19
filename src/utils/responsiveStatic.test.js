@@ -27,7 +27,7 @@ test("nueva PWA usa cache distinto y conserva cola clínica de IndexedDB", () =>
   const sw = leer("public/sw.js");
   const preparación = leer("src/utils/prepararOffline.js");
   const cola = leer("src/utils/colaPacientesOffline.js");
-  assert.match(sw, /registro-offline-2026-11-v3/);
+  assert.match(sw, /registro-offline-2026-11-v4/);
   assert.match(preparación, /offline-paciente-v3/);
   assert.match(preparación, /hospital-luciani-foto\.svg/);
   assert.match(preparación, /zoriak-logo-oficial\.svg/);
