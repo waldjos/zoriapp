@@ -42,7 +42,7 @@ export default function Login() {
             alt="ZoriApp · Gestión de jornadas médicas" />
           <PatrocinanteZoriak compact />
         </header>
-        <main className="zori-design-login-card">
+        <section className="zori-design-login-card">
           <div className="zori-design-login-intro">
             <div className="zori-design-login-emblem">
               <ZoriIcon name="evaluacion" size={69} strokeWidth={1.65}/>
@@ -90,7 +90,7 @@ export default function Login() {
             Acceso exclusivo para médicos autorizados. Los registros pueden guardarse temporalmente
             en este teléfono y sincronizarse al recuperar conexión.
           </p>
-        </main>
+        </section>
       </div>
     </div>
   );
