@@ -2,7 +2,9 @@
  * Preparación explícita del dispositivo. El OCR está incluido como archivos
  * locales y debe descargarse antes de trabajar sin red.
  */
-const PAQUETE = "zoriapp-offline-paciente-v1";
+// Cambiar esta versión al actualizar los recursos de la PWA; evita falsos estados
+// "listo offline" heredados de compilaciones antiguas.
+const PAQUETE = "zoriapp-offline-paciente-v2";
 const RECURSOS_MARCA = [
   "/branding/zoriapp-2026.svg",
   "/branding/zoriapp-icon-2026.svg",
@@ -28,8 +30,10 @@ async function rutasDeInterfaz() {
 export async function comprobarPreparacionOffline() {
   if (!("caches" in window) || !("serviceWorker" in navigator)) return false;
   const rutas = [...RECURSOS_MARCA, ...RECURSOS_OCR, ...await rutasDeInterfaz()];
+  // Consultar solamente la versión actual, no archivos de otros paquetes antiguos.
+  const cache = await caches.open(PAQUETE);
   for (const ruta of rutas) {
-    if (!await caches.match(ruta)) return false;
+    if (!await cache.match(ruta)) return false;
   }
   return true;
 }
