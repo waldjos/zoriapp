@@ -4,13 +4,13 @@
  */
 // Cambiar esta versión al actualizar los recursos de la PWA; evita falsos estados
 // "listo offline" heredados de compilaciones antiguas.
-const PAQUETE = "zoriapp-offline-paciente-v3";
+const PAQUETE = "zoriapp-offline-paciente-v4";
 const RECURSOS_MARCA = [
   "/branding/zoriapp-2026.svg",
   "/branding/zoriapp-icon-2026.svg",
   "/branding/ivss-original.svg",
   "/branding/zoriak-logo-oficial.svg",
-  "/branding/hospital-luciani-foto.svg",
+  "/branding/hospital-domingo-luciani.jpg",
   "/PROSILOD.jpg",
 ];
 const RECURSOS_OCR = [
