@@ -1,41 +1,45 @@
 import { useState } from "react";
+import { HOSPITAL_FOTO_JPEG } from "../assets/hospitalFoto";
 
-// Copia literal del SVG oficial, recuperada durante la compilación si está disponible.
-const LOGO_OFICIAL_ZORIAK = "/branding/zoriak-logo-oficial.svg";
+const ZORIAK_OFICIAL = "/branding/zoriak-logo-oficial.svg";
+
+export function PatrocinanteZoriak({ compact = false }) {
+  const [visible, setVisible] = useState(true);
+  return (
+    <div className={`zori-design-patrocinio${compact ? " zori-design-patrocinio--compact" : ""}`}>
+      <span>Con el apoyo de</span>
+      <a href="https://zoriakpharma.com/" target="_blank" rel="noopener noreferrer"
+        className="zori-design-logo-patrocinante" aria-label="Zoriak Pharma">
+        {visible
+          ? <img src={ZORIAK_OFICIAL} alt="Zoriak Pharma" loading="eager"
+              onError={() => setVisible(false)} />
+          : <strong>Zoriak Pharma</strong>}
+      </a>
+      <em>Tu círculo de confianza</em>
+    </div>
+  );
+}
 
 export default function IdentidadJornada() {
-  const [logoDisponible, setLogoDisponible] = useState(true);
   return (
-    <section className="zori-branding" aria-label="Identidad de la jornada médica">
-      <div className="zori-branding-top">
-        <img className="zori-branding-logo" src="/branding/zoriapp-2026.svg"
-          alt="ZoriApp — Gestión de jornadas médicas" />
-        <a className="zori-branding-sponsor" href="https://zoriakpharma.com/"
-          target="_blank" rel="noopener noreferrer" aria-label="Zoriak Pharma, patrocinante">
-          <small>Con el apoyo de</small>
-          <span className="zori-branding-sponsor-identity">
-            {logoDisponible
-              ? <img src={LOGO_OFICIAL_ZORIAK} alt="Zoriak Pharma" loading="eager"
-                  onError={() => setLogoDisponible(false)} />
-              : <strong className="zori-sponsor-name">Zoriak Pharma</strong>}
-          </span>
-          <span className="zori-branding-sponsor-tagline">Tu círculo de confianza</span>
-        </a>
-      </div>
-      <div className="zori-hospital-strip">
-        <div className="zori-hospital-heading">
+    <div className="zori-design-institucional">
+      <section className="zori-design-brand-header" aria-label="ZoriApp y patrocinio">
+        <img src="/branding/zoriapp-2026.svg" alt="ZoriApp · Gestión de jornadas médicas"
+          className="zori-design-logo-app" />
+        <PatrocinanteZoriak />
+      </section>
+      <section className="zori-design-hospital" aria-label="Hospital Dr. Domingo Luciani">
+        <header className="zori-design-hospital-head">
           <img src="/branding/ivss-original.svg" alt="IVSS" />
           <div>
-            <span className="zori-hospital-eyebrow">Instituto Venezolano de los Seguros Sociales</span>
+            <span>Instituto Venezolano de los Seguros Sociales</span>
             <strong>Hospital Dr. Domingo Luciani</strong>
-            <span>Jornada médica 2026 · El Llanito, Petare</span>
+            <small>Jornada médica 2026 · El Llanito, Petare</small>
           </div>
-        </div>
-        <div className="zori-hospital-photo-frame">
-          <img className="zori-hospital-photo" src="/branding/hospital-luciani-foto.svg"
-            alt="Fachada del Hospital Dr. Domingo Luciani" loading="eager" />
-        </div>
-      </div>
-    </section>
+        </header>
+        <img className="zori-design-hospital-photo" src={HOSPITAL_FOTO_JPEG}
+          alt="Fachada del Hospital Dr. Domingo Luciani" loading="eager" />
+      </section>
+    </div>
   );
 }

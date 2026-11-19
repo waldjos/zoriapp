@@ -1,6 +1,6 @@
 /* PWA ZoriApp: archivos de interfaz + recursos OCR, sin almacenar datos clínicos. */
 // Cambia al actualizar CSS o recursos locales; nunca borra la cola clínica IndexedDB.
-const VERSION = "zoriapp-registro-offline-2026-11-v4";
+const VERSION = "zoriapp-registro-offline-2026-11-v5";
 const SHELL = VERSION + "-shell";
 const OCR = VERSION + "-ocr";
 const ENTRADA = [

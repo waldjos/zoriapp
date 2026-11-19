@@ -22,6 +22,7 @@ import { pendientesLocales } from "./utils/colaPacientesOffline";
 
 import "./App.css";
 import "./responsive-light.css";
+import "./zori-design-fidelidad.css";
 
 function AppShell() {
   const { user, logout } = useAuth();

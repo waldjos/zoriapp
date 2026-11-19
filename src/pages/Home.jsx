@@ -256,7 +256,7 @@ export default function Home() {
   if (!user) return null; // protección básica
 
   return (
-    <div className="page home-page">
+    <div className="page home-page zori-design-home">
       <div className="home-container">
       <div className="home-card">
         <IdentidadJornada />
