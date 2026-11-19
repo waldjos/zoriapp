@@ -14,19 +14,26 @@ export default function IdentidadJornada() {
           target="_blank" rel="noopener noreferrer" aria-label="Zoriak Pharma, patrocinante">
           <small>Con el apoyo de</small>
           <span className="zori-branding-sponsor-identity">
-            {logoDisponible && <img src={LOGO_OFICIAL_ZORIAK} alt=""
-              aria-hidden="true" onError={() => setLogoDisponible(false)} />}
-            <strong className="zori-sponsor-name">Zoriak Pharma</strong>
+            {logoDisponible
+              ? <img src={LOGO_OFICIAL_ZORIAK} alt="Zoriak Pharma" loading="eager"
+                  onError={() => setLogoDisponible(false)} />
+              : <strong className="zori-sponsor-name">Zoriak Pharma</strong>}
           </span>
           <span className="zori-branding-sponsor-tagline">Tu círculo de confianza</span>
         </a>
       </div>
       <div className="zori-hospital-strip">
-        <img src="/branding/ivss-original.svg" alt="IVSS" />
-        <div>
-          <span className="zori-hospital-eyebrow">Instituto Venezolano de los Seguros Sociales</span>
-          <strong>Hospital Dr. Domingo Luciani</strong>
-          <span>Jornada médica 2026 · El Llanito, Petare</span>
+        <div className="zori-hospital-heading">
+          <img src="/branding/ivss-original.svg" alt="IVSS" />
+          <div>
+            <span className="zori-hospital-eyebrow">Instituto Venezolano de los Seguros Sociales</span>
+            <strong>Hospital Dr. Domingo Luciani</strong>
+            <span>Jornada médica 2026 · El Llanito, Petare</span>
+          </div>
+        </div>
+        <div className="zori-hospital-photo-frame">
+          <img className="zori-hospital-photo" src="/branding/hospital-luciani-foto.svg"
+            alt="Fachada del Hospital Dr. Domingo Luciani" loading="eager" />
         </div>
       </div>
     </section>
