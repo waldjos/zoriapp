@@ -8,6 +8,7 @@ import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/forma
 import { getPSARiskCategory } from "../utils/psaUtils";
 import { getTactoRiskCategory } from "../utils/tactoUtils";
 import ProsilodBanner from "../components/ProsilodBanner";
+import EstadoSincronizacion from "../components/EstadoSincronizacion";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -259,6 +260,7 @@ export default function Home() {
       <div className="home-container">
       <div className="home-card">
         <IdentidadJornada />
+        <EstadoSincronizacion user={user} />
         <ProsilodBanner />
 
         <HomeQuickActions />
