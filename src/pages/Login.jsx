@@ -54,24 +54,23 @@ export default function Login() {
             </div>
           </div>
           <form className="zori-design-login-form" onSubmit={handleSubmit}>
-            <label className="zori-design-login-field">
+            <div className="zori-design-login-field">
               <ZoriIcon name="correo" size={27}/>
-              <span className="sr-only">Correo electrónico</span>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                autoComplete="username" inputMode="email" placeholder="Correo electrónico" required />
-            </label>
-            <label className="zori-design-login-field">
+              <input aria-label="Correo electrónico" type="email" value={email}
+                onChange={e => setEmail(e.target.value)} autoComplete="username"
+                inputMode="email" placeholder="Correo electrónico" required />
+            </div>
+            <div className="zori-design-login-field">
               <ZoriIcon name="seguridad" size={27}/>
-              <span className="sr-only">Contraseña</span>
-              <input type={mostrarClave ? "text" : "password"} value={password}
-                onChange={e => setPassword(e.target.value)}
+              <input aria-label="Contraseña" type={mostrarClave ? "text" : "password"}
+                value={password} onChange={e => setPassword(e.target.value)}
                 autoComplete="current-password" placeholder="Contraseña" required/>
               <button type="button" className="zori-design-show-password"
                 aria-label={mostrarClave ? "Ocultar contraseña" : "Mostrar contraseña"}
                 aria-pressed={mostrarClave} onClick={() => setMostrarClave(v=>!v)}>
                 {mostrarClave ? "Ocultar" : "Ver"}
               </button>
-            </label>
+            </div>
             {error && <p role="alert" className="login-error">{error}</p>}
             <button className="zori-design-login-submit" type="submit" disabled={submitting}>
               {submitting ? "Ingresando..." : "Ingresar"}
