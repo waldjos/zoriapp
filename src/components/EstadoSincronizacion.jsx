@@ -10,6 +10,7 @@ export default function EstadoSincronizacion({ user }) {
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [verLista, setVerLista] = useState(false);
+  const [expandido, setExpandido] = useState(false);
   const [inicializado, setInicializado] = useState(false);
   const [archivosOffline, setArchivosOffline] = useState(false);
   const [preparando, setPreparando] = useState(false);
@@ -99,20 +100,27 @@ export default function EstadoSincronizacion({ user }) {
   }, [uid, actualizar, sincronizar]);
 
   if (!uid) return null;
+  const mostrarHerramientas = expandido || pendientes.length > 0 || !enLinea || preparando;
 
   return (
-    <section className="zori-sync-panel" aria-label="Estado de los registros sin conexión">
+    <section className={`zori-sync-panel${mostrarHerramientas ? "" : " zori-sync-panel--compact"}`} aria-label="Estado de los registros sin conexión">
       <div className="zori-sync-top">
         <div>
           <strong className="zori-sync-title">
             {enLinea ? "● Con conexión" : "● Sin internet"} · {inicializado ? pendientes.length : "…"} pendientes
           </strong>
-          <span className="zori-sync-note">
-            {enLinea ? "Enviado solo cuando Firebase confirma la recepción." :
-              "Puedes seguir registrando: los datos quedarán en este teléfono."}
-          </span>
+          {mostrarHerramientas && (
+            <span className="zori-sync-note">
+              {enLinea ? "Enviado solo cuando Firebase confirma la recepción." :
+                "Puedes seguir registrando: los datos quedarán en este teléfono."}
+            </span>
+          )}
         </div>
-        <div className="zori-sync-actions">
+        <button type="button" className="zori-sync-expand" aria-expanded={mostrarHerramientas}
+          aria-controls="zori-offline-tools" onClick={() => setExpandido(!expandido)}>
+          {mostrarHerramientas && expandido ? "Ocultar" : mostrarHerramientas ? "Opciones" : "Opciones offline"}
+        </button>
+        {mostrarHerramientas && <div className="zori-sync-actions">
           {pendientes.length > 0 && (
             <button type="button" className="zori-sync-toggle" onClick={() => setVerLista(!verLista)}
               aria-expanded={verLista}>{verLista ? "Ocultar" : "Ver pendientes"}</button>
@@ -120,9 +128,9 @@ export default function EstadoSincronizacion({ user }) {
           <button className="zori-sync-button" type="button"
             disabled={!enLinea || enviando || pendientes.length === 0}
             onClick={() => sincronizar(false)}>{enviando ? "Sincronizando…" : "Sincronizar ahora"}</button>
-        </div>
+        </div>}
       </div>
-      <div className="zori-sync-preparar">
+      {mostrarHerramientas && <div id="zori-offline-tools" className="zori-sync-preparar">
         {archivosOffline
           ? <span className="zori-sync-ready">✓ Archivos de la app y OCR descargados para uso offline</span>
           : <span className="zori-sync-ready">Prepara este teléfono con internet antes de la jornada.</span>}
@@ -130,7 +138,7 @@ export default function EstadoSincronizacion({ user }) {
           disabled={!enLinea || preparando}>
           {preparando ? "Descargando " + avanceDescarga + "%" : archivosOffline ? "Actualizar archivos offline" : "Preparar modo offline"}
         </button>
-      </div>
+      </div>}
       {mensaje && <p role="status" className="zori-sync-message">{mensaje}</p>}
       {verLista && pendientes.length > 0 && (
         <ol className="zori-sync-list">
