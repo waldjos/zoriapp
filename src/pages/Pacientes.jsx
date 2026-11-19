@@ -7,7 +7,6 @@ import {
   addDoc,
   onSnapshot,
   query,
-  orderBy,
   serverTimestamp,
   doc,
   updateDoc,
@@ -329,10 +328,9 @@ export default function Pacientes() {
 
   // Escuchar en tiempo real la colección "pacientes"
   useEffect(() => {
-    const q = query(
-      collection(db, "pacientes"),
-      orderBy("createdAt", "desc")
-    );
+    // No ordenar por createdAt en la consulta: Firestore excluye registros
+    // históricos que carecen de ese campo. Se ordenan después de leerlos.
+    const q = query(collection(db, "pacientes"));
 
     const unsubscribe = onSnapshot(
       q,
@@ -341,6 +339,17 @@ export default function Pacientes() {
           id: docSnap.id,
           ...docSnap.data(),
         }));
+        // Expedientes sin fecha quedan al final, pero siguen visibles
+        // en las pestañas "Sin clasificar" y "Todas".
+        const valorFecha = (paciente) => {
+          const fecha = paciente.createdAt || paciente.fechaCapturaLocal || paciente.fechaRegistro;
+          if (!fecha) return 0;
+          if (typeof fecha.toMillis === "function") return fecha.toMillis();
+          if (typeof fecha.seconds === "number") return fecha.seconds * 1000;
+          const parsed = Date.parse(fecha);
+          return Number.isFinite(parsed) ? parsed : 0;
+        };
+        lista.sort((a, b) => valorFecha(b) - valorFecha(a));
         setPacientes(lista);
         setCargandoPacientes(false);
       },
@@ -465,9 +474,10 @@ export default function Pacientes() {
     setSuccess("");
   };
 
-  // Filtrado por búsqueda (nombre o cédula) — comparación normalizada y sin acentos
-  const pacientesFiltrados = pacientes.filter((p) => {
-    if (!filtroJornada(p, periodo)) return false;
+  // El total del periodo no debe depender de lo escrito en el buscador.
+  const pacientesEnPeriodo = pacientes.filter((p) => filtroJornada(p, periodo));
+  // Filtrado por búsqueda (nombre o cédula) — sin acentos.
+  const pacientesFiltrados = pacientesEnPeriodo.filter((p) => {
     const termino = searchTerm.trim();
     if (!termino) return true;
 
@@ -899,7 +909,7 @@ export default function Pacientes() {
               <h2 className="list-title">Lista de pacientes</h2>
               {!cargandoPacientes && (
                 <p className="page-header-subtitle" style={{ marginTop: "6px" }}>
-                  Registros de {periodo === "sin-fecha" ? "fecha desconocida" : periodo === "todos" ? "todos los años" : periodo}: <strong>{pacientesFiltrados.length}</strong>
+                  Registros de {periodo === "sin-fecha" ? "fecha desconocida" : periodo === "todos" ? "todos los años" : periodo}: <strong>{pacientesEnPeriodo.length}</strong>
                   {searchTerm && (<> | Coincidencias: <strong>{pacientesFiltrados.length}</strong></>)}
                 </p>
               )}
@@ -930,7 +940,7 @@ export default function Pacientes() {
           <p style={{ marginTop: "1rem" }}>Cargando pacientes...</p>
         ) : pacientesFiltrados.length === 0 ? (
           <p style={{ marginTop: "1rem" }}>
-            {searchTerm.trim() ? `Ninguna coincidencia para "${searchTerm.trim()}".` : "No hay pacientes registrados aún."}
+            {searchTerm.trim() ? `Ninguna coincidencia para "${searchTerm.trim()}".` : "No hay pacientes en el periodo seleccionado."}
           </p>
         ) : (
           <div className="table-wrapper table-scroll table-wrapper--scroll-y" style={{ marginTop: "0.6rem" }}>
@@ -958,6 +968,7 @@ export default function Pacientes() {
                     <td>{p.email || "-"}</td>
                     <td>{(p.psaTotal != null || p.psaLibre != null) ? `${p.psaTotal ?? "-"} / ${p.psaLibre ?? "-"}` : "-"}</td>
                     <td>{getPSALibrePercent(p.psaTotal, p.psaLibre) != null && shouldShowPSALibreRelation(p.psaTotal) ? `${getPSALibrePercent(p.psaTotal, p.psaLibre)}%` : "-"}</td>
+                    <td>{p.estadoResultado || p.entregaResultados || "Sin estado"}</td>
                     <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       <div className="actions-cell">
                         <button onClick={() => irADetalle(p.id)} style={{ backgroundColor: "#2563eb" }}>Ver ficha</button>
