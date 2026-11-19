@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { HOSPITAL_FOTO_JPEG } from "../assets/hospitalFoto";
 
 const ZORIAK_OFICIAL = "/branding/zoriak-logo-oficial.svg";
 
@@ -21,6 +20,7 @@ export function PatrocinanteZoriak({ compact = false }) {
 }
 
 export default function IdentidadJornada() {
+  const [fotoDisponible, setFotoDisponible] = useState(true);
   return (
     <div className="zori-design-institucional">
       <section className="zori-design-brand-header" aria-label="ZoriApp y patrocinio">
@@ -37,8 +37,24 @@ export default function IdentidadJornada() {
             <small>Jornada médica 2026 · El Llanito, Petare</small>
           </div>
         </header>
-        <img className="zori-design-hospital-photo" src={HOSPITAL_FOTO_JPEG}
-          alt="Fachada del Hospital Dr. Domingo Luciani" loading="eager" />
+        {fotoDisponible ? (
+          <img
+            className="zori-design-hospital-photo"
+            src="/branding/hospital-domingo-luciani.jpg"
+            alt="Fachada del Hospital Dr. Domingo Luciani"
+            loading="eager"
+            decoding="async"
+            width="520"
+            height="255"
+            onError={() => setFotoDisponible(false)}
+          />
+        ) : (
+          <div className="zori-design-hospital-photo-fallback" role="img"
+            aria-label="Fachada del Hospital Dr. Domingo Luciani no disponible">
+            <strong>Hospital Dr. Domingo Luciani</strong>
+            <span>El Llanito, Petare</span>
+          </div>
+        )}
       </section>
     </div>
   );
