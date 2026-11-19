@@ -35,9 +35,9 @@ export default function Login() {
         {/* Columna izquierda: branding y beneficios */}
         <div className="login-left">
           <div className="login-logo-row">
-            <img src="/branding/zoriapp-icon-2026.svg" alt="ZoriApp" className="login-logo" />
-            <span className="login-logo-text">ZoriApp</span>
+            <img src="/branding/zoriapp-2026.svg" alt="ZoriApp, gestión de jornadas médicas" className="login-brand-logo" />
           </div>
+          <div className="login-institution">Hospital Dr. Domingo Luciani · Jornada médica 2026</div>
 
           <h1 className="login-title">Ingreso a ZoriApp</h1>
           <p className="login-subtitle">
@@ -55,6 +55,13 @@ export default function Login() {
           <p className="login-footer-text">
             Acceso exclusivo para médicos autorizados. Los registros pueden quedar pendientes en el teléfono y se envían a Firebase cuando vuelva la conexión.
           </p>
+          <div className="login-sponsor" aria-label="Patrocinante Zoriak Pharma">
+            <span>Con el apoyo de</span>
+            <img src="/branding/zoriak-logo-oficial.svg" alt="" aria-hidden="true"
+              onError={(event) => { event.currentTarget.style.display = "none"; }} />
+            <strong>Zoriak Pharma</strong>
+            <small>Tu círculo de confianza</small>
+          </div>
         </div>
 
         {/* Columna derecha: formulario */}
