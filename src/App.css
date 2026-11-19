@@ -1937,3 +1937,156 @@ button:active {
   .zori-prosilod { grid-template-columns:1fr; }
   .zori-prosilod-photo img { max-height:110px; }
 }
+
+
+/* Corrección de interfaz móvil: contraste, jerarquía y panel offline compacto */
+.home-page {
+  min-height: 100dvh;
+  background: linear-gradient(165deg, #f7fbfc 0%, #e7f4f5 100%);
+  color: #132a44;
+}
+.home-page .home-container {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  margin: 0 auto;
+  padding: 10px 9px 115px;
+  width: min(100%, 1120px);
+}
+.home-page .home-card {
+  background: transparent;
+  color: #132a44;
+  box-shadow: none;
+  padding: 3px;
+}
+.home-page .zori-quick-heading,
+.home-page .zori-quick-heading--secondary,
+.home-page .dashboard-title {
+  color: #152f4b;
+  font-size: clamp(1.1rem, 2.7vw, 1.35rem);
+  line-height: 1.3;
+}
+.home-page .zori-quick-section {
+  margin-top: 16px;
+}
+.home-page .zori-years-note {
+  color: #435e71;
+  font-size: .85rem;
+  line-height: 1.55;
+}
+.home-page .zori-quick-advanced summary,
+.home-page .zori-home-reports summary {
+  color: #183954;
+  font-weight: 750;
+}
+.home-page .zori-home-reports .home-export-card {
+  background: #f3f9fb !important;
+  color: #152f4b;
+}
+.home-page .zori-home-reports .home-export-card p {
+  color: #405b6d !important;
+}
+.zori-branding-sponsor {
+  min-width: 0;
+}
+.zori-branding-sponsor-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-end;
+  min-width: 0;
+}
+.zori-branding-sponsor-identity img {
+  width: auto;
+  max-width: min(100%, 155px);
+  max-height: 39px;
+  object-fit: contain;
+}
+.zori-branding-sponsor-identity strong {
+  color: #173c75;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.zori-branding-sponsor-tagline {
+  color: #264c65;
+  font-size: .82rem;
+  line-height: 1.3;
+}
+.zori-sync-panel--compact {
+  width: min(calc(100% - 1.5rem), 1030px);
+  margin: 9px auto 5px;
+  padding: 8px 12px;
+  border: 1px solid #bbdace;
+  border-radius: 12px;
+  background: #e5f6ef;
+  color: #143c35;
+  box-shadow: none;
+}
+.zori-sync-panel--compact .zori-sync-title {
+  color: #195740;
+  font-size: .85rem;
+}
+.zori-sync-expand {
+  padding: .48rem .75rem;
+  min-height: 36px;
+  font-weight: 700;
+  font-size: .78rem;
+  color: #eafff4;
+  background: #164d54;
+  border: 1px solid #2a7373;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.zori-sync-panel--compact .zori-sync-expand {
+  color: #15523f;
+  background: #ffffff;
+  border-color: #9fcebb;
+}
+.zori-sync-expand:focus-visible {
+  outline: 3px solid #85dba7;
+  outline-offset: 2px;
+}
+.zori-sync-panel--compact .zori-sync-top {
+  flex-wrap: nowrap;
+  gap: .55rem;
+}
+.zori-sync-panel--compact .zori-sync-top > div:first-child {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .home-page .home-container { padding: 7px 8px 115px; }
+  .home-page .home-card { padding: 2px; }
+  .zori-branding { border-radius: 18px; padding: 12px; }
+  .zori-branding-top { grid-template-columns: 1fr; gap: 10px; }
+  .zori-branding-logo { max-width: 260px; max-height: 64px; }
+  .zori-branding-sponsor {
+    align-items: flex-start;
+    border-left: 0;
+    border-top: 1px solid #dbe8ed;
+    padding: 9px 0 0;
+    gap: 3px;
+  }
+  .zori-branding-sponsor-identity { align-items: flex-start; }
+  .zori-branding-sponsor-identity img { max-height: 31px; max-width: 145px; }
+  .zori-branding-sponsor-identity strong { font-size: 1rem; }
+  .zori-branding-sponsor small { font-size: .77rem; }
+  .zori-branding-sponsor-tagline { font-size: .78rem !important; }
+  .home-page .zori-quick-tile { min-height: 104px; padding: 12px 10px; }
+  .home-page .zori-quick-copy strong { font-size: .91rem; }
+  .home-page .zori-quick-copy small { font-size: .77rem; line-height: 1.3; }
+  .home-page .zori-quick-heading { font-size: 1.15rem; }
+  .zori-prosilod { grid-template-columns: minmax(125px, .85fr) minmax(0, 1fr); }
+  .zori-prosilod h2 { font-size: 1.52rem; }
+  .zori-prosilod-generic { font-size: .98rem; }
+  .zori-prosilod-kicker { font-size: .74rem; }
+  .zori-prosilod-tag { font-size: .74rem; line-height: 1.35; }
+  .zori-prosilod-copy small { font-size: .69rem; }
+  .zori-sync-panel--compact { width: calc(100% - 1.5rem); padding: 8px 11px; }
+  .zori-sync-panel--compact .zori-sync-top { align-items: center; flex-wrap: nowrap; }
+  .zori-sync-panel--compact .zori-sync-title { font-size: .82rem; }
+  .zori-sync-expand { white-space: nowrap; }
+}
