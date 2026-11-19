@@ -1,0 +1,45 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/registro",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tacto",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mini-jornada",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/pacientes",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/pacientes/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/laboratorio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/validar-resultados",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/importar-psa",
+      "destination": "/index.html"
+    }
+  ]
+}
