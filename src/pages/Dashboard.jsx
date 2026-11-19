@@ -278,7 +278,7 @@ export default function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: "#020617", border: "1px solid rgba(148,163,184,.2)", borderRadius: 14 }}
+                  contentStyle={{ background: "#ffffff", color: "#173c53", border: "1px solid #c6dfe5", borderRadius: 14 }}
                   formatter={(value) => [value, "Pacientes"]}
                 />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" />
@@ -303,7 +303,7 @@ export default function Dashboard() {
                   <XAxis dataKey="localidad" tick={{ fill: "#cbd5e1", fontSize: 12 }} />
                   <YAxis tick={{ fill: "#cbd5e1", fontSize: 12 }} />
                   <Tooltip
-                    contentStyle={{ background: "#020617", border: "1px solid rgba(148,163,184,.2)", borderRadius: 14 }}
+                    contentStyle={{ background: "#ffffff", color: "#173c53", border: "1px solid #c6dfe5", borderRadius: 14 }}
                   />
                   <Bar dataKey="cantidad" name="Pacientes" fill="#38bdf8" radius={[10, 10, 0, 0]} animationDuration={1700} />
                 </BarChart>
@@ -351,13 +351,13 @@ export default function Dashboard() {
                 <defs>
                   <linearGradient id="colorImpact" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#5eead4" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#020617" stopOpacity={0.05} />
+                    <stop offset="95%" stopColor="#e7f3f8" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="rgba(148,163,184,0.1)" vertical={false} />
                 <XAxis dataKey="label" tick={{ fill: "#cbd5e1", fontSize: 12 }} />
                 <YAxis tick={{ fill: "#cbd5e1", fontSize: 12 }} />
-                <Tooltip contentStyle={{ background: "#020617", border: "1px solid rgba(148,163,184,.2)", borderRadius: 14 }} />
+                <Tooltip contentStyle={{ background: "#ffffff", color: "#173c53", border: "1px solid #c6dfe5", borderRadius: 14 }} />
                 <Area type="monotone" dataKey="value" stroke="#34d399" fill="url(#colorImpact)" animationDuration={2000} />
               </AreaChart>
             </ResponsiveContainer>

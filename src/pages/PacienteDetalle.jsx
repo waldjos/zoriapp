@@ -381,7 +381,7 @@ export default function PacienteDetalle() {
         </p>
         {/* Mostrar información del profesional que realizó el último tacto, si existe */}
         {paciente.tacto && (paciente.tacto.medicoEmail || paciente.tacto.medicoId) && (
-          <p style={{ margin: "0.25rem 0", color: "#cbd5f5" }}>
+          <p style={{ margin: "0.25rem 0", color: "#3d627a" }}>
             <strong>Evaluación (tacto) realizada por:</strong>{' '}
             {paciente.tacto.medicoEmail || paciente.tacto.medicoId}
             {paciente.tacto.actualizadoEn && (

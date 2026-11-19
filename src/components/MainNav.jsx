@@ -16,7 +16,7 @@ const SECUNDARIAS = [
   { path: "/dashboard", label: "Estadísticas", grupo: "Resultados y gestión" },
 ];
 
-export default function MainNav() {
+export default function MainNav({ onLogout }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mostrarMas, setMostrarMas] = useState(false);
@@ -70,6 +70,17 @@ export default function MainNav() {
                   ))}
                 </div>
               ))}
+              <div className="main-nav-panel-group main-nav-session">
+                <p className="main-nav-panel-label">Cuenta</p>
+                <button
+                  type="button"
+                  className="main-nav-panel-link main-nav-logout"
+                  onClick={onLogout}
+                >
+                  <span aria-hidden="true">↪</span>
+                  Cerrar sesión
+                </button>
+              </div>
             </div>
           )}
         </div>
