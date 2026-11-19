@@ -21,6 +21,7 @@ import EstadoSincronizacion from "./components/EstadoSincronizacion";
 import { pendientesLocales } from "./utils/colaPacientesOffline";
 
 import "./App.css";
+import "./responsive-light.css";
 
 function AppShell() {
   const { user, logout } = useAuth();
