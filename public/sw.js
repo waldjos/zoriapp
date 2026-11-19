@@ -1,12 +1,12 @@
 /* PWA ZoriApp: archivos de interfaz + recursos OCR, sin almacenar datos clínicos. */
 // Cambia al actualizar CSS o recursos locales; nunca borra la cola clínica IndexedDB.
-const VERSION = "zoriapp-registro-offline-2026-11-v5";
+const VERSION = "zoriapp-registro-offline-2026-11-v6";
 const SHELL = VERSION + "-shell";
 const OCR = VERSION + "-ocr";
 const ENTRADA = [
   "/", "/index.html", "/manifest.webmanifest",
   "/icons/icon-192.png", "/branding/zoriapp-2026.svg",
-  "/branding/zoriak-logo-oficial.svg", "/branding/hospital-luciani-foto.svg",
+  "/branding/zoriak-logo-oficial.svg", "/branding/hospital-domingo-luciani.jpg",
   "/branding/ivss-original.svg", "/PROSILOD.jpg"
 ];
 
@@ -78,6 +78,6 @@ self.addEventListener("fetch", (event) => {
   // Solo archivos estáticos. No guardar respuestas de Firebase o datos de pacientes.
   const estatico = req.destination === "script" || req.destination === "style" ||
     req.destination === "font" || req.destination === "image" ||
-    url.pathname.startsWith("/assets/") || /\.(js|css|wasm|woff2?|png|webp|svg)$/.test(url.pathname);
+    url.pathname.startsWith("/assets/") || /\.(js|css|wasm|woff2?|png|jpe?g|webp|svg)$/.test(url.pathname);
   if (estatico) event.respondWith(primeroCache(req, SHELL));
 });
