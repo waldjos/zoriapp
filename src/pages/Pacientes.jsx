@@ -1,26 +1,23 @@
 // src/pages/Pacientes.jsx
 import { useEffect, useState } from "react";
-import { createWorker } from "tesseract.js";
-import { useRef } from "react";
 import {
   collection,
   addDoc,
   onSnapshot,
   query,
-  orderBy,
   serverTimestamp,
   doc,
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
-import ProsilodBanner from "../components/ProsilodBanner";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { filtroJornada } from "../utils/jornada";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";
-import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
+import { formatoNombre, formatoNombreEnEdicion, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
 import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "../utils/registroExpress";
 
 export default function Pacientes() {
@@ -37,273 +34,6 @@ export default function Pacientes() {
   const [estadoResultado, setEstadoResultado] = useState("pendiente");
   const [psaTotal, setPsaTotal] = useState("");
   const [psaLibre, setPsaLibre] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [permitirOcrExterno, setPermitirOcrExterno] = useState(false);
-  const [ocrError, setOcrError] = useState("");
-  const [ocrProgress, setOcrProgress] = useState(0);
-  const workerRef = useRef(null);
-  const [ocrRaw, setOcrRaw] = useState("");
-  const [extractedNotice, setExtractedNotice] = useState(null);
-
-  // Terminar worker al desmontar para liberar memoria
-  useEffect(() => {
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-    };
-  }, []);
-
-  // Ejecuta OCR con varios niveles de preprocesado y elige la mejor salida
-  const runOcrWithRetries = async (file) => {
-    const attempts = [
-      { contrast: 1.2, sharpen: false, maxWidth: 1200 }, // suave
-      { contrast: 1.4, sharpen: true, maxWidth: 1600 }, // medio
-      { contrast: 1.7, sharpen: true, maxWidth: 2000 }, // agresivo
-    ];
-
-    let best = { score: -1, text: '', cedula: null, nombre: null, fecha: null };
-
-    for (let i = 0; i < attempts.length; i++) {
-      const opts = attempts[i];
-      try {
-        setOcrProgress(Math.round((i / attempts.length) * 100));
-        const processed = await (async (f, o) => {
-          return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-              const maxWidth = o.maxWidth || 1600;
-              const scale = Math.min(1, maxWidth / img.width);
-              const canvas = document.createElement('canvas');
-              canvas.width = Math.round(img.width * scale);
-              canvas.height = Math.round(img.height * scale);
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-              const data = imageData.data;
-              // grayscale
-              for (let k = 0; k < data.length; k += 4) {
-                const r = data[k], g = data[k+1], b = data[k+2];
-                const v = 0.299*r + 0.587*g + 0.114*b;
-                data[k] = data[k+1] = data[k+2] = v;
-              }
-              // contrast
-              const contrast = o.contrast || 1.2;
-              for (let k = 0; k < data.length; k += 4) {
-                let v = data[k];
-                let nv = (v - 128) * contrast + 128;
-                nv = Math.max(0, Math.min(255, nv));
-                data[k] = data[k+1] = data[k+2] = nv;
-              }
-              ctx.putImageData(imageData, 0, 0);
-
-              // optional sharpen
-              if (o.sharpen) {
-                const sctx = canvas.getContext('2d');
-                const sData = sctx.getImageData(0,0,canvas.width, canvas.height);
-                const sd = sData.data;
-                const copy = new Uint8ClampedArray(sd);
-                const w = canvas.width, h = canvas.height;
-                for (let y = 1; y < h-1; y++) {
-                  for (let x = 1; x < w-1; x++) {
-                    const idx = (y*w + x)*4;
-                    const center = copy[idx];
-                    const north = copy[idx - w*4];
-                    const south = copy[idx + w*4];
-                    const west = copy[idx - 4];
-                    const east = copy[idx + 4];
-                    let val = center*5 - north - south - west - east;
-                    val = Math.max(0, Math.min(255, val));
-                    sd[idx] = sd[idx+1] = sd[idx+2] = val;
-                  }
-                }
-                sctx.putImageData(sData, 0, 0);
-                sctx.canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.95);
-              } else {
-                canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
-              }
-            };
-            img.onerror = reject;
-            const reader = new FileReader();
-            reader.onload = (ev) => (img.src = ev.target.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(f);
-          });
-        })(file, opts);
-
-        const worker = workerRef.current;
-        const { data: { text } } = await worker.recognize(processed);
-        const raw = (text || '').replace(/\t/g, ' ');
-        // parse
-        const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        let cedulaFound = null;
-        for (const line of lines) {
-          const m = line.match(/\b([VEJPG]\-?\s?\d{6,10}|\d{6,10})\b/i);
-          if (m) { cedulaFound = m[0].replace(/\s|\-/g, ''); break; }
-        }
-        let fechaFound = null;
-        for (const line of lines) {
-          const fm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})|(\d{4}[\/\-]\d{2}[\/\-]\d{2})/);
-          if (fm) { fechaFound = fm[0]; break; }
-        }
-        let nombreFound = null;
-        for (const line of lines) {
-          const clean = line.replace(/[\d\W_]+/g, ' ').trim();
-          if (clean.length >= 6 && /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(clean) && clean.split(' ').length >= 2) {
-            nombreFound = clean; break;
-          }
-        }
-
-        // scoring
-        let score = 0;
-        if (cedulaFound) score += 100;
-        if (nombreFound) score += 20;
-        if (fechaFound) score += 10;
-        // prefer longer OCR outputs a bit
-        score += Math.min(10, raw.length / 100);
-
-        if (score > best.score) {
-          best = { score, text: raw, cedula: cedulaFound, nombre: nombreFound, fecha: fechaFound };
-        }
-
-        // if we already have cedula, stop early
-        if (best.cedula) break;
-      } catch (err) {
-        console.error('attempt OCR error', err);
-      }
-    }
-
-    setOcrProgress(100);
-    return best;
-  };
-
-  // Llamar al endpoint serverless que reenvía a OCR.space
-  const callOcrSpaceServer = async (file) => {
-    const readAsDataURL = (f) => new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result));
-      r.onerror = reject;
-      r.readAsDataURL(f);
-    });
-
-    const dataUrl = await readAsDataURL(file);
-    // Enviar al endpoint local /api/ocr-space
-    const resp = await fetch('/api/ocr-space', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: dataUrl }),
-    });
-    if (!resp.ok) throw new Error('OCR.space proxy failed');
-    const json = await resp.json();
-    const parsed = json?.ParsedResults?.[0]?.ParsedText || '';
-    const raw = (parsed || '').replace(/\t/g, ' ');
-    // extraer campos iguales a la lógica local
-    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    let cedulaFound = null;
-    for (const line of lines) {
-      const m = line.match(/\b([VEJPG]\-?\s?\d{6,10}|\d{6,10})\b/i);
-      if (m) { cedulaFound = m[0].replace(/\s|\-/g, ''); break; }
-    }
-    let fechaFound = null;
-    for (const line of lines) {
-      const fm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})|(\d{4}[\/\-]\d{2}[\/\-]\d{2})/);
-      if (fm) { fechaFound = fm[0]; break; }
-    }
-    let nombreFound = null;
-    for (const line of lines) {
-      const clean = line.replace(/[\d\W_]+/g, ' ').trim();
-      if (clean.length >= 6 && /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(clean) && clean.split(' ').length >= 2) {
-        nombreFound = clean; break;
-      }
-    }
-
-    return { text: raw, cedula: cedulaFound, fecha: fechaFound, nombre: nombreFound };
-  };
-
-  // Handler que intenta OCR.space primero y luego Tesseract si hace falta
-  const handleFileInput = async (file) => {
-    setOcrError("");
-    setOcrProgress(0);
-    setOcrLoading(true);
-    let tieneCedula = Boolean(cedula), tieneNombre = Boolean(nombreCompleto);
-    try {
-      // Solo enviar la fotografía a proveedor externo si se marca el consentimiento.
-      if (permitirOcrExterno) try {
-        const serverRes = await callOcrSpaceServer(file);
-        if (serverRes) {
-          if (serverRes.cedula && !tieneCedula) {
-            try { const d = cedulaVE(serverRes.cedula, tipoDocumento);
-              setCedula(d.cedula); setTipoDocumento(d.tipoDocumento); tieneCedula = true;
-            } catch { /* requiere verificación */ }
-          }
-          if (serverRes.nombre && !tieneNombre) {
-            setNombreCompleto(formatoNombre(serverRes.nombre)); tieneNombre = true;
-          }
-          if (serverRes.fecha && !fechaNacimiento) {
-            try { setFechaNacimiento(fechaParaFormulario(fechaNacimientoISO(serverRes.fecha))); }
-            catch { /* requiere verificación */ }
-          }
-          if (serverRes.text) setOcrRaw(serverRes.text);
-          setExtractedNotice({ source: 'OCR.space', ...serverRes });
-        }
-      } catch (srvErr) {
-        console.warn('OCR.space call failed', srvErr);
-      }
-
-      // si no se detectó cédula o nombre, intentar local
-      if (!tieneCedula || !tieneNombre) {
-        if (!workerRef.current) {
-          const worker = createWorker({
-            logger: (m) => {
-              if (m.status === 'recognizing text' && m.progress) setOcrProgress(Math.round(m.progress * 100));
-            },
-          });
-          workerRef.current = worker;
-          try {
-            await worker.load();
-            await worker.loadLanguage('spa');
-            await worker.initialize('spa');
-            await worker.setParameters({
-              tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÚáéíóúÑñ -/.,',
-              tessedit_pageseg_mode: '6',
-            });
-          } catch (initErr) {
-            console.error('Error inicializando OCR worker:', initErr);
-          }
-        }
-
-        try {
-          const best = await runOcrWithRetries(file);
-          if (best) {
-            if (best.cedula && !tieneCedula) {
-              try { const d = cedulaVE(best.cedula, tipoDocumento);
-                setCedula(d.cedula); setTipoDocumento(d.tipoDocumento); tieneCedula = true;
-              } catch { /* requiere verificación */ }
-            }
-            if (best.nombre && !tieneNombre) {
-              setNombreCompleto(formatoNombre(best.nombre)); tieneNombre = true;
-            }
-            if (best.fecha && !fechaNacimiento) {
-              try { setFechaNacimiento(fechaParaFormulario(fechaNacimientoISO(best.fecha))); }
-              catch { /* requiere verificación */ }
-            }
-            if (best.text) setOcrRaw((prev) => (prev ? prev + '\n\n--- Tesseract ---\n' + best.text : best.text));
-            setExtractedNotice((prev) => prev ? ({ ...prev, tesseract: best }) : ({ source: 'Tesseract', ...best }));
-          }
-        } catch (err) {
-          console.error('Local OCR retries failed', err);
-        }
-      }
-    } catch (err) {
-      console.error('handleFileInput error', err);
-      setOcrError('Error procesando la imagen.');
-    } finally {
-      setOcrLoading(false);
-    }
-  };
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -324,13 +54,14 @@ export default function Pacientes() {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const periodo = searchParams.get("periodo") || "2026";
 
   // Escuchar en tiempo real la colección "pacientes"
   useEffect(() => {
-    const q = query(
-      collection(db, "pacientes"),
-      orderBy("createdAt", "desc")
-    );
+    // No ordenar por createdAt en la consulta: Firestore excluye registros
+    // históricos que carecen de ese campo. Se ordenan después de leerlos.
+    const q = query(collection(db, "pacientes"));
 
     const unsubscribe = onSnapshot(
       q,
@@ -339,6 +70,17 @@ export default function Pacientes() {
           id: docSnap.id,
           ...docSnap.data(),
         }));
+        // Expedientes sin fecha quedan al final, pero siguen visibles
+        // en las pestañas "Sin clasificar" y "Todas".
+        const valorFecha = (paciente) => {
+          const fecha = paciente.createdAt || paciente.fechaCapturaLocal || paciente.fechaRegistro;
+          if (!fecha) return 0;
+          if (typeof fecha.toMillis === "function") return fecha.toMillis();
+          if (typeof fecha.seconds === "number") return fecha.seconds * 1000;
+          const parsed = Date.parse(fecha);
+          return Number.isFinite(parsed) ? parsed : 0;
+        };
+        lista.sort((a, b) => valorFecha(b) - valorFecha(a));
         setPacientes(lista);
         setCargandoPacientes(false);
       },
@@ -463,8 +205,10 @@ export default function Pacientes() {
     setSuccess("");
   };
 
-  // Filtrado por búsqueda (nombre o cédula) — comparación normalizada y sin acentos
-  const pacientesFiltrados = pacientes.filter((p) => {
+  // El total del periodo no debe depender de lo escrito en el buscador.
+  const pacientesEnPeriodo = pacientes.filter((p) => filtroJornada(p, periodo));
+  // Filtrado por búsqueda (nombre o cédula) — sin acentos.
+  const pacientesFiltrados = pacientesEnPeriodo.filter((p) => {
     const termino = searchTerm.trim();
     if (!termino) return true;
 
@@ -482,7 +226,7 @@ export default function Pacientes() {
   });
 
   // Exportar pacientes simplificado: solo campos del registro (nombre + datos de registro)
-  const getExportList = () => (searchTerm ? pacientesFiltrados : pacientes);
+  const getExportList = () => pacientesFiltrados;
 
   // Columnas a mostrar/exportar: clave y etiqueta en español
   const exportColumns = [
@@ -673,40 +417,28 @@ export default function Pacientes() {
 
   return (
     <div className="page pacientes-page pacientes-card">
-      {/* FORMULARIO DE REGISTRO / EDICIÓN */}
+      <header className="zori-pacientes-intro">
+        <div>
+          <h1>Buscar pacientes</h1>
+          <p>Consulta y corrige expedientes. El escaneo de cédulas y el nuevo ingreso se hacen únicamente desde Registrar.</p>
+        </div>
+        <button type="button" onClick={() => navigate("/registro")}>+ Registrar nuevo paciente</button>
+      </header>
+      {/* Solo se muestra este formulario al seleccionar Editar en un registro existente. */}
+      {editingId && (
       <section className="form-card">
-        <h1 className="page-header-title">Pacientes</h1>
-        <p className="page-header-subtitle">Registra y administra los pacientes de la jornada.</p>
+        <h2 className="page-header-title">Editar datos del paciente</h2>
+        <p className="page-header-subtitle">Modifica únicamente la ficha seleccionada.</p>
 
         <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-          {/* Captura de documento de identidad */}
-          <div style={{ marginBottom: "0.75rem" }}>
-            <label>Capturar foto de documento de identidad</label>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                const file = e.target.files && e.target.files[0];
-                if (file) handleFileInput(file);
-              }}
-            />
-            {ocrLoading && <p style={{ color: "#5CC52E" }}>Procesando imagen...</p>}
-            {ocrError && <p style={{ color: "red" }}>{ocrError}</p>}
-            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <input type="checkbox" checked={permitirOcrExterno}
-                onChange={(e) => setPermitirOcrExterno(e.target.checked)} />
-              Autorizar OCR externo (envía la fotografía al proveedor para su lectura).
-            </label>
-            <small>Por defecto se procesa en el dispositivo. Siempre confirma los datos leídos.</small>
-          </div>
           {/* Nombre */}
           <div style={{ marginBottom: "0.75rem" }}>
             <label>Nombre completo *</label>
             <input
               type="text"
               value={nombreCompleto}
-              onChange={(e) => setNombreCompleto(formatoNombre(e.target.value))}
+              onChange={(e) => setNombreCompleto(formatoNombreEnEdicion(e.target.value))}
+              onBlur={() => setNombreCompleto((anterior) => formatoNombre(anterior))}
               required
             />
           </div>
@@ -834,14 +566,6 @@ export default function Pacientes() {
           {error && <p className="status-error">{error}</p>}
           {success && <p className="status-ok">{success}</p>}
 
-          {/* Mostrar texto OCR bruto para depuración y permitir reintento */}
-          {ocrRaw && (
-            <div style={{ marginTop: '0.6rem' }}>
-              <label>Texto OCR detectado (revisa y corrige si hace falta)</label>
-              <textarea value={ocrRaw} readOnly rows={6} style={{ width: '100%', marginTop: '0.35rem' }} />
-            </div>
-          )}
-
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
             <button
               type="submit"
@@ -859,6 +583,7 @@ export default function Pacientes() {
           </div>
         </form>
       </section>
+      )}
 
       {/* Cuadro / modal simple con la lista filtrada */}
       {showListBox && (
@@ -881,7 +606,7 @@ export default function Pacientes() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(searchTerm ? pacientesFiltrados : pacientes).map((p) => (
+                  {pacientesFiltrados.map((p) => (
                     <tr key={p.id}>
                       {exportColumns.map((c) => (
                         <td key={c.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6' }}>{getValue(p, c.key)}</td>
@@ -897,13 +622,26 @@ export default function Pacientes() {
 
       {/* LISTADO DE PACIENTES */}
       <section className="list-card" style={{ marginTop: "1rem" }}>
+        <div className="zori-period-tabs" aria-label="Seleccionar jornada">
+          {[
+            ["2026", "Jornada 2026"],
+            ["2025", "Histórico 2025"],
+            ["sin-fecha", "Sin clasificar"],
+            ["todos", "Todas"]
+          ].map(([valor, titulo]) => (
+            <button key={valor} type="button"
+              className={periodo === valor ? "is-active" : ""}
+              aria-pressed={periodo === valor}
+              onClick={() => setSearchParams({periodo: valor})}>{titulo}</button>
+          ))}
+        </div>
         <div className="list-header">
           <div className="list-header-top">
             <div>
               <h2 className="list-title">Lista de pacientes</h2>
               {!cargandoPacientes && (
                 <p className="page-header-subtitle" style={{ marginTop: "6px" }}>
-                  Total de pacientes registrados: <strong>{pacientes.length}</strong>
+                  Registros de {periodo === "sin-fecha" ? "fecha desconocida" : periodo === "todos" ? "todos los años" : periodo}: <strong>{pacientesEnPeriodo.length}</strong>
                   {searchTerm && (<> | Coincidencias: <strong>{pacientesFiltrados.length}</strong></>)}
                 </p>
               )}
@@ -920,28 +658,6 @@ export default function Pacientes() {
                 <button type="button" onClick={() => setShowListBox(true)} className="btn-secondary">
                   Ver lista
                 </button>
-                <button
-                  type="button"
-                  onClick={enviarSMSLote}
-                  disabled={enviandoSMS}
-                  className="btn-sms"
-                >
-                  {enviandoSMS ? 'Enviando SMS...' : 'Enviar SMS'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const now = new Date();
-                    const daysToAdd = ((8 - now.getDay()) % 7) || 7;
-                    const nextMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToAdd);
-                    const pad = (n) => String(n).padStart(2, '0');
-                    const dateStr = `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth()+1)}-${pad(nextMonday.getDate())}`;
-                    window.open(`/whatsapp-link?date=${encodeURIComponent(dateStr)}`, '_blank');
-                  }}
-                  className="btn-whatsapp"
-                >
-                  WhatsApp
-                </button>
               </div>
           </div>
         </div>
@@ -956,7 +672,7 @@ export default function Pacientes() {
           <p style={{ marginTop: "1rem" }}>Cargando pacientes...</p>
         ) : pacientesFiltrados.length === 0 ? (
           <p style={{ marginTop: "1rem" }}>
-            {searchTerm.trim() ? `Ninguna coincidencia para "${searchTerm.trim()}".` : "No hay pacientes registrados aún."}
+            {searchTerm.trim() ? `Ninguna coincidencia para "${searchTerm.trim()}".` : "No hay pacientes en el periodo seleccionado."}
           </p>
         ) : (
           <div className="table-wrapper table-scroll table-wrapper--scroll-y" style={{ marginTop: "0.6rem" }}>
@@ -984,6 +700,7 @@ export default function Pacientes() {
                     <td>{p.email || "-"}</td>
                     <td>{(p.psaTotal != null || p.psaLibre != null) ? `${p.psaTotal ?? "-"} / ${p.psaLibre ?? "-"}` : "-"}</td>
                     <td>{getPSALibrePercent(p.psaTotal, p.psaLibre) != null && shouldShowPSALibreRelation(p.psaTotal) ? `${getPSALibrePercent(p.psaTotal, p.psaLibre)}%` : "-"}</td>
+                    <td>{p.estadoResultado || p.entregaResultados || "Sin estado"}</td>
                     <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       <div className="actions-cell">
                         <button onClick={() => irADetalle(p.id)} style={{ backgroundColor: "#2563eb" }}>Ver ficha</button>
@@ -998,7 +715,7 @@ export default function Pacientes() {
         )}
       </section>
 
-      <ProsilodBanner />
+
     </div>
   );
 }

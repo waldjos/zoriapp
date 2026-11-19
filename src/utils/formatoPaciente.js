@@ -1,8 +1,13 @@
-import { nombrePropio } from "./registroExpress";
+import { nombrePropio, nombrePropioEnEdicion } from "./registroExpress";
 
 /** Capitalización legible para registro y presentación, sin afectar la búsqueda normalizada. */
 export function formatoNombre(valor) {
   return nombrePropio(valor);
+}
+
+/** Mantiene espacios finales mientras se escribe; evita pegar nombres y apellidos. */
+export function formatoNombreEnEdicion(valor) {
+  return nombrePropioEnEdicion(valor);
 }
 
 export function formatoCedula(valor) {

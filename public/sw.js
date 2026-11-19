@@ -1,8 +1,14 @@
 /* PWA ZoriApp: archivos de interfaz + recursos OCR, sin almacenar datos clínicos. */
-const VERSION = "zoriapp-registro-offline-2026-11-v1";
+// Cambia al actualizar CSS o recursos locales; nunca borra la cola clínica IndexedDB.
+const VERSION = "zoriapp-registro-offline-2026-11-v5";
 const SHELL = VERSION + "-shell";
 const OCR = VERSION + "-ocr";
-const ENTRADA = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon-192.png"];
+const ENTRADA = [
+  "/", "/index.html", "/manifest.webmanifest",
+  "/icons/icon-192.png", "/branding/zoriapp-2026.svg",
+  "/branding/zoriak-logo-oficial.svg", "/branding/hospital-luciani-foto.svg",
+  "/branding/ivss-original.svg", "/PROSILOD.jpg"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -30,7 +36,8 @@ function esOcr(url) {
 
 async function primeroCache(request, cacheNombre) {
   const cache = await caches.open(cacheNombre);
-  const existente = await caches.match(request);
+  // Solo desde la versión actual: evita servir recursos antiguos instalados.
+  const existente = await cache.match(request);
   if (existente) return existente;
   const respuesta = await fetch(request);
   if (respuesta.ok || respuesta.type === "opaque") {
@@ -45,7 +52,9 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   if (url.origin !== self.location.origin) {
+    const logoOriginalZoriak = url.href === "https://zoriakpharma.com/wp-content/uploads/2024/04/logo.svg";
     if (esOcr(url)) event.respondWith(primeroCache(req, OCR));
+    else if (logoOriginalZoriak) event.respondWith(primeroCache(req, SHELL));
     return;
   }
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/__")) return;

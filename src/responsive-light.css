@@ -1,0 +1,553 @@
+/*
+ * ZoriApp 2026 · Tema claro y compatibilidad móvil
+ *
+ * Capa única de estilos correctivos para toda la PWA.
+ * No sustituir la fotografía ni los símbolos oficiales.
+ *
+ * Matriz objetivo: 320, 360, 375 (iPhone X), 390, 414 (iPhone 11),
+ * 430, 768 y escritorio; retrato, paisaje y tamaño de fuente ampliado.
+ */
+:root {
+  color-scheme: light;
+  --primary: #00896e;
+  --primary-dark: #006c59;
+  --primary-soft: #e3f5ec;
+  --bg-main: #f3f9fb;
+  --bg-card: #ffffff;
+  --bg-soft: #ecf5f7;
+  --text-main: #18334c;
+  --text-muted: #4c6577;
+  --border-subtle: #cbdee5;
+  --danger: #bd3242;
+  --danger-soft: #fff1f1;
+  --shadow-soft: 0 8px 25px rgba(18, 67, 85, .09);
+  --zori-bottom-safe: env(safe-area-inset-bottom, 0px);
+  --zori-left-safe: env(safe-area-inset-left, 0px);
+  --zori-right-safe: env(safe-area-inset-right, 0px);
+}
+html, body, #root {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  background: #f3f9fb;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  background: linear-gradient(165deg, #f8fcfd, #eaf5f8);
+  background-attachment: scroll;
+  background-repeat: repeat;
+  color: var(--text-main);
+}
+.app-shell, .app-main, .page, .single-panel, .page-container, .page-wrapper,
+.form-card, .list-card, .dashboard-page, .home-page, .home-container {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.app-shell, .app-main {
+  background: transparent;
+}
+.app-header {
+  background: #f5fafc;
+  border-bottom: 1px solid #d9e7ed;
+  padding: .55rem max(.75rem, var(--zori-right-safe)) .55rem max(.75rem, var(--zori-left-safe));
+}
+.app-main { padding-inline: var(--zori-left-safe) var(--zori-right-safe); }
+h1, h2, h3, h4 { color: #15344f; overflow-wrap: break-word; }
+p, label, small { color: var(--text-muted); }
+img, svg, video, canvas { max-width: 100%; }
+button, a, input, textarea, select { max-width: 100%; }
+button, a { overflow-wrap: anywhere; }
+button, input, select, textarea { font-family: inherit; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea, select {
+  background: #fff;
+  color: #14364e;
+  border-color: #adcbd3;
+  font-size: 16px;
+  min-height: 44px;
+}
+input::placeholder, textarea::placeholder { color: #718694; }
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+button:focus-visible, a:focus-visible {
+  outline: 3px solid #67be9e;
+  outline-offset: 2px;
+}
+input[type="file"] { color: #18334c; font-size: 16px; }
+input[type="checkbox"], input[type="radio"] { accent-color: #00866b; }
+.page-container, .login-container, .form-card, .list-card, .panel-card,
+.page-card, .app-card, .pacientes-card, .laboratorio-card {
+  background: #fff;
+  color: var(--text-main);
+  border: 1px solid #d2e4e9;
+  box-shadow: var(--shadow-soft);
+}
+.page-container { width: min(100%, 900px); margin: 14px auto; }
+.form-card, .list-card { overflow-wrap: anywhere; }
+.single-panel, .page-wrapper { width: min(100%, 960px); margin: 0 auto; }
+.zori-registro {
+  margin: 10px auto 24px;
+  padding: clamp(14px, 2.7vw, 26px);
+  background: #fff;
+  border: 1px solid #d2e4e9;
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+}
+.zori-registro > p, .page-header-subtitle, .page-subtitle { color: #526d7c; }
+.zori-registro-step, .zori-field-label { color: #126c58; }
+.zori-registro label, .zori-document-field small, .zori-document-number label,
+.zori-document-prefix label { color: #344d60; }
+.zori-ocr-capture {
+  background: #eff9f4;
+  border: 1px solid #a9d5c6;
+  color: #143b35;
+}
+.zori-ocr-capture h2, .zori-ocr-capture h3, .zori-ocr-message { color: #163e38; }
+.zori-ocr-trigger { min-height: 51px; border-color: #77c8aa; background: #078364; }
+.zori-offline-hint {
+  background: #e6f7ed;
+  border-color: #b0d6c1;
+  color: #27543d;
+}
+.zori-confirmacion-cedula {
+  background: #edf8f1;
+  border: 1px solid #8dc5a9;
+  color: #193f34;
+}
+.zori-confirmacion-cedula strong, .zori-confirmacion-cedula small { color: #225042; }
+.zori-nombre-ayuda { color: #4b6e62; }
+.zori-sync-panel {
+  background: #eaf7f3;
+  border-color: #b4d6c9;
+  color: #193f38;
+}
+.zori-sync-title, .zori-sync-note, .zori-sync-ready,
+.zori-sync-message, .zori-sync-list li small { color: #275346; }
+.zori-sync-list li { border-color: #c2ded3; }
+.zori-sync-list li strong { color: #83520f; }
+.zori-sync-warning { color: #8b4d11; }
+.zori-sync-preparar { border-color: #c3ded4; }
+.zori-sync-toggle { background: #fff; color: #145a4a; border-color: #a9cdbf; }
+.zori-sync-panel--compact { background: #e8f7ef; }
+/* Identidad institucional: siempre usar la foto proporcionada, no una recreación. */
+.zori-hospital-strip {
+  isolation: isolate;
+  background-color: #e9f4f6;
+  background-image:
+    linear-gradient(100deg, rgba(243,250,251,.98) 0%, rgba(243,250,251,.93) 44%, rgba(231,244,248,.69) 100%),
+    url("/branding/hospital-luciani-foto.svg");
+  background-position: center, center 45%;
+  background-size: cover;
+  border-color: #c7dee4;
+  min-height: 88px;
+}
+.zori-hospital-strip strong, .zori-hospital-strip .zori-hospital-eyebrow { color: #173f5f; }
+.zori-hospital-strip .zori-hospital-eyebrow { color: #ab1d2f; }
+.zori-branding-sponsor-identity {
+  background: #152e68;
+  border: 1px solid #243e7c;
+  padding: 8px 10px;
+  border-radius: 12px;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+}
+.zori-branding-sponsor-identity img {
+  width: 100%;
+  max-height: 57px;
+  object-fit: contain;
+  object-position: center center;
+}
+.zori-branding .zori-sponsor-name { color: #fff; text-align: center; }
+.zori-branding-sponsor-tagline { color: #3d5870; }
+/* Acciones, navegación y tablas */
+.main-nav--simple {
+  background: #fff;
+  border-color: #d0e2e8;
+  box-shadow: 0 1px 9px rgba(0, 46, 70, .06);
+}
+.main-nav--simple .main-nav-btn {
+  color: #2b5060;
+}
+.main-nav--simple .main-nav-btn:hover,
+.main-nav--simple .main-nav-btn--active {
+  color: #065640;
+  background: #e5f5ed;
+  border-color: #91c9ad;
+}
+.main-nav--simple .main-nav-panel {
+  background: #fff;
+  color: #163c52;
+  border-color: #bad8e1;
+  box-shadow: 0 16px 35px rgba(14, 59, 75, .15);
+}
+.main-nav--simple .main-nav-panel-head strong { color: #153b54; }
+.main-nav--simple .main-nav-close { color: #15495a; background: #e7f2f5; }
+.main-nav-panel-label { color: #557287; }
+.main-nav--simple .main-nav-panel-link {
+  color: #204858;
+  background: #f1f8fa;
+  border-color: #d5e6eb;
+}
+.main-nav--simple .main-nav-panel-link.is-active,
+.main-nav--simple .main-nav-panel-link:hover {
+  background: #e0f4e8;
+  border-color: #95ceaa;
+  color: #125742;
+}
+.home-button, .secondary-btn, .badge-pill {
+  background: #e8f5f7;
+  color: #153b52;
+  border-color: #b9d6dd;
+}
+.status-ok { color: #175c43; background: #d8f3e5; }
+.status-error { color: #9a2d3c; background: #fff0f0; }
+.danger-btn { color: #a32338; }
+.zori-quick-advanced, .home-page .zori-quick-advanced {
+  background: #fff;
+  border-color: #cbdfe4;
+}
+.zori-quick-advanced summary, .home-page .zori-quick-advanced summary { color: #1d4255; }
+.zori-quick-advanced[open] summary { border-color: #c8e0e6; }
+.zori-quick-advanced .zori-quick-tile { background: #f6fafb; color: #183c52; }
+/* La página nunca debe desplazarse horizontalmente: solamente cada tabla. */
+.table-wrapper, .table-scroll {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+  background: #fff;
+  border-color: #c8dce4;
+}
+.table-wrapper > table, .table-scroll > table {
+  width: max-content;
+  min-width: 100%;
+}
+.pacientes-table thead, .table thead { background: #eaf3f7; }
+.pacientes-table th, .table th { color: #1e455e; }
+.pacientes-table td, .table td { color: #1e3b51; vertical-align: middle; }
+.pacientes-table tbody tr:nth-child(odd), .table tbody tr:nth-child(odd) { background: #fff; }
+.pacientes-table tbody tr:nth-child(even), .table tbody tr:nth-child(even) { background: #f3f8fa; }
+.pacientes-table td, .table td { overflow-wrap: anywhere; }
+.actions-cell { min-width: 0; gap: 6px; }
+.actions-cell button, .actions-cell a { min-height: 40px; white-space: normal; }
+.form-row-inline { flex-wrap: wrap; }
+.form-row-inline > div { flex: 1 1 180px; min-width: 0; }
+/* Estadísticas: reemplazar superficies oscuras remanentes. */
+.dashboard-page {
+  grid-template-columns: minmax(0, 285px) minmax(0, 1fr);
+  background: transparent;
+  color: #17334f;
+  overflow-x: hidden;
+}
+.dashboard-sidebar, .dashboard-card, .card-highlight,
+.bar-chart-panel, .locality-list, .impact-card,
+.small-chart, .dashboard-loading-card {
+  background: #fff;
+  color: #1e3c54;
+  border-color: #d2e4e9;
+  box-shadow: var(--shadow-soft);
+}
+.dashboard-hero {
+  background: linear-gradient(135deg, #e3f6ed, #eff6fd);
+  border-color: #cde2e7;
+  color: #1c3f58;
+}
+.dashboard-sidebar-head h1,
+.dashboard-hero h2, .section-header h2, .locality-list h3,
+.dashboard-card h2, .sidebar-menu h2 { color: #163650; }
+.sidebar-chip { color: #16684f; background: #dff5e9; }
+.sidebar-copy, .sidebar-summary span, .sidebar-metrics .metric-pill span,
+.card-detail, .card-label, .legend-item p, .impact-card p { color: #506c7d; }
+.sidebar-summary div, .metric-pill, .legend-item, .sidebar-link {
+  background: #f3f9fb;
+  border-color: #d4e5eb;
+  color: #23465d;
+}
+.sidebar-link:hover { background: #e7f6ee; }
+.locality-list, .dashboard-main, .dashboard-card, .dashboard-sidebar,
+.dashboard-hero, .dashboard-grid, .mix-panel, .impact-grid { min-width: 0; }
+.recharts-cartesian-axis-tick-value, .recharts-text { fill: #526e80; }
+.recharts-cartesian-grid line { stroke: #d6e6e9; }
+.home-page .home-container { padding-bottom: 14px; }
+/* Teléfonos con notch, barra de gestos y Safari antiguo */
+@media (max-width: 1180px) {
+  .dashboard-page { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 700px) {
+  .app-main {
+    padding-bottom: calc(100px + var(--zori-bottom-safe));
+    padding-left: var(--zori-left-safe);
+    padding-right: var(--zori-right-safe);
+  }
+  .main-nav--simple {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 6px calc(7px + var(--zori-right-safe)) calc(7px + var(--zori-bottom-safe)) calc(7px + var(--zori-left-safe));
+    background: #fff;
+    border-top: 1px solid #cbdfe5;
+    box-shadow: 0 -5px 17px rgba(13, 70, 83, .10);
+  }
+  .main-nav--simple .main-nav-inner { grid-template-columns: repeat(4, minmax(0,1fr)); min-width: 0; gap: 4px; }
+  .main-nav--simple .main-nav-btn {
+    min-width: 0;
+    min-height: 57px;
+    padding: 6px 2px;
+    gap: 2px;
+    font-size: clamp(.69rem, 3.2vw, .85rem);
+    line-height: 1.14;
+    overflow-wrap: anywhere;
+  }
+  .main-nav--simple .main-nav-icon { font-size: clamp(1.3rem, 5.3vw, 1.62rem); }
+  .main-nav--simple .main-nav-more { min-width: 0; }
+  .main-nav--simple .main-nav-panel {
+    left: max(8px,var(--zori-left-safe));
+    right: max(8px,var(--zori-right-safe));
+    bottom: calc(80px + var(--zori-bottom-safe));
+    width: auto;
+    max-height: 64vh;
+    max-height: min(64dvh, 580px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page, .page-container, .page-wrapper, .single-panel,
+  .pacientes-page, .tacto-page, .laboratorio-page { padding-left: 9px; padding-right: 9px; }
+  .page-container { margin: 8px auto; border-radius: 18px; padding: 14px 10px 18px; }
+  .zori-registro { margin: 8px auto; padding: 15px 12px 20px; border-radius: 18px; }
+  .zori-registro h1, .page-header-title { font-size: clamp(1.35rem,5.6vw,1.85rem); }
+  .zori-quick-grid, .home-page .zori-quick-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .zori-quick-tile, .home-page .zori-quick-tile { min-width: 0; gap: 6px; padding: 9px; min-height: 96px; }
+  .zori-quick-tile .zori-quick-symbol { flex: 0 0 34px; width: 34px; height: 34px; }
+  .zori-quick-copy, .zori-quick-chevron { min-width: 0; }
+  .zori-quick-copy { overflow-wrap: anywhere; }
+  .zori-quick-chevron { flex: none; font-size: 1.4rem; }
+  .zori-document-row { grid-template-columns: minmax(70px, 86px) minmax(0, 1fr); gap: 8px; }
+  .zori-sync-panel { width: calc(100% - 14px); }
+  .zori-sync-top > div:first-child { min-width: 0; }
+  .zori-sync-panel--compact .zori-sync-title { font-size: clamp(.75rem,3.5vw,.88rem); }
+  .zori-hospital-strip { padding: 12px; }
+  .dashboard-page { padding: 12px 8px calc(110px + var(--zori-bottom-safe)); }
+  .dashboard-grid, .impact-grid, .mix-panel, .legend-grid { grid-template-columns: minmax(0,1fr); }
+  .dashboard-hero, .dashboard-sidebar { border-radius: 17px; padding: 15px; }
+  .dashboard-card, .card-highlight, .bar-chart-panel { border-radius: 14px; padding: 13px; }
+  .dashboard-page .recharts-responsive-container { max-width: 100%; }
+}
+@media (max-width: 370px) {
+  .zori-branding-top, .home-page .zori-branding-top { grid-template-columns: 1fr; }
+  .zori-branding-sponsor {
+    border-left: 0;
+    border-top: 1px solid #d6e5e9;
+    padding: 10px 0 0;
+    align-items: flex-start;
+  }
+  .zori-branding-sponsor-identity { width: min(100%, 220px); }
+  .zori-quick-grid, .home-page .zori-quick-grid { grid-template-columns: minmax(0,1fr); }
+  .main-nav--simple .main-nav-btn { font-size: .72rem; }
+  .zori-document-row { grid-template-columns: minmax(67px, 80px) minmax(0, 1fr); }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .main-nav--simple .main-nav-btn { min-height: 47px; }
+  .main-nav--simple .main-nav-panel {
+    max-height: 57vh;
+    bottom: calc(63px + var(--zori-bottom-safe));
+  }
+  .app-main { padding-bottom: calc(72px + var(--zori-bottom-safe)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+/* La impresión de resultados es intencionalmente blanca y sin navegación. */
+@media print {
+  body, html, #root { background: #fff !important; color: #111 !important; }
+  .main-nav, .app-header, .zori-sync-panel { display: none !important; }
+}
+
+
+/* ZoriApp 2026 · Ajustes de cierre de identidad y flujos médicos. */
+/* El verde corresponde a la paleta aprobada de la interfaz; el SVG oficial no se recolorea. */
+:root { --zoriak-green: #00896e; --zoriak-green-deep: #006b53; }
+.zori-branding-sponsor-identity,
+.home-page .zori-branding-sponsor-identity {
+  background: linear-gradient(125deg, var(--zoriak-green), var(--zoriak-green-deep));
+  border: 1px solid #006b53;
+  border-radius: 13px;
+  box-shadow: 0 5px 12px rgba(0,111,81,.13);
+  min-height: 52px;
+  padding: 8px 12px;
+}
+.zori-branding-sponsor-identity img {
+  display: block;
+  width: 100%;
+  max-width: 178px;
+  max-height: 68px;
+  height: auto;
+  object-fit: contain;
+  object-position: center center;
+}
+.zori-branding .zori-sponsor-name {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+}
+.zori-hospital-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background-image: none;
+  background-color: #f2f9f9;
+  border: 1px solid #cadfe3;
+  padding: 11px;
+  overflow: hidden;
+}
+.zori-hospital-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.zori-hospital-heading > img {
+  display: block;
+  flex: none;
+  width: 53px;
+  height: 53px;
+  max-width: 53px;
+  object-fit: contain;
+}
+.zori-hospital-heading > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.zori-hospital-heading strong {
+  color: #173c59;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+.zori-hospital-heading .zori-hospital-eyebrow { color: #aa1f30; }
+.zori-hospital-photo-frame {
+  width: 100%;
+  height: clamp(93px, 13vw, 121px);
+  min-height: 93px;
+  max-height: 121px;
+  overflow: hidden;
+  border-radius: 11px;
+  border: 1px solid #d0e1e8;
+  background: #dceaf0;
+}
+.zori-hospital-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 63%;
+}
+.zori-tacto-feature {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  margin: 12px 0 0;
+  border: 1px solid #84c8ad;
+  border-left: 5px solid #00896e;
+  border-radius: 17px;
+  background: linear-gradient(105deg, #e2f8eb, #f7fcf8);
+  box-shadow: 0 6px 16px rgba(28,95,74,.09);
+  color: #173d33;
+  text-align: left;
+  cursor: pointer;
+}
+.zori-tacto-feature:hover { background: linear-gradient(105deg,#d5f4e4,#f0faf4); }
+.zori-tacto-icon {
+  display: flex;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: #00896e;
+  color: #fff;
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+.zori-tacto-copy {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.zori-tacto-eyebrow {
+  color: #1d6f58;
+  font-size: .73rem;
+  font-weight: 750;
+  letter-spacing: .01em;
+}
+.zori-tacto-copy strong {
+  color: #134533;
+  font-size: 1.12rem;
+  line-height: 1.22;
+  overflow-wrap: break-word;
+}
+.zori-tacto-copy small {
+  color: #3d6156;
+  font-size: .83rem;
+  line-height: 1.35;
+}
+.zori-tacto-arrow {
+  flex: none;
+  color: #217552;
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1;
+}
+.main-nav-session {
+  margin-top: 8px;
+  padding-top: 9px;
+  border-top: 1px solid #d6e4e8;
+}
+.main-nav--simple .main-nav-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  background: #fff3f3;
+  border: 1px solid #ebc6cc;
+  color: #9b2737;
+  font-weight: 750;
+}
+.main-nav--simple .main-nav-logout:hover,
+.main-nav--simple .main-nav-logout:focus-visible {
+  background: #fbe5e7;
+  color: #832035;
+}
+@media (max-width: 700px) {
+  .zori-hospital-strip { padding: 10px; }
+  .zori-hospital-heading > img { width: 47px; max-width: 47px; height: 47px; }
+  .zori-hospital-photo-frame { height: 95px; }
+  .zori-tacto-feature { padding: 12px 10px; gap: 9px; border-radius: 14px; }
+  .zori-tacto-icon { flex-basis: 42px; width: 42px; height: 42px; border-radius: 12px; }
+  .zori-tacto-copy strong { font-size: 1.03rem; }
+  .zori-tacto-copy small { font-size: .78rem; }
+  .zori-tacto-eyebrow { font-size: .68rem; }
+}
+@media (max-width: 345px) {
+  .zori-tacto-feature { gap: 7px; }
+  .zori-tacto-icon { flex-basis: 36px; width: 36px; height: 36px; }
+  .zori-tacto-copy strong { font-size: .94rem; }
+  .zori-tacto-copy small { font-size: .72rem; }
+  .zori-hospital-heading > img { width: 38px; max-width: 38px; height: 38px; }
+  .zori-hospital-heading strong { font-size: .9rem; }
+}

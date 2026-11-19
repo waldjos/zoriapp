@@ -167,9 +167,9 @@ export default function ImportarPSA() {
         </button>
       </div>
 
-      {error && <p style={{ color: "#f87171", marginTop: "0.75rem" }}>{error}</p>}
+      {error && <p style={{ color: "#b72f43", marginTop: "0.75rem" }}>{error}</p>}
       {resultado && (
-        <p style={{ color: "#86efac", marginTop: "0.75rem" }}>
+        <p style={{ color: "#176c4c", marginTop: "0.75rem" }}>
           Actualizados: <strong>{resultado.actualizados}</strong> · Sin coincidencia: <strong>{resultado.sinMatch}</strong>
           {resultado.errores ? ` · Errores: ${resultado.errores}` : ""}
         </p>

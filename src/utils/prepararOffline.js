@@ -2,7 +2,17 @@
  * Preparación explícita del dispositivo. El OCR está incluido como archivos
  * locales y debe descargarse antes de trabajar sin red.
  */
-const PAQUETE = "zoriapp-offline-paciente-v1";
+// Cambiar esta versión al actualizar los recursos de la PWA; evita falsos estados
+// "listo offline" heredados de compilaciones antiguas.
+const PAQUETE = "zoriapp-offline-paciente-v3";
+const RECURSOS_MARCA = [
+  "/branding/zoriapp-2026.svg",
+  "/branding/zoriapp-icon-2026.svg",
+  "/branding/ivss-original.svg",
+  "/branding/zoriak-logo-oficial.svg",
+  "/branding/hospital-luciani-foto.svg",
+  "/PROSILOD.jpg",
+];
 const RECURSOS_OCR = [
   "/ocr/worker.min.js",
   "/ocr/core/tesseract-core.wasm.js",
@@ -21,9 +31,11 @@ async function rutasDeInterfaz() {
 
 export async function comprobarPreparacionOffline() {
   if (!("caches" in window) || !("serviceWorker" in navigator)) return false;
-  const rutas = [...RECURSOS_OCR, ...await rutasDeInterfaz()];
+  const rutas = [...RECURSOS_MARCA, ...RECURSOS_OCR, ...await rutasDeInterfaz()];
+  // Consultar solamente la versión actual, no archivos de otros paquetes antiguos.
+  const cache = await caches.open(PAQUETE);
   for (const ruta of rutas) {
-    if (!await caches.match(ruta)) return false;
+    if (!await cache.match(ruta)) return false;
   }
   return true;
 }
@@ -35,7 +47,7 @@ export async function prepararOffline(alAvanzar = () => {}) {
   }
   await navigator.serviceWorker.register("/sw.js");
   const cache = await caches.open(PAQUETE);
-  const rutas = [...RECURSOS_OCR, ...await rutasDeInterfaz()];
+  const rutas = [...RECURSOS_MARCA, ...RECURSOS_OCR, ...await rutasDeInterfaz()];
   let completados = 0;
   for (const ruta of rutas) {
     const respuesta = await fetch(ruta, { cache: "reload" });

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import ZoriIcon from "./ZoriIcon";
 
 const PRINCIPALES = [
-  { path: "/", label: "Inicio", icono: "⌂" },
-  { path: "/registro", label: "Registrar", icono: "+" },
-  { path: "/pacientes", label: "Pacientes", icono: "☷" },
+  { path: "/", label: "Inicio", icono: "inicio" },
+  { path: "/registro", label: "Registrar", icono: "registrar-paciente" },
+  { path: "/pacientes", label: "Pacientes", icono: "pacientes" },
 ];
 
 const SECUNDARIAS = [
@@ -16,7 +17,7 @@ const SECUNDARIAS = [
   { path: "/dashboard", label: "Estadísticas", grupo: "Resultados y gestión" },
 ];
 
-export default function MainNav() {
+export default function MainNav({ onLogout }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mostrarMas, setMostrarMas] = useState(false);
@@ -39,7 +40,7 @@ export default function MainNav() {
               className={`main-nav-btn${activo ? " main-nav-btn--active" : ""}`}
               aria-current={activo ? "page" : undefined}
               onClick={() => ir(path)}>
-              <span className="main-nav-icon" aria-hidden="true">{icono}</span>
+              <span className="main-nav-icon" aria-hidden="true"><ZoriIcon name={icono} size={25}/></span>
               <span className="main-nav-label">{label}</span>
             </button>
           );
@@ -49,7 +50,7 @@ export default function MainNav() {
             className={`main-nav-btn${enMas || mostrarMas ? " main-nav-btn--active" : ""}`}
             aria-expanded={mostrarMas} aria-controls="zoriapp-more-panel"
             onClick={() => setMostrarMas((anterior) => !anterior)}>
-            <span className="main-nav-icon" aria-hidden="true">⋯</span>
+            <span className="main-nav-icon" aria-hidden="true"><ZoriIcon name="mas" size={25}/></span>
             <span className="main-nav-label">Más</span>
           </button>
           {mostrarMas && (
@@ -70,6 +71,17 @@ export default function MainNav() {
                   ))}
                 </div>
               ))}
+              <div className="main-nav-panel-group main-nav-session">
+                <p className="main-nav-panel-label">Cuenta</p>
+                <button
+                  type="button"
+                  className="main-nav-panel-link main-nav-logout"
+                  onClick={onLogout}
+                >
+                  <ZoriIcon name="cerrar-sesion" size={19}/>
+                  Cerrar sesión
+                </button>
+              </div>
             </div>
           )}
         </div>

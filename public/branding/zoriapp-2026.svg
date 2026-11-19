@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 280" role="img" aria-label="ZoriApp — Gestión de jornadas médicas">
+<defs>
+<linearGradient id="mark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#008f70"/><stop offset="1" stop-color="#075c6e"/></linearGradient>
+<linearGradient id="lime" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#7acb38"/><stop offset="1" stop-color="#43a838"/></linearGradient>
+</defs>
+<g transform="translate(22 18)"><circle cx="121" cy="120" r="110" fill="url(#mark)"/>
+<path d="M103 62 C80 38 51 57 48 87 C45 116 63 139 87 143 C109 145 120 124 114 105 C111 92 96 92 95 83 C93 76 97 65 103 62Z" fill="url(#lime)" stroke="#f7fff9" stroke-width="12" stroke-linejoin="round"/>
+<path d="M138 62 C161 38 190 57 193 87 C196 116 178 139 154 143 C132 145 121 124 127 105 C130 92 145 92 146 83 C148 76 144 65 138 62Z" fill="url(#lime)" stroke="#f7fff9" stroke-width="12" stroke-linejoin="round"/>
+<path d="M113 119 C118 142 115 181 115 207 M129 119 C124 142 127 181 127 207" fill="none" stroke="#f7fff9" stroke-width="7" stroke-linecap="round"/>
+<path d="M31 203 C82 232 166 235 212 201" fill="none" stroke="#72c72e" stroke-width="9" stroke-linecap="round" opacity=".95"/></g>
+<line x1="280" x2="280" y1="43" y2="238" stroke="#aec4ce" stroke-width="2" />
+<text x="322" y="159" font-family="Arial,Helvetica,sans-serif" font-size="110" font-weight="800" letter-spacing="-4" fill="#092052">Zori<tspan fill="#008e54">App</tspan></text>
+<text x="328" y="219" font-family="Arial,Helvetica,sans-serif" font-size="37" fill="#092052" letter-spacing="-.6">Gestión de jornadas médicas</text>
+</svg>

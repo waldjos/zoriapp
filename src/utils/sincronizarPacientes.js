@@ -46,6 +46,8 @@ export function sincronizarPendientes(uid, alAvanzar = () => {}) {
         const datos = registro.datos;
         const operacion = setDoc(doc(db, "pacientes", registro.id), {
           ...datos,
+          jornadaAnio: datos.jornadaAnio || 2026,
+          jornadaId: datos.jornadaId || "domingo-luciani-2026",
           creadoPor: uid,
           fechaCapturaLocal: registro.fechaLocal,
           createdAt: serverTimestamp(),

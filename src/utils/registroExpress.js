@@ -11,6 +11,27 @@ export function nombrePropio(valor) {
   );
 }
 
+/**
+ * Normaliza las iniciales mientras el usuario escribe, PERO no elimina
+ * espacios finales. Eliminarlos en cada onChange impedía escribir apellidos.
+ * nombrePropio() continúa siendo la versión canónica al guardar.
+ */
+export function nombrePropioEnEdicion(valor) {
+  if (valor == null) return "";
+  const editable = String(valor).replace(/[\t\r\n]+/g, " ")
+    .replace(/ {2,}/g, " ").toLocaleLowerCase("es-VE");
+  return editable.replace(/(^|[\s\-'’])(\p{L})/gu, (_, separador, letra) =>
+    separador + letra.toLocaleUpperCase("es-VE")
+  );
+}
+
+/** Se exige al menos un nombre y un apellido, sin adivinar separaciones. */
+export function nombreCompletoValido(valor) {
+  const partes = nombrePropio(valor).split(" ").filter(Boolean);
+  return partes.length >= 2 && partes.every((parte) => /\p{L}/u.test(parte));
+}
+
+
 export function cedulaVE(valor, tipoSeleccionado = "V") {
   const sinSeparadores = String(valor ?? "").trim().toUpperCase().replace(/[.\s\-]/g, "");
   const coincidencia = sinSeparadores.match(/^([VE])?(\d+)$/);

@@ -1,14 +1,20 @@
 {
-  "name": "Zoriapp",
-  "short_name": "Zoriapp",
-  "description": "Sistema de gestión para jornadas de urología.",
+  "name": "ZoriApp — Jornadas médicas",
+  "short_name": "ZoriApp",
+  "description": "Registro médico offline y gestión de jornadas de urología",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFFFFF",
-  "theme_color": "#5CC52E",
+  "background_color": "#F5FAFC",
+  "theme_color": "#007F66",
   "icons": [
+    {
+      "src": "/branding/zoriapp-icon-2026.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",

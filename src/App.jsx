@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Páginas
@@ -21,9 +21,12 @@ import EstadoSincronizacion from "./components/EstadoSincronizacion";
 import { pendientesLocales } from "./utils/colaPacientesOffline";
 
 import "./App.css";
+import "./responsive-light.css";
+import "./zori-design-fidelidad.css";
 
 function AppShell() {
   const { user, logout } = useAuth();
+  const { pathname } = useLocation();
   const salir = async () => {
     if (user?.uid) {
       try {
@@ -39,15 +42,8 @@ function AppShell() {
   };
   return (
     <div className="app-shell">
-      <header className="app-header">
-        {user && (
-          <button onClick={salir} style={{ backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "999px", padding: "0.5rem 1.1rem", fontWeight: 600, cursor: "pointer" }}>
-            Cerrar sesión
-          </button>
-        )}
-      </header>
-      {user && <MainNav />}
-      {user && <EstadoSincronizacion user={user} />}
+      {user && <MainNav onLogout={salir} />}
+      {user && pathname !== "/" && <EstadoSincronizacion user={user} />}
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<Login />} />

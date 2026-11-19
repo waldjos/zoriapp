@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createWorker } from "tesseract.js";
 import { extraerCedulaVenezolana } from "../utils/cedulaVenezolanaOCR";
 import { prepararLecturasAdicionales } from "../utils/mejorarFotoCedula";
+import { rotarFotoCedulaLocal } from "../utils/rotarFotoCedula";
 
 /**
  * OCR en el dispositivo: no guarda la foto ni la envía al servidor.
@@ -84,40 +85,66 @@ export default function CedulaOCR({ onExtract }) {
       const resultado = await trabajador.recognize(procesada);
       const extraido = extraerCedulaVenezolana(resultado.data?.text || "");
 
-      // La primera lectura se conserva; si fallan nombres o apellidos, realizar
-      // otra(s) lectura(s) del área de texto con contraste mejorado.
+      // Nunca formar un nombre juntando nombres de una lectura con apellidos de
+      // otra: ambas partes tienen que salir coherentemente de la MISMA pasada OCR.
+      const incorporar = (candidato) => {
+        if (!candidato) return;
+        const mismoDocumento = !extraido.cedula || !candidato.cedula ||
+          extraido.cedula === candidato.cedula;
+        if (!mismoDocumento) return;
+        if (!extraido.cedula && candidato.cedula) {
+          extraido.cedula = candidato.cedula;
+          extraido.tipo = candidato.tipo;
+        }
+        if (!extraido.fecha && candidato.fecha) extraido.fecha = candidato.fecha;
+        if ((!extraido.nombres || !extraido.apellidos) &&
+            candidato.nombres && candidato.apellidos) {
+          extraido.nombres = candidato.nombres;
+          extraido.apellidos = candidato.apellidos;
+        }
+      };
+
+      // Si la cédula fue fotografiada de costado, leerla en ambas orientaciones.
+      // Solo se hacen estas pasadas adicionales cuando el nombre NO es fiable.
       if (!extraido.nombres || !extraido.apellidos) {
-        if (activo.current) setMensaje("Mejorando el contraste y revisando nombres y apellidos…");
+        if (activo.current) setMensaje("Comprobando orientación de la cédula…");
+        for (const grados of [-90, 90]) {
+          if (extraido.nombres && extraido.apellidos) break;
+          const orientada = await rotarFotoCedulaLocal(procesada, grados);
+          if (!orientada) continue;
+          try {
+            const lectura = await trabajador.recognize(orientada);
+            incorporar(extraerCedulaVenezolana(lectura.data?.text || ""));
+          } catch { /* otras orientaciones y escritura manual siguen disponibles */ }
+        }
+      }
+
+      if (!extraido.nombres || !extraido.apellidos) {
+        if (activo.current) setMensaje("Realzando el texto de nombres y apellidos…");
         const variantes = await prepararLecturasAdicionales(
           procesada, resultado.data?.words, extraido.cedula, extraido.fecha
         );
-
         try { await trabajador.setParameters({ tessedit_pageseg_mode: "6" }); }
-        catch { /* La segunda pasada mantiene el modo original si no se admite. */ }
-
+        catch { /* conservar modo previo si el dispositivo no lo admite */ }
         for (const variante of variantes) {
           if (extraido.nombres && extraido.apellidos) break;
-          const adicional = await trabajador.recognize(variante);
-          const recuperado = extraerCedulaVenezolana(adicional.data?.text || "");
-          if (!extraido.nombres && recuperado.nombres) extraido.nombres = recuperado.nombres;
-          if (!extraido.apellidos && recuperado.apellidos) extraido.apellidos = recuperado.apellidos;
-          // No reemplazar una cédula o fecha ya reconocida en la primera pasada.
-          if (!extraido.cedula && recuperado.cedula) {
-            extraido.cedula = recuperado.cedula;
-            extraido.tipo = recuperado.tipo;
-          }
-          if (!extraido.fecha && recuperado.fecha) extraido.fecha = recuperado.fecha;
+          try {
+            const lectura = await trabajador.recognize(variante);
+            incorporar(extraerCedulaVenezolana(lectura.data?.text || ""));
+          } catch { /* nunca aceptar resultados dudosos ni perder datos previos */ }
         }
-
-        extraido.nombre = extraido.nombres && extraido.apellidos
-          ? extraido.nombres + " " + extraido.apellidos : "";
-        extraido.incompletos = [
-          !extraido.cedula && "cédula",
-          !extraido.nombres && "nombres",
-          !extraido.apellidos && "apellidos",
-          !extraido.fecha && "nacimiento",
-        ].filter(Boolean);
       }
+
+      // Recalcular el estado después de todas las lecturas. No afirmar éxito
+      // cuando solo se detectó texto con aspecto de nombre pero sin validación.
+      extraido.nombre = extraido.nombres && extraido.apellidos
+        ? extraido.nombres + " " + extraido.apellidos : "";
+      extraido.incompletos = [
+        !extraido.cedula && "cédula",
+        !extraido.nombres && "nombres",
+        !extraido.apellidos && "apellidos",
+        !extraido.fecha && "nacimiento",
+      ].filter(Boolean);
 
       if (activo.current) {
         onExtract(extraido);

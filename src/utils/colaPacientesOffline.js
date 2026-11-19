@@ -4,11 +4,22 @@
  * AES-GCM con CryptoKey no exportable guardada en IndexedDB. Requiere navegador seguro.
  * La protección no sustituye el bloqueo/cifrado del teléfono ni evita el XSS.
  */
+import { uuidSeguro } from "./uuidSeguro";
 const BASE = "zoriapp-registros-offline-v1";
 const CAMBIO = "zoriapp-cola-cambio";
 let apertura;
 let llavePendiente;
 
+function transaccionEscritura(db, almacen) {
+  try { return db.transaction(almacen, "readwrite", { durability: "strict" }); }
+  catch (error) {
+    if (error?.name === "TypeError" || error?.name === "NotSupportedError") {
+      // Safari anterior no reconoce el parámetro durability; evitar fallar.
+      return db.transaction(almacen, "readwrite");
+    }
+    throw error;
+  }
+}
 function solicitud(req) {
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -22,7 +33,7 @@ export function avisarCola() {
 export const EVENTO_COLA = CAMBIO;
 
 function abrir() {
-  if (!("indexedDB" in window) || !window.crypto?.subtle || !window.crypto?.randomUUID) {
+  if (!("indexedDB" in window) || !window.crypto?.subtle || !window.crypto?.getRandomValues) {
     return Promise.reject(new Error("Este navegador no permite almacenamiento local cifrado seguro."));
   }
   if (!apertura) {
@@ -48,7 +59,7 @@ async function leer(almacen, id) {
 async function guardar(almacen, objeto) {
   const db = await abrir();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(almacen, "readwrite", { durability: "strict" });
+    const tx = transaccionEscritura(db, almacen);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error || new Error("Error al guardar la ficha local."));
     tx.onabort = () => reject(tx.error || new Error("La escritura local fue cancelada."));
@@ -58,7 +69,7 @@ async function guardar(almacen, objeto) {
 async function quitar(almacen, id) {
   const db = await abrir();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(almacen, "readwrite", { durability: "strict" });
+    const tx = transaccionEscritura(db, almacen);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error || new Error("Error al borrar registro ya confirmado."));
     tx.onabort = () => reject(tx.error || new Error("La eliminación local fue cancelada."));
@@ -98,7 +109,7 @@ export async function verificarAlmacenamientoOffline() {
 export async function guardarPacienteLocal(datos, uid) {
   if (!uid) throw new Error("Debes iniciar sesión una vez con internet para utilizar el registro offline.");
   await verificarAlmacenamientoOffline();
-  const id = "offline_" + crypto.randomUUID();
+  const id = "offline_" + uuidSeguro(crypto);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const clave = await llave();
   const contenido = new TextEncoder().encode(JSON.stringify(datos));

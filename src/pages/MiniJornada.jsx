@@ -300,7 +300,7 @@ export default function MiniJornada() {
           <h2 style={{ fontSize: "1rem", marginBottom: "0.4rem" }}>
             Evaluación de: {formatoNombre(seleccionado.nombreCompleto)}
           </h2>
-          <p style={{ fontSize: "0.8rem", marginBottom: "0.9rem", color: "#9ca3af" }}>
+          <p style={{ fontSize: "0.8rem", marginBottom: "0.9rem", color: "#526c7a" }}>
             C.I.: {formatoCedula(seleccionado.cedula)} • Edad: {seleccionado.edad} • Tel: {seleccionado.telefono}
           </p>
 
