@@ -8,7 +8,6 @@ const TARJETAS = [
 ];
 
 const CLINICAS = [
-  { ruta: "/tacto", titulo: "Evaluación de tacto", descripcion: "Registrar hallazgos", simbolo: "✓" },
   { ruta: "/mini-jornada", titulo: "Mini jornada", descripcion: "Atención rápida", simbolo: "↗" },
   { ruta: "/laboratorio", titulo: "Laboratorio y PSA", descripcion: "Resultados de pacientes", simbolo: "＋" },
 ];
@@ -37,6 +36,15 @@ export default function HomeQuickActions() {
     <section className="zori-quick-section" aria-label="Acciones de la jornada">
       <h2 className="zori-quick-heading">¿Qué necesitas hacer?</h2>
       <div className="zori-quick-grid">{ver(TARJETAS)}</div>
+      <button type="button" className="zori-tacto-feature" onClick={() => navigate("/tacto")}>
+        <span className="zori-tacto-icon" aria-hidden="true">✓</span>
+        <span className="zori-tacto-copy">
+          <span className="zori-tacto-eyebrow">Acceso clínico directo</span>
+          <strong>Evaluación de tacto</strong>
+          <small>Consultar pacientes y registrar hallazgos clínicos</small>
+        </span>
+        <span className="zori-tacto-arrow" aria-hidden="true">›</span>
+      </button>
       <p className="zori-years-note">Los registros se muestran por jornada. Los expedientes sin fecha identificable permanecen disponibles en «Pacientes → Sin clasificar».</p>
       <h2 className="zori-quick-heading zori-quick-heading--secondary">Herramientas clínicas</h2>
       <div className="zori-quick-grid zori-quick-grid--clinical">{ver(CLINICAS)}</div>
