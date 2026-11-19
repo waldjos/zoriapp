@@ -12,11 +12,14 @@ export default function IdentidadJornada() {
         <a className="zori-branding-sponsor" href="https://zoriakpharma.com/"
           target="_blank" rel="noopener noreferrer" aria-label="Zoriak Pharma, patrocinante">
           <small>Con el apoyo de</small>
-          {logoDisponible
-            ? <img src={LOGO_OFICIAL_ZORIAK} alt="Zoriak Pharma"
-                onError={() => setLogoDisponible(false)} />
-            : <strong>Zoriak Pharma</strong>}
-          <span>Tu círculo de confianza</span>
+          <span className="zori-branding-sponsor-identity">
+            {logoDisponible && (
+              <img src={LOGO_OFICIAL_ZORIAK} alt=""
+                aria-hidden="true" onError={() => setLogoDisponible(false)} />
+            )}
+            <strong>Zoriak Pharma</strong>
+          </span>
+          <span className="zori-branding-sponsor-tagline">Tu círculo de confianza</span>
         </a>
       </div>
       <div className="zori-hospital-strip">
