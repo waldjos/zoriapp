@@ -1,112 +1,96 @@
-// src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { PatrocinanteZoriak } from "../components/IdentidadJornada";
+import ZoriIcon from "../components/ZoriIcon";
 
+const FUNCIONES = [
+  ["registrar-paciente", "Registro rápido de pacientes"],
+  ["evaluacion", "Evaluación clínica"],
+  ["laboratorio", "Resultados de laboratorio"],
+  ["sincronizar", "Sincronización de tu información"],
+];
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mostrarClave, setMostrarClave] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (evento) => {
+    evento.preventDefault();
     setError("");
     setSubmitting(true);
-
     try {
-      await login(email, password);
-      navigate("/"); // te lleva al Home con los 5 botones
-    } catch (err) {
-      console.error(err);
-      setError("Correo o contraseña incorrectos.");
+      await login(email.trim(), password);
+      navigate("/");
+    } catch {
+      setError("No fue posible ingresar. Comprueba tus credenciales o comunícate con el coordinador.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        {/* Columna izquierda: branding y beneficios */}
-        <div className="login-left">
-          <div className="login-logo-row">
-            <img src="/branding/zoriapp-2026.svg" alt="ZoriApp, gestión de jornadas médicas" className="login-brand-logo" />
+    <div className="login-page zori-design-login">
+      <div className="zori-design-login-wrap">
+        <header className="zori-design-login-header" aria-label="Identidad y patrocinio">
+          <img src="/branding/zoriapp-2026.svg"
+            alt="ZoriApp · Gestión de jornadas médicas" />
+          <PatrocinanteZoriak compact />
+        </header>
+        <main className="zori-design-login-card">
+          <div className="zori-design-login-intro">
+            <div className="zori-design-login-emblem">
+              <ZoriIcon name="evaluacion" size={69} strokeWidth={1.65}/>
+              <ZoriIcon name="urologia" size={38} strokeWidth={1.65} className="zori-design-login-kidney"/>
+            </div>
+            <div>
+              <h1>Ingreso a ZoriApp</h1>
+              <p>Gestiona jornadas médicas y la línea de urología de forma simple y segura.</p>
+            </div>
           </div>
-          <div className="login-institution">Hospital Dr. Domingo Luciani · Jornada médica 2026</div>
-
-          <h1 className="login-title">Ingreso a ZoriApp</h1>
-          <p className="login-subtitle">
-            Plataforma médica para jornadas de urología, diseñada para que
-            registres, evalúes y valides resultados en minutos.
-          </p>
-
-          <div className="login-badges">
-            <span className="login-badge">✅ Registro rápido de pacientes</span>
-            <span className="login-badge">✅ Evaluación de tacto guiada</span>
-            <span className="login-badge">✅ PDFs de laboratorio centralizados</span>
-            <span className="login-badge">✅ Dashboard de resultados</span>
-          </div>
-
-          <p className="login-footer-text">
-            Acceso exclusivo para médicos autorizados. Los registros pueden quedar pendientes en el teléfono y se envían a Firebase cuando vuelva la conexión.
-          </p>
-          <div className="login-sponsor" aria-label="Patrocinante Zoriak Pharma">
-            <span>Con el apoyo de</span>
-            <img src="/branding/zoriak-logo-oficial.svg" alt="" aria-hidden="true"
-              onError={(event) => { event.currentTarget.style.display = "none"; }} />
-            <strong>Zoriak Pharma</strong>
-            <small>Tu círculo de confianza</small>
-          </div>
-        </div>
-
-        {/* Columna derecha: formulario */}
-        <div className="login-right">
-          <form className="login-form" onSubmit={handleSubmit}>
-            <label className="login-label">
-              Correo electrónico
-              <input
-                type="email"
-                className="login-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="medico@centro.com"
-                required
-              />
+          <form className="zori-design-login-form" onSubmit={handleSubmit}>
+            <label className="zori-design-login-field">
+              <ZoriIcon name="correo" size={27}/>
+              <span className="sr-only">Correo electrónico</span>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                autoComplete="username" inputMode="email" placeholder="Correo electrónico" required />
             </label>
-
-            <label className="login-label">
-              Contraseña
-              <input
-                type="password"
-                className="login-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+            <label className="zori-design-login-field">
+              <ZoriIcon name="seguridad" size={27}/>
+              <span className="sr-only">Contraseña</span>
+              <input type={mostrarClave ? "text" : "password"} value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password" placeholder="Contraseña" required/>
+              <button type="button" className="zori-design-show-password"
+                aria-label={mostrarClave ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-pressed={mostrarClave} onClick={() => setMostrarClave(v=>!v)}>
+                {mostrarClave ? "Ocultar" : "Ver"}
+              </button>
             </label>
-
-            {error && <p className="login-error">{error}</p>}
-
-            <button
-              type="submit"
-              className="login-button"
-              disabled={submitting}
-            >
+            {error && <p role="alert" className="login-error">{error}</p>}
+            <button className="zori-design-login-submit" type="submit" disabled={submitting}>
               {submitting ? "Ingresando..." : "Ingresar"}
+              <ZoriIcon name="siguiente" size={26}/>
             </button>
-
-            <p className="login-hint">
-              Si tienes problemas para ingresar, contacta al coordinador de la
-              jornada para validar tu usuario.
-            </p>
           </form>
-        </div>
+          <div className="zori-design-login-benefits">
+            {FUNCIONES.map(([icono, texto])=>(
+              <div key={texto}>
+                <span><ZoriIcon name={icono} size={26}/></span>
+                <strong>{texto}</strong>
+              </div>
+            ))}
+          </div>
+          <p className="zori-design-login-disclaimer">
+            Acceso exclusivo para médicos autorizados. Los registros pueden guardarse temporalmente
+            en este teléfono y sincronizarse al recuperar conexión.
+          </p>
+        </main>
       </div>
     </div>
   );
