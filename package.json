@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test && node scripts/preparar-ocr.mjs && vite build",
+    "build": "npm run test && node scripts/preparar-ocr.mjs && node scripts/incorporar-logo-zoriak.mjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js",
