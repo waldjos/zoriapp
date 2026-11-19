@@ -367,3 +367,187 @@ input[type="checkbox"], input[type="radio"] { accent-color: #00866b; }
   body, html, #root { background: #fff !important; color: #111 !important; }
   .main-nav, .app-header, .zori-sync-panel { display: none !important; }
 }
+
+
+/* ZoriApp 2026 · Ajustes de cierre de identidad y flujos médicos. */
+/* El verde corresponde a la paleta aprobada de la interfaz; el SVG oficial no se recolorea. */
+:root { --zoriak-green: #00896e; --zoriak-green-deep: #006b53; }
+.zori-branding-sponsor-identity,
+.home-page .zori-branding-sponsor-identity {
+  background: linear-gradient(125deg, var(--zoriak-green), var(--zoriak-green-deep));
+  border: 1px solid #006b53;
+  border-radius: 13px;
+  box-shadow: 0 5px 12px rgba(0,111,81,.13);
+  min-height: 52px;
+  padding: 8px 12px;
+}
+.zori-branding-sponsor-identity img {
+  display: block;
+  width: 100%;
+  max-width: 178px;
+  max-height: 68px;
+  height: auto;
+  object-fit: contain;
+  object-position: center center;
+}
+.zori-branding .zori-sponsor-name {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+}
+.zori-hospital-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background-image: none;
+  background-color: #f2f9f9;
+  border: 1px solid #cadfe3;
+  padding: 11px;
+  overflow: hidden;
+}
+.zori-hospital-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.zori-hospital-heading > img {
+  display: block;
+  flex: none;
+  width: 53px;
+  height: 53px;
+  max-width: 53px;
+  object-fit: contain;
+}
+.zori-hospital-heading > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.zori-hospital-heading strong {
+  color: #173c59;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+.zori-hospital-heading .zori-hospital-eyebrow { color: #aa1f30; }
+.zori-hospital-photo-frame {
+  width: 100%;
+  height: clamp(93px, 13vw, 121px);
+  min-height: 93px;
+  max-height: 121px;
+  overflow: hidden;
+  border-radius: 11px;
+  border: 1px solid #d0e1e8;
+  background: #dceaf0;
+}
+.zori-hospital-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 63%;
+}
+.zori-tacto-feature {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  margin: 12px 0 0;
+  border: 1px solid #84c8ad;
+  border-left: 5px solid #00896e;
+  border-radius: 17px;
+  background: linear-gradient(105deg, #e2f8eb, #f7fcf8);
+  box-shadow: 0 6px 16px rgba(28,95,74,.09);
+  color: #173d33;
+  text-align: left;
+  cursor: pointer;
+}
+.zori-tacto-feature:hover { background: linear-gradient(105deg,#d5f4e4,#f0faf4); }
+.zori-tacto-icon {
+  display: flex;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: #00896e;
+  color: #fff;
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+.zori-tacto-copy {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.zori-tacto-eyebrow {
+  color: #1d6f58;
+  font-size: .73rem;
+  font-weight: 750;
+  letter-spacing: .01em;
+}
+.zori-tacto-copy strong {
+  color: #134533;
+  font-size: 1.12rem;
+  line-height: 1.22;
+  overflow-wrap: break-word;
+}
+.zori-tacto-copy small {
+  color: #3d6156;
+  font-size: .83rem;
+  line-height: 1.35;
+}
+.zori-tacto-arrow {
+  flex: none;
+  color: #217552;
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1;
+}
+.main-nav-session {
+  margin-top: 8px;
+  padding-top: 9px;
+  border-top: 1px solid #d6e4e8;
+}
+.main-nav--simple .main-nav-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  background: #fff3f3;
+  border: 1px solid #ebc6cc;
+  color: #9b2737;
+  font-weight: 750;
+}
+.main-nav--simple .main-nav-logout:hover,
+.main-nav--simple .main-nav-logout:focus-visible {
+  background: #fbe5e7;
+  color: #832035;
+}
+@media (max-width: 700px) {
+  .zori-hospital-strip { padding: 10px; }
+  .zori-hospital-heading > img { width: 47px; max-width: 47px; height: 47px; }
+  .zori-hospital-photo-frame { height: 95px; }
+  .zori-tacto-feature { padding: 12px 10px; gap: 9px; border-radius: 14px; }
+  .zori-tacto-icon { flex-basis: 42px; width: 42px; height: 42px; border-radius: 12px; }
+  .zori-tacto-copy strong { font-size: 1.03rem; }
+  .zori-tacto-copy small { font-size: .78rem; }
+  .zori-tacto-eyebrow { font-size: .68rem; }
+}
+@media (max-width: 345px) {
+  .zori-tacto-feature { gap: 7px; }
+  .zori-tacto-icon { flex-basis: 36px; width: 36px; height: 36px; }
+  .zori-tacto-copy strong { font-size: .94rem; }
+  .zori-tacto-copy small { font-size: .72rem; }
+  .zori-hospital-heading > img { width: 38px; max-width: 38px; height: 38px; }
+  .zori-hospital-heading strong { font-size: .9rem; }
+}
