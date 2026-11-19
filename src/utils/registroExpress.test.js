@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { nombrePropio, cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "./registroExpress.js";
+import { nombrePropio, nombrePropioEnEdicion, nombreCompletoValido, cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha } from "./registroExpress.js";
 
 test("teléfonos móviles VE con separadores y prefijo internacional", () => {
   assert.equal(telefonoE164VE("0424.123-45 67"), "+584241234567");
@@ -33,4 +33,13 @@ test("fecha rápida, edad y validación de días reales", () => {
   assert.equal(edadDesdeFecha("2000-12-20", new Date("2026-11-12T12:00:00")), 25);
   assert.throws(() => fechaNacimientoISO("31/02/2000"));
   assert.throws(() => fechaNacimientoISO("12/11/2999"));
+});
+
+test("edición de nombre conserva espacios finales hasta el siguiente apellido", () => {
+  assert.equal(nombrePropioEnEdicion("maria "), "Maria ");
+  assert.equal(nombrePropioEnEdicion("maria p"), "Maria P");
+  assert.equal(nombrePropioEnEdicion("maria perez "), "Maria Perez ");
+  assert.equal(nombrePropio("maria perez "), "Maria Perez");
+  assert.equal(nombreCompletoValido("maria perez"), true);
+  assert.equal(nombreCompletoValido("mariaperez"), false);
 });
