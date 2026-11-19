@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Páginas
@@ -24,6 +24,7 @@ import "./App.css";
 
 function AppShell() {
   const { user, logout } = useAuth();
+  const { pathname } = useLocation();
   const salir = async () => {
     if (user?.uid) {
       try {
@@ -47,7 +48,7 @@ function AppShell() {
         )}
       </header>
       {user && <MainNav />}
-      {user && <EstadoSincronizacion user={user} />}
+      {user && pathname !== "/" && <EstadoSincronizacion user={user} />}
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<Login />} />
