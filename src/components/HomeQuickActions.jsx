@@ -1,3 +1,4 @@
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ZoriIcon from "./ZoriIcon";
 
@@ -7,13 +8,9 @@ const TARJETAS = [
   { ruta: "/pacientes?periodo=2026", titulo: "Jornada 2026", icono: "jornada-2026", clase: "current" },
   { ruta: "/pacientes?periodo=2025", titulo: "Histórico 2025", icono: "historico-2025", clase: "historic" },
 ];
-const CLINICAS = [
-  { ruta: "/mini-jornada", titulo: "Mini jornada", icono: "evaluacion" },
-  { ruta: "/laboratorio", titulo: "Laboratorio y PSA", icono: "laboratorio" },
-];
+const CLINICAS = [];
 const GESTION = [
   { ruta: "/validar-resultados", titulo: "Validar resultados", icono: "ficha-paciente" },
-  { ruta: "/importar-psa", titulo: "Importar PSA", icono: "laboratorio" },
   { ruta: "/dashboard", titulo: "Estadísticas", icono: "evaluacion" },
 ];
 
@@ -29,6 +26,7 @@ function Tarjeta({item, navegar, tipo="primary"}) {
 
 export default function HomeQuickActions() {
   const navigate = useNavigate();
+  const {sede}=useAuth();
   return (
     <section className="zori-quick-section zori-design-actions" aria-label="Acciones de la jornada">
       <div className="zori-design-section-head">
@@ -36,7 +34,7 @@ export default function HomeQuickActions() {
         <span aria-hidden="true" />
       </div>
       <div className="zori-design-primary-grid">
-        {TARJETAS.map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate}/>)}
+        {TARJETAS.filter(item=>sede.id==="domingo_luciani" || item.clase!=="historic").map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate}/>)}
       </div>
       <button type="button" className="zori-design-tacto" onClick={() => navigate("/tacto")}>
         <ZoriIcon name="urologia" size={46} strokeWidth={1.7} className="zori-design-tacto-symbol"/>
@@ -46,16 +44,13 @@ export default function HomeQuickActions() {
         </span>
         <span className="zori-design-tacto-next" aria-hidden="true"><ZoriIcon name="siguiente" size={27}/></span>
       </button>
-      <div className="zori-design-secondary-grid">
-        {CLINICAS.map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate} tipo="secondary"/>)}
-      </div>
       <details className="zori-quick-advanced zori-design-management">
         <summary>Administración y resultados</summary>
         <div className="zori-design-secondary-grid">
           {GESTION.map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate} tipo="secondary"/>)}
         </div>
       </details>
-      <p className="zori-years-note">Los expedientes sin fecha identificable permanecen en Pacientes → Sin clasificar.</p>
+      {sede.id==="domingo_luciani" && <p className="zori-years-note">Los expedientes sin fecha identificable permanecen en Pacientes → Sin clasificar.</p>}
     </section>
   );
 }

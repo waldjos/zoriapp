@@ -18,7 +18,7 @@ import HomeQuickActions from "../components/HomeQuickActions";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, sede } = useAuth();
   const [stats, setStats] = useState({
     atendidos: 0,
     entregados: 0,
@@ -172,7 +172,7 @@ export default function Home() {
     if (!user) return;
     setCargandoStats(true);
     const unsubscribe = onSnapshot(
-      collection(db, "pacientes"),
+      collection(db, "sedes", sede.id, "pacientes"),
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => filtroJornada(p, "2026"));
         setPacientesList(list);

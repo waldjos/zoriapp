@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { guardarPacienteLocal } from "../utils/colaPacientesOffline";
 import { formatoNombre, formatoNombreEnEdicion } from "../utils/formatoPaciente";
+import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import CedulaOCR from "../components/CedulaOCR";
 import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha, nombreCompletoValido } from "../utils/registroExpress";
@@ -23,7 +24,7 @@ export default function RegistroPaciente() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const { user } = useAuth();
+  const { user, sede } = useAuth();
 
   const recibirLecturaOCR = ({ cedula: numero, tipo, nombre, fecha }) => {
     setVerificado(false);
@@ -109,8 +110,10 @@ export default function RegistroPaciente() {
       // Nunca bloquear el registro por falta de conectividad.
       // La cola cifrada conserva cada ficha hasta confirmar su subida a Firebase.
       const datos = {
-        jornadaAnio: 2026,
-        jornadaId: "domingo-luciani-2026",
+        jornadaAnio: sede.jornadaAnio,
+        jornadaId: sede.jornadaId,
+        sedeId: sede.id,
+        proyectoId: db.app.options.projectId,
         nombreCompleto: formatoNombre(nombreCompleto),
         cedula: documento.cedula,
         tipoDocumento: documento.tipoDocumento,
@@ -122,6 +125,7 @@ export default function RegistroPaciente() {
         notas: notas.trim(),
       };
 
+      if (!sede.jornadaAbierta) throw new Error("La jornada está cerrada para nuevos registros.");
       await guardarPacienteLocal(datos, user.uid);
 
       setSuccess("Ficha guardada en este dispositivo. Se sincronizará con Firebase al recuperar internet; revisa el contador de pendientes.");

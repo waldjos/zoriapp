@@ -20,7 +20,7 @@ import { formatoNombre, formatoCedula } from "../utils/formatoPaciente";
 export default function PacienteDetalle() {
   const { id } = useParams(); // ID del documento en "pacientes"
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, sede } = useAuth();
 
   // ---- Estado del paciente ----
   const [paciente, setPaciente] = useState(null);
@@ -66,7 +66,7 @@ export default function PacienteDetalle() {
   useEffect(() => {
     const cargarPaciente = async () => {
       try {
-        const ref = doc(db, "pacientes", id);
+        const ref = doc(db, "sedes", sede.id, "pacientes", id);
         const snap = await getDoc(ref);
 
         if (!snap.exists()) {
@@ -143,7 +143,7 @@ export default function PacienteDetalle() {
   // 2) Escuchar las evaluaciones clínicas en tiempo real
   // ---------------------------------------------------
   useEffect(() => {
-    const colRef = collection(db, "pacientes", id, "evaluacionesClinicas");
+    const colRef = collection(db, "sedes", sede.id, "pacientes", id, "evaluacionesClinicas");
     const q = query(colRef, orderBy("fecha", "desc"));
 
     const unsubscribe = onSnapshot(
@@ -179,7 +179,7 @@ export default function PacienteDetalle() {
         throw new Error("No hay usuario autenticado.");
       }
 
-      const colRef = collection(db, "pacientes", id, "evaluacionesClinicas");
+      const colRef = collection(db, "sedes", sede.id, "pacientes", id, "evaluacionesClinicas");
 
       await addDoc(colRef, {
         fecha: serverTimestamp(),
@@ -232,7 +232,7 @@ export default function PacienteDetalle() {
     if (!paciente) return;
     setGuardandoPSA(true);
     try {
-      const ref = doc(db, "pacientes", paciente.id);
+      const ref = doc(db, "sedes", sede.id, "pacientes", paciente.id);
       await updateDoc(ref, {
         psaTotal: psaTotal.trim() || null,
         psaLibre: psaLibre.trim() || null,
@@ -284,7 +284,7 @@ export default function PacienteDetalle() {
         </tbody>
       </table>
       <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#666" }}>
-        Impreso el {new Date().toLocaleString("es")} – Hospital Domingo Luciani – Proyecto Zoriak
+        Impreso el {new Date().toLocaleString("es")} – {sede.nombre} – Proyecto Zoriak
       </p>
       {/* Confirmar entrega (no se imprime) */}
       <div className="no-print" style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
@@ -306,7 +306,7 @@ export default function PacienteDetalle() {
                     setMensajeEntrega("Error: no se puede identificar al paciente.");
                     return;
                   }
-                  const ref = doc(db, "pacientes", paciente.id);
+                  const ref = doc(db, "sedes", sede.id, "pacientes", paciente.id);
                   await updateDoc(ref, {
                     entregaResultados: "entregado",
                     entregaResultadosAt: serverTimestamp(),

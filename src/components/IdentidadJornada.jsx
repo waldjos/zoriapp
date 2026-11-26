@@ -1,3 +1,4 @@
+import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 
 const ZORIAK_OFICIAL = "/branding/zoriak-logo-oficial.svg";
@@ -21,6 +22,8 @@ export function PatrocinanteZoriak({ compact = false }) {
 
 export default function IdentidadJornada() {
   const [fotoDisponible, setFotoDisponible] = useState(true);
+  const {sede}=useAuth();
+  if (sede?.id !== "domingo_luciani") return <div className="zori-design-institucional"><section className="zori-design-brand-header"><img src="/branding/zoriapp-2026.svg" alt="ZoriApp" className="zori-design-logo-app"/><PatrocinanteZoriak/></section><section className="zori-design-hospital" style={{padding:"1rem"}}><h2>{sede?.nombre}</h2><p>Jornada urológica {sede?.jornadaAnio} · Meta: {sede?.metaPacientes} pacientes</p></section></div>;
   return (
     <div className="zori-design-institucional">
       <section className="zori-design-brand-header" aria-label="ZoriApp y patrocinio">

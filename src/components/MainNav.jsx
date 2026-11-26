@@ -10,10 +10,7 @@ const PRINCIPALES = [
 
 const SECUNDARIAS = [
   { path: "/tacto", label: "Evaluación de tacto", grupo: "Atención médica" },
-  { path: "/mini-jornada", label: "Mini jornada", grupo: "Atención médica" },
-  { path: "/laboratorio", label: "Laboratorio", grupo: "Atención médica" },
   { path: "/validar-resultados", label: "Validar resultados", grupo: "Resultados y gestión" },
-  { path: "/importar-psa", label: "Importar PSA", grupo: "Resultados y gestión" },
   { path: "/dashboard", label: "Estadísticas", grupo: "Resultados y gestión" },
 ];
 

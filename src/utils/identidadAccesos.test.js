@@ -19,7 +19,7 @@ test("Evaluación de tacto se destaca debajo de las cuatro tarjetas", () => {
   assert.match(acciones, /zori-design-primary-grid/);
   assert.match(acciones, /zori-design-tacto/);
   assert.match(acciones, /navigate\("\/tacto"\)/);
-  assert.ok(acciones.indexOf('TARJETAS.map') < acciones.indexOf("zori-design-tacto"));
+  assert.ok(acciones.indexOf('TARJETAS.filter') >= 0 && acciones.indexOf('TARJETAS.filter') < acciones.indexOf("zori-design-tacto"));
   const clinicas = acciones.split("const CLINICAS =")[1]?.split("const GESTION")[0] || "";
   assert.doesNotMatch(clinicas, /Evaluación de tacto/);
 });

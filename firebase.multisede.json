@@ -1,0 +1,8 @@
+{
+  "firestore": {
+    "rules": "firestore.multisede.rules"
+  },
+  "storage": {
+    "rules": "storage.multisede.rules"
+  }
+}

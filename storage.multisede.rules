@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+ match /b/{bucket}/o {
+  // Documentos clínicos: bloqueados hasta sustituir los enlaces de descarga con token.
+  match /{allPaths=**} { allow read,write: if false; }
+ }
+}
