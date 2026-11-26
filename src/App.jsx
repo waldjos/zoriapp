@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Páginas
 import Login from "./pages/Login";
+import PanelCentral from "./pages/PanelCentral";
 import Home from "./pages/Home";
 import RegistroPaciente from "./pages/RegistroPaciente";
 import Pacientes from "./pages/Pacientes";
@@ -43,10 +44,11 @@ function AppShell() {
   return (
     <div className="app-shell">
       {user && <MainNav onLogout={salir} />}
-      {user && pathname !== "/" && <EstadoSincronizacion user={user} />}
+      {user && pathname !== "/" && pathname !== "/superadmin" && <EstadoSincronizacion user={user} />}
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/superadmin" element={<PrivateRoute><PanelCentral /></PrivateRoute>} />
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
           <Route path="/registro" element={<PrivateRoute><RegistroPaciente /></PrivateRoute>} />
           <Route path="/tacto" element={<PrivateRoute><Tacto /></PrivateRoute>} />

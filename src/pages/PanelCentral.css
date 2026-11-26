@@ -1,0 +1,11 @@
+.zc-panel{max-width:920px;margin:0 auto;padding:1rem 1rem 6rem;color:#17374d;overflow-wrap:anywhere}
+.zc-panel header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.zc-panel h1{font-size:clamp(1.4rem,4vw,2rem);margin:.9rem 0 .5rem}
+.zc-panel button{background:#08775e;color:white;border:0;border-radius:10px;padding:.75rem;font-weight:600;margin:.5rem .25rem .5rem 0}
+.zc-panel a{color:#08775e;text-decoration:underline}
+.zc-note,.zc-site,.zc-grid article{background:#fff;border:1px solid #d3e2de;border-radius:14px;padding:1rem}
+.zc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin:1rem 0}
+.zc-grid strong{display:block;font-size:clamp(1.15rem,3vw,1.8rem);color:#08775e;margin-top:.35rem}
+.zc-grid span{font-size:.85rem}
+.zc-site{margin-bottom:.75rem}.zc-site h3{margin:.5rem 0;font-size:1.1rem}
+.zc-status{font-size:.8rem;color:#4c6664}.zc-site dl{display:grid;grid-template-columns:1fr 1.6fr;gap:.4rem;margin:.7rem 0}.zc-site dd{margin:0;font-weight:600}

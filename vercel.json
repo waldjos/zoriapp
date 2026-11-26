@@ -40,6 +40,10 @@
     {
       "source": "/importar-psa",
       "destination": "/index.html"
+    },
+    {
+      "source": "/superadmin",
+      "destination": "/index.html"
     }
   ]
 }
