@@ -5,6 +5,7 @@ import {db} from "../firebase";
 import {useAuth} from "../context/AuthContext";
 import {usePanelCentral} from "../utils/usePanelCentral";
 import "./PanelCentral.css";
+import AfiliarLuciani from "../components/AfiliarLuciani";
 const num=v=>Number.isSafeInteger(v)&&v>=0?v:null;
 const formato=v=>num(v)===null?"Por definir":new Intl.NumberFormat("es-VE").format(v);
 const dinero=v=>num(v)===null?"Por definir":"USD "+formato(v);
@@ -26,13 +27,14 @@ export default function PanelCentral(){
  return <section className="zc-panel">
  <header><img src="/branding/zoriapp-2026.svg" alt="ZoriApp" width="190"/><span>Administración central</span></header>
  <h1>Panel de Superadministrador</h1><p>Consulta institucional · etapa de transición.</p>
- <p className="zc-note">Solo lectura. No modifica pacientes, permisos, sedes ni jornadas. Las tarifas son configuradas, no cobros confirmados.</p>
+ <p className="zc-note">Consulta de sedes y preparación de perfiles del personal existente. No modifica pacientes ni jornadas. Las tarifas son configuradas, no cobros confirmados.</p>
  <button type="button" onClick={()=>setVersion(v=>v+1)}>Actualizar sedes</button> <Link to="/">Volver a la aplicación actual</Link>
  {error&&<p role="alert">{error}</p>}
  {!rows&&!error&&<p role="status">Consultando sedes…</p>}
  {rows&&<><div className="zc-grid">
  {[[rows.length,"Sedes registradas"],[formato(suma(rows,"metaPacientes")),"Meta de pacientes"],[dinero(suma(rows,"tarifaUSD")),"Tarifas por jornada"],[dinero(suma(rows,"renovacionUSD")),"Renovaciones previstas"]].map(([v,k])=><article key={k}><span>{k}</span><strong>{v}</strong></article>)}
  </div><h2>Instituciones</h2>{rows.map(s=><article className="zc-site" key={s.id}><span className="zc-status">{s.activa===true?"Sede habilitada":"Sede no habilitada"}</span><h3>{typeof s.nombre==="string"?s.nombre:s.id}</h3><dl><dt>Jornada</dt><dd>{formato(s.jornadaAnio)} · {s.jornadaAbierta===true?"Abierta":"Cerrada"}</dd><dt>Meta</dt><dd>{formato(s.metaPacientes)}</dd><dt>Tarifa</dt><dd>{dinero(s.tarifaUSD)}</dd><dt>Renovación</dt><dd>{dinero(s.renovacionUSD)}</dd></dl></article>)}</>}
- <p>La gestión de usuarios y apertura de nuevas sedes requieren la siguiente versión de reglas y las pruebas de aislamiento.</p>
+ {rows?.some(s=>s.id==="domingo_luciani") && <AfiliarLuciani key={uid} uid={uid}/>}
+ <p>Las nuevas sedes permanecen cerradas hasta aprobar las reglas definitivas y las pruebas de aislamiento.</p>
  </section>;
 }

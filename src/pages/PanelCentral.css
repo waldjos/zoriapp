@@ -9,3 +9,5 @@
 .zc-grid span{font-size:.85rem}
 .zc-site{margin-bottom:.75rem}.zc-site h3{margin:.5rem 0;font-size:1.1rem}
 .zc-status{font-size:.8rem;color:#4c6664}.zc-site dl{display:grid;grid-template-columns:1fr 1.6fr;gap:.4rem;margin:.7rem 0}.zc-site dd{margin:0;font-weight:600}
+
+.zc-site textarea{display:block;width:100%;box-sizing:border-box;margin:.5rem 0;border:1px solid #bdceca;border-radius:8px;padding:.7rem;resize:vertical;font:inherit}

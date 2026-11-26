@@ -18,3 +18,5 @@ test("ruta protegida y fallback Vercel",()=>{
  assert.match(read("src/App.jsx"),/path="\/superadmin" element=\{<PrivateRoute><PanelCentral/);
  assert.ok(JSON.parse(read("vercel.json")).rewrites.some(x=>x.source==="/superadmin"&&x.destination==="/index.html"));
 });
+
+test("afiliación solo crea perfiles médicos faltantes, no toca expedientes",()=>{const s=read("src/components/AfiliarLuciani.jsx");assert.match(s,/runTransaction/);assert.match(s,/if\(!s.exists\(\)\)/);assert.match(s,/sedeId:"domingo_luciani",rol:"medico",activo:true/);assert.doesNotMatch(s,/"pacientes"|deleteDoc|updateDoc/);});
