@@ -46,9 +46,9 @@ export function sincronizarPendientes(uid, alAvanzar = () => {}) {
         const datos = registro.datos;
         if (auth.currentUser?.uid !== uid) throw new Error("Sesión modificada.");
         const perfil = (await getDocFromServer(doc(db,"usuarios",uid))).data();
-        if (!perfil?.activo || !datos.sedeId || datos.sedeId !== perfil.sedeId) throw new Error("Registro de otra sede o legado pendiente de revisión.");
+        if (!perfil?.activo || !datos.sedeId || datos.sedeId !== perfil.sedeId || datos.proyectoId !== db.app.options.projectId) throw new Error("Registro de otra sede o legado pendiente de revisión.");
         const operacion = setDoc(doc(db, "sedes", datos.sedeId, "pacientes", registro.id), {
-          ...datos,
+          ...Object.fromEntries(Object.entries(datos).filter(([k]) => k !== "proyectoId")),
           jornadaAnio: datos.jornadaAnio,
           jornadaId: datos.jornadaId,
           creadoPor: uid,

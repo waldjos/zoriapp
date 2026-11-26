@@ -162,7 +162,7 @@ export default function Pacientes() {
         // ➕ Crear nuevo paciente
         await addDoc(collection(db, "sedes", sede.id, "pacientes"), {
           ...dataPaciente,
-          jornadaId: sede.jornadaId, jornadaAnio: sede.jornadaAnio,
+          sedeId: sede.id, jornadaId: sede.jornadaId, jornadaAnio: sede.jornadaAnio,
           createdAt: serverTimestamp(),
           creadoPor: user.uid,
         });
@@ -388,35 +388,7 @@ export default function Pacientes() {
     URL.revokeObjectURL(url);
   };
 
-  const enviarSMSLote = async () => {
-    const confirmar = window.confirm('¿Estás seguro de enviar SMS al lote del día? Esta acción no se puede deshacer.');
-    if (!confirmar) return;
-
-    setEnviandoSMS(true);
-    setMensajeSMS("");
-
-    try {
-      const resp = await Promise.reject(new Error("El envío masivo está deshabilitado en la prueba multisede.")); /*
-      const respLegacy = await fetch('/api/send-sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pacientes }),
-      }); */
-
-      const result = await resp.json();
-
-      if (resp.ok) {
-        setMensajeSMS(`Éxito: ${result.mensaje}`);
-      } else {
-        setMensajeSMS(`Error: ${result.error}`);
-      }
-    } catch (err) {
-      console.error('Error enviando SMS:', err);
-      setMensajeSMS('Error al enviar SMS. Revisa la consola para más detalles.');
-    } finally {
-      setEnviandoSMS(false);
-    }
-  };
+  const enviarSMSLote = () => { setEnviandoSMS(false); setMensajeSMS("Envío masivo deshabilitado en la prueba multisede."); };
 
   return (
     <div className="page pacientes-page pacientes-card">

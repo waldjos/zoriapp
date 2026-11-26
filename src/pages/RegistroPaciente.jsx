@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { guardarPacienteLocal } from "../utils/colaPacientesOffline";
 import { formatoNombre, formatoNombreEnEdicion } from "../utils/formatoPaciente";
+import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import CedulaOCR from "../components/CedulaOCR";
 import { cedulaVE, telefonoE164VE, correoNormalizado, fechaNacimientoISO, fechaParaFormulario, mascaraFechaRapida, edadDesdeFecha, nombreCompletoValido } from "../utils/registroExpress";
@@ -112,6 +113,7 @@ export default function RegistroPaciente() {
         jornadaAnio: sede.jornadaAnio,
         jornadaId: sede.jornadaId,
         sedeId: sede.id,
+        proyectoId: db.app.options.projectId,
         nombreCompleto: formatoNombre(nombreCompleto),
         cedula: documento.cedula,
         tipoDocumento: documento.tipoDocumento,

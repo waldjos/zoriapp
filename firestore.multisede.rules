@@ -8,7 +8,7 @@ service cloud.firestore {
   function member(s){return active() && profile().sedeId == s && profile().rol in ['admin_sede','medico','registrador'] && get(/databases/$(database)/documents/sedes/$(s)).data.activa == true;}
   function clinician(s){return member(s) && profile().rol in ['admin_sede','medico'];}
   function current(s){return get(/databases/$(database)/documents/sedes/$(s)).data;}
-  function registration(s){return member(s) && current(s).jornadaAbierta == true && request.resource.data.creadoPor == request.auth.uid && request.resource.data.jornadaId == current(s).jornadaId && request.resource.data.jornadaAnio == current(s).jornadaAnio;}
+  function registration(s){return member(s) && current(s).jornadaAbierta == true && request.resource.data.sedeId == s && request.resource.data.creadoPor == request.auth.uid && request.resource.data.jornadaId == current(s).jornadaId && request.resource.data.jornadaAnio == current(s).jornadaAnio;}
   function registrationOnly(){return request.resource.data.keys().hasOnly(['sedeId','jornadaId','jornadaAnio','nombreCompleto','cedula','tipoDocumento','telefono','localidad','edad','fechaNacimiento','email','notas','creadoPor','fechaCapturaLocal','createdAt','origenRegistro']);}
   function validProfile(){return request.resource.data.rol in ['admin_sede','medico','registrador'] && request.resource.data.activo is bool && request.resource.data.sedeId is string && exists(/databases/$(database)/documents/sedes/$(request.resource.data.sedeId));}
   match /usuarios/{uid}{
@@ -24,7 +24,7 @@ service cloud.firestore {
    match /pacientes/{pid}{
     allow read: if clinician(s);
     allow create: if registration(s) && (clinician(s) || (registrationOnly() && request.resource.data.sedeId == s));
-    allow update: if clinician(s) && request.resource.data.get('jornadaId',null) == resource.data.get('jornadaId',null) && request.resource.data.get('jornadaAnio',null) == resource.data.get('jornadaAnio',null) && request.resource.data.get('sedeId',null) == resource.data.get('sedeId',null);
+    allow update: if clinician(s) && request.resource.data.keys().hasAll(resource.data.keys()) && request.resource.data.get('jornadaId',null) == resource.data.get('jornadaId',null) && request.resource.data.get('jornadaAnio',null) == resource.data.get('jornadaAnio',null) && request.resource.data.get('sedeId',null) == resource.data.get('sedeId',null);
     match /evaluacionesClinicas/{eid}{
      allow read,create,update: if clinician(s);
     }

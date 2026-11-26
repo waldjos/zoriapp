@@ -8,13 +8,9 @@ const TARJETAS = [
   { ruta: "/pacientes?periodo=2026", titulo: "Jornada 2026", icono: "jornada-2026", clase: "current" },
   { ruta: "/pacientes?periodo=2025", titulo: "Histórico 2025", icono: "historico-2025", clase: "historic" },
 ];
-const CLINICAS = [
-  { ruta: "/mini-jornada", titulo: "Mini jornada", icono: "evaluacion" },
-  { ruta: "/laboratorio", titulo: "Laboratorio y PSA", icono: "laboratorio" },
-];
+const CLINICAS = [];
 const GESTION = [
   { ruta: "/validar-resultados", titulo: "Validar resultados", icono: "ficha-paciente" },
-  { ruta: "/importar-psa", titulo: "Importar PSA", icono: "laboratorio" },
   { ruta: "/dashboard", titulo: "Estadísticas", icono: "evaluacion" },
 ];
 
@@ -48,16 +44,13 @@ export default function HomeQuickActions() {
         </span>
         <span className="zori-design-tacto-next" aria-hidden="true"><ZoriIcon name="siguiente" size={27}/></span>
       </button>
-      <div className="zori-design-secondary-grid">
-        {CLINICAS.map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate} tipo="secondary"/>)}
-      </div>
       <details className="zori-quick-advanced zori-design-management">
         <summary>Administración y resultados</summary>
         <div className="zori-design-secondary-grid">
           {GESTION.map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate} tipo="secondary"/>)}
         </div>
       </details>
-      <p className="zori-years-note">Los expedientes sin fecha identificable permanecen en Pacientes → Sin clasificar.</p>
+      {sede.id==="domingo_luciani" && <p className="zori-years-note">Los expedientes sin fecha identificable permanecen en Pacientes → Sin clasificar.</p>}
     </section>
   );
 }
