@@ -1,3 +1,4 @@
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ZoriIcon from "./ZoriIcon";
 
@@ -29,6 +30,7 @@ function Tarjeta({item, navegar, tipo="primary"}) {
 
 export default function HomeQuickActions() {
   const navigate = useNavigate();
+  const {sede}=useAuth();
   return (
     <section className="zori-quick-section zori-design-actions" aria-label="Acciones de la jornada">
       <div className="zori-design-section-head">
@@ -36,7 +38,7 @@ export default function HomeQuickActions() {
         <span aria-hidden="true" />
       </div>
       <div className="zori-design-primary-grid">
-        {TARJETAS.map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate}/>)}
+        {TARJETAS.filter(item=>sede.id==="domingo_luciani" || item.clase!=="historic").map(item => <Tarjeta key={item.titulo} item={item} navegar={navigate}/>)}
       </div>
       <button type="button" className="zori-design-tacto" onClick={() => navigate("/tacto")}>
         <ZoriIcon name="urologia" size={46} strokeWidth={1.7} className="zori-design-tacto-symbol"/>

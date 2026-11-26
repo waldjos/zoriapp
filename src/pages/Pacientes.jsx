@@ -52,16 +52,17 @@ export default function Pacientes() {
   const [enviandoSMS, setEnviandoSMS] = useState(false);
   const [mensajeSMS, setMensajeSMS] = useState("");
 
-  const { user } = useAuth();
+  const { user, sede } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const periodo = searchParams.get("periodo") || "2026";
+  const solicitado = searchParams.get("periodo") || "2026";
+  const periodo = sede.id === "domingo_luciani" ? solicitado : "2026";
 
   // Escuchar en tiempo real la colección "pacientes"
   useEffect(() => {
     // No ordenar por createdAt en la consulta: Firestore excluye registros
     // históricos que carecen de ese campo. Se ordenan después de leerlos.
-    const q = query(collection(db, "pacientes"));
+    const q = query(collection(db, "sedes", sede.id, "pacientes"));
 
     const unsubscribe = onSnapshot(
       q,
@@ -151,7 +152,7 @@ export default function Pacientes() {
 
       if (editingId) {
         // 🔄 Actualizar paciente existente
-        const ref = doc(db, "pacientes", editingId);
+        const ref = doc(db, "sedes", sede.id, "pacientes", editingId);
         await updateDoc(ref, {
           ...dataPaciente,
           updatedAt: serverTimestamp(),
@@ -159,8 +160,9 @@ export default function Pacientes() {
         setSuccess("Paciente actualizado correctamente.");
       } else {
         // ➕ Crear nuevo paciente
-        await addDoc(collection(db, "pacientes"), {
+        await addDoc(collection(db, "sedes", sede.id, "pacientes"), {
           ...dataPaciente,
+          jornadaId: sede.jornadaId, jornadaAnio: sede.jornadaAnio,
           createdAt: serverTimestamp(),
           creadoPor: user.uid,
         });
@@ -394,11 +396,12 @@ export default function Pacientes() {
     setMensajeSMS("");
 
     try {
-      const resp = await fetch('/api/send-sms', {
+      const resp = await Promise.reject(new Error("El envío masivo está deshabilitado en la prueba multisede.")); /*
+      const respLegacy = await fetch('/api/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pacientes }),
-      });
+      }); */
 
       const result = await resp.json();
 
@@ -628,7 +631,7 @@ export default function Pacientes() {
             ["2025", "Histórico 2025"],
             ["sin-fecha", "Sin clasificar"],
             ["todos", "Todas"]
-          ].map(([valor, titulo]) => (
+          ].filter(([valor]) => sede.id === "domingo_luciani" || valor === "2026").map(([valor, titulo]) => (
             <button key={valor} type="button"
               className={periodo === valor ? "is-active" : ""}
               aria-pressed={periodo === valor}

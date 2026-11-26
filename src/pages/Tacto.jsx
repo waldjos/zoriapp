@@ -12,7 +12,7 @@ export default function Tacto() {
   const [seleccionado, setSeleccionado] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
-  const { user } = useAuth();
+  const { user, sede } = useAuth();
 
   // Estado del formulario de evaluación
   const [evaluacion, setEvaluacion] = useState({
@@ -30,7 +30,7 @@ export default function Tacto() {
   useEffect(() => {
     const cargarPacientes = async () => {
       try {
-        const snap = await getDocs(collection(db, "pacientes"));
+        const snap = await getDocs(collection(db, "sedes", sede.id, "pacientes"));
         const datos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         console.log("Pacientes cargados:", datos);
         setPacientes(datos);
@@ -112,7 +112,7 @@ export default function Tacto() {
     setMensaje("");
 
     try {
-      const ref = doc(db, "pacientes", seleccionado.id);
+      const ref = doc(db, "sedes", sede.id, "pacientes", seleccionado.id);
       // Añadir metadata del profesional que registra la evaluación
       await updateDoc(ref, {
         tacto: {

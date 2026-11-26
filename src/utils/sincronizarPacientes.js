@@ -1,5 +1,5 @@
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { doc, getDocFromServer, serverTimestamp, setDoc } from "firebase/firestore";
+import { db, auth } from "../firebase";
 import { pendientesLocales, confirmarSincronizacion } from "./colaPacientesOffline";
 
 let sincronizacionEnCurso = null;
@@ -44,10 +44,13 @@ export function sincronizarPendientes(uid, alAvanzar = () => {}) {
 
       try {
         const datos = registro.datos;
-        const operacion = setDoc(doc(db, "pacientes", registro.id), {
+        if (auth.currentUser?.uid !== uid) throw new Error("Sesión modificada.");
+        const perfil = (await getDocFromServer(doc(db,"usuarios",uid))).data();
+        if (!perfil?.activo || !datos.sedeId || datos.sedeId !== perfil.sedeId) throw new Error("Registro de otra sede o legado pendiente de revisión.");
+        const operacion = setDoc(doc(db, "sedes", datos.sedeId, "pacientes", registro.id), {
           ...datos,
-          jornadaAnio: datos.jornadaAnio || 2026,
-          jornadaId: datos.jornadaId || "domingo-luciani-2026",
+          jornadaAnio: datos.jornadaAnio,
+          jornadaId: datos.jornadaId,
           creadoPor: uid,
           fechaCapturaLocal: registro.fechaLocal,
           createdAt: serverTimestamp(),

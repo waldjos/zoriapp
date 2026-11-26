@@ -1,3 +1,4 @@
+import { useAuth } from "../context/AuthContext";
 // src/pages/Dashboard.jsx
 import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
@@ -40,6 +41,7 @@ const menuItems = [
 ];
 
 export default function Dashboard() {
+  const { sede } = useAuth();
   const [cargando, setCargando] = useState(true);
   const [totalPacientes, setTotalPacientes] = useState(0);
   const [totalLaboratorios, setTotalLaboratorios] = useState(0);
@@ -58,7 +60,7 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    const pacientesRef = collection(db, "pacientes");
+    const pacientesRef = collection(db, "sedes", sede.id, "pacientes");
     const unsubscribe = onSnapshot(
       pacientesRef,
       (snapshot) => {
