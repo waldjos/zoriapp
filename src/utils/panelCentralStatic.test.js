@@ -19,4 +19,4 @@ test("ruta protegida y fallback Vercel",()=>{
  assert.ok(JSON.parse(read("vercel.json")).rewrites.some(x=>x.source==="/superadmin"&&x.destination==="/index.html"));
 });
 
-test("afiliación solo crea perfiles médicos faltantes, no toca expedientes",()=>{const s=read("src/components/AfiliarLuciani.jsx");assert.match(s,/runTransaction/);assert.match(s,/if\(!s.exists\(\)\)/);assert.match(s,/sedeId:"domingo_luciani",rol:"medico",activo:true/);assert.doesNotMatch(s,/"pacientes"|deleteDoc|updateDoc/);});
+test("afiliación solo crea perfiles médicos faltantes, no toca expedientes",()=>{const s=read("src/components/AfiliarLuciani.jsx");assert.match(s,/runTransaction/);assert.match(s,/if\(!s.exists\(\)\)/);assert.match(s,/sedeId,rol:"medico",activo:true/);assert.match(s,/\["domingo_luciani","periferico_catia"\]\.includes\(sedeId\)/);assert.match(s,/s\.data\(\)\.sedeId!==sedeId/);assert.doesNotMatch(s,/"pacientes"|deleteDoc|updateDoc/);});
