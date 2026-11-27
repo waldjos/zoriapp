@@ -25,6 +25,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import MainNav from "./components/MainNav";
 import EstadoSincronizacion from "./components/EstadoSincronizacion";
 import { pendientesLocales } from "./utils/colaPacientesOffline";
+import { pendientesLocales as pendientesCatia } from "./utils/colaCatiaOffline";
 
 import "./App.css";
 import "./responsive-light.css";
@@ -45,7 +46,7 @@ function AppShell() {
   const salir = async () => {
     if (user?.uid) {
       try {
-        const sinSubir = await pendientesLocales(user.uid);
+        const sinSubir = acceso?.destino==="catia" ? await pendientesCatia(user.uid) : await pendientesLocales(user.uid);
         if (sinSubir.length && !window.confirm(
           "Hay " + sinSubir.length + " registros SIN SINCRONIZAR en este teléfono. Si cierras sesión no podrás verlos hasta entrar nuevamente con esta cuenta. ¿Cerrar sesión?"
         )) return;
