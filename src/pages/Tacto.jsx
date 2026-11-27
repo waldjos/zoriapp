@@ -1,6 +1,6 @@
 // src/pages/Tacto.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, doc, updateDoc } from "../utils/backendJornada";
+import { collection, onSnapshot, doc, updateDoc } from "../utils/backendJornada";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -26,21 +26,17 @@ export default function Tacto() {
     planosClivaje: "", // si / no
   });
 
-  // Cargar pacientes una vez
+  const [errorLista,setErrorLista]=useState("");
+  const [cargandoLista,setCargandoLista]=useState(true);
+  // Recepción y evaluación funcionan en teléfonos distintos.
   useEffect(() => {
-    const cargarPacientes = async () => {
-      try {
-        const snap = await getDocs(collection(db, "pacientes"));
-        const datos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-        setPacientes(datos);
-      } catch (err) {
-        console.error("Error cargando pacientes:", err);
-      }
-    };
-
-    cargarPacientes();
-  }, []);
+    setPacientes([]);setCargandoLista(true);
+    return onSnapshot(collection(db,"pacientes"),snap=>{
+      if(snap.metadata?.fromCache||snap.metadata?.hasPendingWrites){setCargandoLista(false);setErrorLista("Conexión sin confirmar; los nuevos registros podrían no aparecer.");return;}
+      setPacientes(snap.docs.map(d=>({...d.data(),id:d.id})));
+      setCargandoLista(false);setErrorLista("");
+    },()=>{setPacientes([]);setCargandoLista(false);setErrorLista("No se pudo consultar la lista. Comprueba conexión y acceso de tu hospital.");});
+  },[user?.uid]);
 
   // Filtrar por nombre o cédula
   const pacientesFiltrados = useMemo(() => {
@@ -134,6 +130,7 @@ export default function Tacto() {
 
   return (
     <div className="page-container">
+      {cargandoLista&&<p role="status">Cargando pacientes…</p>}{errorLista&&<p role="alert">{errorLista}</p>}
       <div className="page-header">
         <h1 className="page-header-title">Evaluación médica</h1>
         <p className="page-header-subtitle">

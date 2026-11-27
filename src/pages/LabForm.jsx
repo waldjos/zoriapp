@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import {
   collection,
-  getDocs,
+  onSnapshot,
   query,
   orderBy,
   updateDoc,
@@ -23,22 +23,10 @@ export default function LabForm() {
   const [progreso, setProgreso] = useState(0);
   const [mensaje, setMensaje] = useState("");
 
-  // Cargar lista de pacientes
-  useEffect(() => {
-    const cargarPacientes = async () => {
-      try {
-        const q = query(collection(db, "pacientes"), orderBy("createdAt", "desc"));
-        const snap = await getDocs(q);
-        const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setPacientes(lista);
-      } catch (error) {
-        console.error("Error cargando pacientes:", error);
-        setMensaje("No se pudieron cargar los pacientes.");
-      }
-    };
-
-    cargarPacientes();
-  }, []);
+  useEffect(() => onSnapshot(collection(db,"pacientes"),snap=>{
+    if(snap.metadata?.fromCache||snap.metadata?.hasPendingWrites){setMensaje("Conexión sin confirmar.");return;}
+    setPacientes(snap.docs.map(d=>({...d.data(),id:d.id})));
+  },()=>{setPacientes([]);setMensaje("No se pudieron cargar los pacientes.");}),[]);
 
   const pacientesFiltrados = pacientes.filter((p) => {
     const term = busqueda.trim();

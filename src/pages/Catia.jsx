@@ -46,6 +46,7 @@ function Evaluacion({p,uid,abierta,seccion}){
 export default function Catia({onLogout}){
  const {user}=useAuth(),uid=user?.uid;
  const [perfil,setPerfil]=useState(undefined),[sede,setSede]=useState(undefined),[rows,setRows]=useState(null),[error,setError]=useState(""),[tab,setTab]=useState("inicio"),[q,setQ]=useState(""),[id,setId]=useState(""),[form,setForm]=useState(nuevo),[msg,setMsg]=useState(""),[busy,setBusy]=useState(false);
+ const [recargarLista,setRecargarLista]=useState(0);
  const [perfilServidor,setPerfilServidor]=useState(false),[sedeServidor,setSedeServidor]=useState(false),[preparada,setPreparada]=useState(false),[confirmada,setConfirmada]=useState(null),[reloj,setReloj]=useState(Date.now());
  useEffect(()=>{const t=setInterval(()=>setReloj(Date.now()),15000);return()=>clearInterval(t);},[]);
  useEffect(()=>onSnapshot(doc(db,"usuarios",uid),{includeMetadataChanges:true},s=>{const ok=!s.metadata.fromCache&&!s.metadata.hasPendingWrites;setPerfilServidor(ok);if(ok)setPerfil(s.data()??null);},()=>{setPerfilServidor(false);setPerfil(null);setConfirmada(null);}),[uid]);
@@ -53,7 +54,7 @@ export default function Catia({onLogout}){
  const miembro=perfilCatia(perfil);
  useEffect(()=>{setSede(undefined);setSedeServidor(false);if(!miembro){setConfirmada(null);return;}return onSnapshot(doc(db,"sedes",SEDE_CATIA),{includeMetadataChanges:true},s=>{const ok=!s.metadata.fromCache&&!s.metadata.hasPendingWrites;setSedeServidor(ok);if(ok){setSede(s.data()??null);if(s.data()?.jornadaAbierta!==true||!sedeCatia(s.data()))setConfirmada(null);}},()=>{setSedeServidor(false);setSede(null);setConfirmada(null);});},[miembro,uid]);
  const permitido=miembro&&sedeCatia(sede);
- useEffect(()=>{setRows(null);setError("");if(!permitido)return;return onSnapshot(collection(db,...rutaCatia()),{includeMetadataChanges:true},s=>{if(s.metadata.fromCache){setRows(null);setError("Sin conexión confirmada. Vuelve a conectarte.");return;}if(s.metadata.hasPendingWrites)return;setRows(s.docs.map(d=>({...d.data(),id:d.id})).filter(esFichaCatia));setError("");},()=>{setRows(null);setError("No se pudo consultar la sede. Verifica permisos.");});},[permitido,uid]);
+ useEffect(()=>{setRows(null);setError("");if(!permitido)return;return onSnapshot(collection(db,...rutaCatia()),{includeMetadataChanges:true},s=>{if(s.metadata.fromCache){setRows(null);setError("Sin conexión confirmada. Vuelve a conectarte.");return;}if(s.metadata.hasPendingWrites)return;setRows(s.docs.map(d=>({...d.data(),id:d.id})).filter(esFichaCatia));setError("");},()=>{setRows(null);setError("No se pudo consultar la sede. Verifica permisos.");});},[permitido,uid,recargarLista]);
  const enServidor=permitido&&perfilServidor&&sedeServidor&&rows!==null;
  const abierta=enServidor&&sede.jornadaAbierta===true;
  useEffect(()=>{if(abierta)setConfirmada(Date.now());},[abierta]);
@@ -100,7 +101,7 @@ export default function Catia({onLogout}){
  <label>Notas (motivo, hallazgos, etc.)<textarea rows={3} maxLength={2000} value={form.notas} onChange={e=>cambiar("notas",e.target.value)}/></label>
  <label className="zori-confirmacion-cedula"><input type="checkbox" checked={verificado} onChange={e=>setVerificado(e.target.checked)} required/><span><strong>He revisado los datos de la cédula.</strong><small>Comprueba nombres, apellidos, número y fecha de nacimiento antes de guardar.</small></span></label>
  </fieldset><button type="submit" disabled={!puedeRegistrar||busy||ocrBusy||!verificado}>{busy?"Guardando…":"Guardar ficha del paciente"}</button><p role="status">{msg}</p>{!puedeRegistrar&&<small>Registro bloqueado. Jornada cerrada o falta preparación/conexión.</small>}</form>}
- {buscar&&<div className="cat-card"><h2>{tab==="tacto"?"Buscar paciente para tacto":tab==="psa"?"Buscar paciente para PSA":"Buscar paciente"}</h2>{visibles?.length===0&&<p>Aún no hay pacientes registrados.</p>}<input aria-label="Buscar paciente" placeholder="Nombre o cédula" value={q} onChange={e=>setQ(e.target.value)}/>{visibles?.filter(p=>String(p.nombreCompleto??"").toLowerCase().includes(q.toLowerCase())||String(p.cedula??"").includes(q)).map(p=><button className="cat-patient" key={p.id} onClick={()=>setId(p.id)}>{p.nombreCompleto} · {p.cedula}</button>)}</div>}
+ {buscar&&<div className="cat-card"><button type="button" onClick={()=>setRecargarLista(x=>x+1)}>Actualizar pacientes</button><h2>{tab==="tacto"?"Buscar paciente para tacto":tab==="psa"?"Buscar paciente para PSA":"Buscar paciente"}</h2>{visibles?.length===0&&<p>Aún no hay pacientes registrados.</p>}<input aria-label="Buscar paciente" placeholder="Nombre o cédula" value={q} onChange={e=>setQ(e.target.value)}/>{visibles?.filter(p=>String(p.nombreCompleto??"").toLowerCase().includes(q.toLowerCase())||String(p.cedula??"").includes(q)).map(p=><button className="cat-patient" key={p.id} onClick={()=>setId(p.id)}>{p.nombreCompleto} · {p.cedula}</button>)}</div>}
  {tab==="pacientes"&&seleccion&&<FichaCatia key={seleccion.id} p={seleccion} uid={uid}/>}
  {buscar&&seleccion&&<Evaluacion key={tab+":"+seleccion.id} p={seleccion} uid={uid} abierta={abierta} seccion={tab}/>}
  </>}
