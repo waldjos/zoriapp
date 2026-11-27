@@ -4,6 +4,8 @@ import {db,auth} from "../firebase";
 import {useAuth} from "../context/AuthContext";
 import ZoriIcon from "../components/ZoriIcon";
 import CedulaOCR from "../components/CedulaOCR";
+import {FichaCatia,IndicadoresCatia} from "../components/ReportesCatia";
+import {esFichaCatia} from "../utils/reportesCatia";
 import {PatrocinanteZoriak} from "../components/IdentidadJornada";
 import {cedulaVE,nombrePropio,nombrePropioEnEdicion,mascaraFechaRapida,nombreCompletoValido,telefonoE164VE,fechaNacimientoISO,edadDesdeFecha,correoNormalizado} from "../utils/registroExpress";
 import {SEDE_CATIA,JORNADA_CATIA,rutaCatia,perfilCatia,sedeCatia,valorPSA,fichaCatiaVacia,fichaDesdeOCR} from "../utils/catia";
@@ -45,7 +47,7 @@ export default function Catia({onLogout}){
  const miembro=perfilCatia(perfil);
  useEffect(()=>{setSede(undefined);if(!miembro)return;return onSnapshot(doc(db,"sedes",SEDE_CATIA),{includeMetadataChanges:true},s=>setSede(!s.metadata.fromCache&&!s.metadata.hasPendingWrites?s.data()??null:null),()=>setSede(null));},[miembro,uid]);
  const permitido=miembro&&sedeCatia(sede);
- useEffect(()=>{setRows(null);setError("");if(!permitido)return;return onSnapshot(collection(db,...rutaCatia()),{includeMetadataChanges:true},s=>{if(s.metadata.fromCache||s.metadata.hasPendingWrites){setRows(null);setError("Sin conexión confirmada. Vuelve a conectarte.");return;}setRows(s.docs.map(d=>({...d.data(),id:d.id})));setError("");},()=>{setRows(null);setError("No se pudo consultar la sede. Verifica permisos.");});},[permitido,uid]);
+ useEffect(()=>{setRows(null);setError("");if(!permitido)return;return onSnapshot(collection(db,...rutaCatia()),{includeMetadataChanges:true},s=>{if(s.metadata.fromCache){setRows(null);setError("Sin conexión confirmada. Vuelve a conectarte.");return;}if(s.metadata.hasPendingWrites)return;setRows(s.docs.map(d=>({...d.data(),id:d.id})).filter(esFichaCatia));setError("");},()=>{setRows(null);setError("No se pudo consultar la sede. Verifica permisos.");});},[permitido,uid]);
  const abierta=permitido&&sede.jornadaAbierta===true&&rows!==null;
  useEffect(()=>{if(!permitido||tab!=="registro")setOcrBusy(false);},[permitido,tab]);
  const cambiar=(k,v)=>{setForm(f=>({...f,[k]:v}));setVerificado(false);};
@@ -69,6 +71,7 @@ export default function Catia({onLogout}){
  <div className={"cat-state "+(abierta?"cat-open":"cat-closed")} role="status"><ZoriIcon name="seguridad" size={20}/>{abierta?"Jornada abierta · conexión confirmada":sede.jornadaAbierta!==true?"Jornada cerrada · modo consulta":"Sin conexión confirmada"}</div><nav className="cat-bottom" aria-label="Navegación Catia">{acciones.map(([k,l,ic])=><button key={k} type="button" aria-pressed={tab===k} onClick={()=>ir(k)}><ZoriIcon name={ic} size={24}/><span>{l}</span></button>)}</nav>
  {error&&<p role="alert">{error}</p>}
  {tab==="inicio"&&<><div className="cat-card"><h2>Indicadores de la jornada</h2><div className="cat-metrics">{[["Meta",sede.metaPacientes??"—"],["Registrados",rows?.length??"—"],["Con tacto",rows?.filter(p=>p.tacto).length??"—"],["Con PSA",rows?.filter(p=>p.psaTotal!==undefined&&p.psaTotal!==null&&p.psaTotal!=="").length??"—"]].map(([l,n])=><div key={l}><span>{l}</span><strong>{n}</strong></div>)}</div>{rows&&sede.metaPacientes>0&&<><progress max={sede.metaPacientes} value={Math.min(rows.length,sede.metaPacientes)}/><small>{rows.length} de {sede.metaPacientes} pacientes</small></>}</div><div className="cat-card"><h2>Accesos rápidos</h2><div className="cat-actions">{acciones.filter(([k])=>k!=="inicio").map(([k,l,ic])=><button key={k} onClick={()=>ir(k)}><ZoriIcon name={ic}/>{l}</button>)}</div><p className="cat-note">Se requiere conexión a internet para consultar y registrar expedientes. Esta sede no admite almacenamiento offline.</p></div></>}
+ {tab==="inicio"&&<IndicadoresCatia rows={rows} uid={uid}/>}
  {tab==="registro"&&<form className="cat-card cat-registro zori-registro" onSubmit={registrar}><h2>Registro de paciente</h2><p>Escanea la cédula o completa los datos manualmente. Una nueva lectura sustituye la ficha en edición.</p>
  <CedulaOCR disabled={busy} onExtract={recibirOCR} onBusyChange={v=>{setOcrBusy(v);if(v)setVerificado(false);}}/>
  <p className="zori-registro-step">2. Confirmar datos del paciente</p>
@@ -84,6 +87,7 @@ export default function Catia({onLogout}){
  <label className="zori-confirmacion-cedula"><input type="checkbox" checked={verificado} onChange={e=>setVerificado(e.target.checked)} required/><span><strong>He revisado los datos de la cédula.</strong><small>Comprueba nombres, apellidos, número y fecha de nacimiento antes de guardar.</small></span></label>
  </fieldset><button type="submit" disabled={!abierta||busy||ocrBusy||!verificado}>{busy?"Guardando…":"Guardar ficha del paciente"}</button><p role="status">{msg}</p>{!abierta&&<small>Jornada cerrada o sin conexión. Puedes comprobar el lector con una cédula ficticia, sin guardar.</small>}</form>}
  {buscar&&<div className="cat-card"><h2>{tab==="tacto"?"Buscar paciente para tacto":tab==="psa"?"Buscar paciente para PSA":"Buscar paciente"}</h2>{rows?.length===0&&<p>Aún no hay pacientes registrados.</p>}<input aria-label="Buscar paciente" placeholder="Nombre o cédula" value={q} onChange={e=>setQ(e.target.value)}/>{rows?.filter(p=>String(p.nombreCompleto??"").toLowerCase().includes(q.toLowerCase())||String(p.cedula??"").includes(q)).map(p=><button className="cat-patient" key={p.id} onClick={()=>setId(p.id)}>{p.nombreCompleto} · {p.cedula}</button>)}</div>}
+ {tab==="pacientes"&&seleccion&&<FichaCatia key={seleccion.id} p={seleccion} uid={uid}/>}
  {buscar&&seleccion&&<Evaluacion key={tab+":"+seleccion.id} p={seleccion} uid={uid} abierta={abierta} seccion={tab}/>}
  </>}
  </section>;
