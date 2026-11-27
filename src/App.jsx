@@ -1,4 +1,8 @@
 // src/App.jsx
+import { useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "./firebase";
+import { destinoInstitucional } from "./utils/destinoInstitucional";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
@@ -29,6 +33,15 @@ import "./zori-design-fidelidad.css";
 function AppShell() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
+  const uid=user?.uid;
+  const [acceso,setAcceso]=useState(null);
+  useEffect(()=>{
+    if(!uid){setAcceso(null);return;}
+    return onSnapshot(doc(db,"usuarios",uid),{includeMetadataChanges:true},snap=>{
+      if(snap.metadata.fromCache || snap.metadata.hasPendingWrites) return;
+      setAcceso({uid,destino:destinoInstitucional(snap.data())});
+    },()=>setAcceso({uid,destino:"denegado"}));
+  },[uid]);
   const salir = async () => {
     if (user?.uid) {
       try {
@@ -42,7 +55,17 @@ function AppShell() {
     }
     await logout();
   };
-  if (pathname === "/catia") return <div className="app-shell"><main className="app-main">{user ? <Catia key={user.uid} onLogout={salir}/> : <Login destino="/catia"/>}</main></div>;
+  if(!user && pathname==="/catia") return <div className="app-shell"><main className="app-main"><Login destino="/catia"/></main></div>;
+  if(user){
+    const destino=acceso?.uid===uid?acceso.destino:null;
+    if(!destino || destino==="denegado") return <div className="app-shell"><main className="app-main"><section className="page-container"><h1>{destino?"Acceso no habilitado":"Verificando perfil institucional"}</h1><p>Se requiere un perfil activo confirmado por el servidor. Comprueba tu conexión.</p><button type="button" onClick={salir}>Cerrar sesión</button></section></main></div>;
+    if(destino==="catia") {
+      if(pathname!=="/catia")return <Navigate to="/catia" replace/>;
+      return <div className="app-shell"><main className="app-main"><Catia key={uid} onLogout={salir}/></main></div>;
+    }
+    if(pathname==="/catia" || pathname==="/login")return <Navigate to={destino==="admin"?"/superadmin":"/"} replace/>;
+    if(pathname==="/superadmin"&&destino!=="admin")return <Navigate to="/" replace/>;
+  }
   return (
     <div className="app-shell">
       {user && <MainNav onLogout={salir} />}
