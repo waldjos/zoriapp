@@ -12,6 +12,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+// Bloqueo preventivo: ningún endpoint auxiliar heredado puede procesar
+// expedientes, fotos, contactos ni envíos hasta contar con autorización real.
+// No se habilita mediante una bandera de entorno.
+app.use((req,res,next)=>{
+  const ruta=req.path.toLowerCase().replace(/\/+$/,"")||"/";
+  if(ruta==="/api/health" && (req.method==="GET"||req.method==="HEAD")) return next();
+  if(ruta==="/api" || ruta.startsWith("/api/") || ["/broadcast-link","/export-vcf","/whatsapp-link"].includes(ruta)){
+    res.setHeader("Cache-Control","no-store");
+    return res.status(503).json({error:"Servicio auxiliar deshabilitado por seguridad."});
+  }
+  return next();
+});
 app.use(bodyParser.json({ limit: '5mb' }));
 
 const SCHEDULE_FILE = path.join(__dirname, 'schedule.json');
