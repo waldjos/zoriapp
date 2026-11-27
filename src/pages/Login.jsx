@@ -11,7 +11,7 @@ const FUNCIONES = [
   ["sincronizar", "Sincronización de tu información"],
 ];
 
-export default function Login() {
+export default function Login({destino="/"}) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      navigate("/");
+      navigate(destino);
     } catch {
       setError("No fue posible ingresar. Comprueba tus credenciales o comunícate con el coordinador.");
     } finally {

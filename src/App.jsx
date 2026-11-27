@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 // Páginas
 import Login from "./pages/Login";
 import PanelCentral from "./pages/PanelCentral";
+import Catia from "./pages/Catia";
 import Home from "./pages/Home";
 import RegistroPaciente from "./pages/RegistroPaciente";
 import Pacientes from "./pages/Pacientes";
@@ -41,6 +42,7 @@ function AppShell() {
     }
     await logout();
   };
+  if (pathname === "/catia") return <div className="app-shell"><main className="app-main">{user ? <Catia key={user.uid} onLogout={salir}/> : <Login destino="/catia"/>}</main></div>;
   return (
     <div className="app-shell">
       {user && <MainNav onLogout={salir} />}

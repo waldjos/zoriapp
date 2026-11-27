@@ -44,6 +44,10 @@
     {
       "source": "/superadmin",
       "destination": "/index.html"
+    },
+    {
+      "source": "/catia",
+      "destination": "/index.html"
     }
   ]
 }
