@@ -38,7 +38,7 @@
               ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 200"
             },
             "telefono": {
-              ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^\\+584[0-9]{9}$/))"
+              ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[+]584[0-9]{9}$/))"
             },
             "email": {
               ".validate": "newData.isString() && newData.val().length <= 254"
@@ -63,6 +63,50 @@
             },
             "$otro": {
               ".validate": false
+            }
+          }
+        }
+      },
+      "tactos": {
+        "$sede": {
+          "$id": {
+            ".read": "((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && root.child('contingencia/registros').child($sede).child($id).exists()",
+            "$evaluacion": {
+              ".write": "(((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && root.child('contingencia/registros').child($sede).child($id).exists()) && !data.exists() && newData.exists()",
+              ".validate": "newData.hasChildren(['tamanio','fibroelastica','aumentadaConsistencia','petrea','bordes','nodulos','ladoNodulo','planosClivaje','medicoId','actualizadoEn']) && (newData.child('fibroelastica').val() === true || newData.child('aumentadaConsistencia').val() === true || newData.child('petrea').val() === true) && ((newData.child('nodulos').val() === 'no' && newData.child('ladoNodulo').val() === '') || (newData.child('nodulos').val() === 'si' && newData.child('ladoNodulo').val() !== ''))",
+              "tamanio": {
+                ".validate": "newData.val() === 'I' || newData.val() === 'II' || newData.val() === 'III'"
+              },
+              "fibroelastica": {
+                ".validate": "newData.isBoolean()"
+              },
+              "aumentadaConsistencia": {
+                ".validate": "newData.isBoolean()"
+              },
+              "petrea": {
+                ".validate": "newData.isBoolean()"
+              },
+              "bordes": {
+                ".validate": "newData.val() === 'regulares' || newData.val() === 'irregulares'"
+              },
+              "nodulos": {
+                ".validate": "newData.val() === 'si' || newData.val() === 'no'"
+              },
+              "ladoNodulo": {
+                ".validate": "newData.val() === '' || newData.val() === 'derecho' || newData.val() === 'izquierdo' || newData.val() === 'bilateral'"
+              },
+              "planosClivaje": {
+                ".validate": "newData.val() === 'si' || newData.val() === 'no'"
+              },
+              "medicoId": {
+                ".validate": "newData.val() === auth.uid"
+              },
+              "actualizadoEn": {
+                ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+              },
+              "$otro": {
+                ".validate": false
+              }
             }
           }
         }

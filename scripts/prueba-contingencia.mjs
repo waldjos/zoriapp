@@ -22,7 +22,18 @@ try{
  await assertFails(cat.ref(path).update({nombreCompleto:"Otro Nombre"}));
  await assertFails(cat.ref(path).remove());
  await assertFails(cat.ref("contingencia/registros/periferico_catia").once("value"));
+ const tp="contingencia/tactos/periferico_catia/V-99999998/eval1";
+ const t={tamanio:"II",fibroelastica:true,aumentadaConsistencia:false,petrea:false,bordes:"regulares",nodulos:"no",ladoNodulo:"",planosClivaje:"si",medicoId:"cat",actualizadoEn:{".sv":"timestamp"}};
+ await assertFails(luc.ref(tp).set({...t,medicoId:"luc"}));
+ await assertFails(cat.ref(tp.replace("99999998","99999997")).set(t));
+ await assertFails(cat.ref(tp).set({...t,medicoId:"luc"}));
+ await assertFails(cat.ref(tp).set({...t,nodulos:"si"}));
+ await assertSucceeds(cat.ref(tp).set(t));
+ await assertSucceeds(cat.ref("contingencia/tactos/periferico_catia/V-99999998").once("value"));
+ await assertFails(luc.ref(tp).once("value"));
+ await assertFails(cat.ref(tp).update({tamanio:"III"}));
+ await assertFails(cat.ref(tp).remove());
  await env.withSecurityRulesDisabled(async c=>c.database().ref("contingencia/sedes/periferico_catia/abierta").set(false));
  await assertFails(cat.ref("contingencia/registros/periferico_catia/V-99999997").set({...d,cedula:"99999997"}));
- console.log("CONTINGENCIA: 16/16 pruebas de reglas superadas");
+ console.log("CONTINGENCIA: 25/25 pruebas de reglas superadas");
 }finally{await env.cleanup();}
