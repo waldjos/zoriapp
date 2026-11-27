@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { EVENTO_COLA, pendientesLocales } from "../utils/colaPacientesOffline";
+import {enContingencia} from "../utils/backendJornada";
 import { sincronizarPendientes } from "../utils/sincronizarPacientes";
 import { comprobarPreparacionOffline, prepararOffline } from "../utils/prepararOffline";
 
@@ -45,6 +46,7 @@ export default function EstadoSincronizacion({ user }) {
   }, [uid]);
 
   const sincronizar = useCallback(async (automatico = false) => {
+    if(enContingencia()){if(!automatico)setMensaje("Fichas anteriores conservadas. No se trasladan automáticamente durante contingencia.");return;}
     if (!uid || !navigator.onLine) return;
     setEnviando(true);
     if (!automatico) setMensaje("Enviando pendientes a Firebase…");

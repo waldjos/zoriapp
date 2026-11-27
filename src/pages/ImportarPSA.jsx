@@ -1,11 +1,9 @@
 // src/pages/ImportarPSA.jsx
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "../utils/backendJornada";
 import { db } from "../firebase";
-import { parseTxtToRows, normalizarNombre, normalizarCedula } from "../utils/pdfParser";
+import { parseTxtToRows, coincidenciaPSASegura } from "../utils/pdfParser";
 
-// Archivo .txt en public/ — coloca aquí tu base HDL convertida a texto
-const TXT_URL = "/datos-psa.txt";
 
 export default function ImportarPSA() {
   const [pdfRows, setPdfRows] = useState([]);
@@ -58,46 +56,12 @@ export default function ImportarPSA() {
     e.target.value = "";
   };
 
-  const handleCargarDesdeServidor = async () => {
-    setError("");
-    setResultado(null);
-    setLoading(true);
-    setPdfRows([]);
-    try {
-      const res = await fetch(TXT_URL);
-      if (!res.ok) throw new Error("Archivo no encontrado. Coloca datos-psa.txt en la carpeta public/.");
-      const text = await res.text();
-      const rows = parseTxtToRows(text);
-      setPdfRows(rows);
-      if (rows.length === 0) setError("No se detectaron filas. Revisa el formato de datos-psa.txt.");
-    } catch (err) {
-      console.error(err);
-      setError(err?.message || "Error al cargar desde el servidor.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Asignar solo a pacientes que coincidan por nombre y/o cédula (cédula normalizada: 537.389 = 537389)
-  const coincidencia = (paciente, row) => {
-    const nomPac = normalizarNombre(paciente.nombreCompleto || "");
-    const nomRow = normalizarNombre(row.nombre || "");
-    const cedPac = normalizarCedula(paciente.cedula || "");
-    const cedRow = normalizarCedula(row.cedula || "");
-
-    if (cedPac && cedRow && cedPac === cedRow) return true;
-    if (nomPac && nomRow) {
-      if (nomPac === nomRow) return true;
-      if (nomPac.includes(nomRow) || nomRow.includes(nomPac)) return true;
-    }
-    return false;
-  };
-
   const handleAsignar = async () => {
     if (pdfRows.length === 0) {
       setError("Primero carga el archivo .txt.");
       return;
     }
+    if (!window.confirm("Confirma que el archivo corresponde a los pacientes del Domingo Luciani. Solo se asignarán coincidencias únicas de nombre y cédula.")) return;
     setError("");
     setAsignando(true);
     setResultado({ actualizados: 0, sinMatch: 0, errores: 0 });
@@ -108,7 +72,7 @@ export default function ImportarPSA() {
       let errores = 0;
 
       for (const paciente of pacientes) {
-        const row = pdfRows.find((r) => coincidencia(paciente, r));
+        const row = coincidenciaPSASegura(paciente, pdfRows, pacientes);
         if (!row) {
           sinMatch++;
           continue;
@@ -141,21 +105,13 @@ export default function ImportarPSA() {
     <div className="page" style={{ maxWidth: 720, margin: "0 auto", padding: "1rem" }}>
       <h1 className="page-header-title">Importar PSA desde archivo .txt</h1>
       <p className="page-header-subtitle">
-        Elige el archivo .txt de la base HDL (una línea por persona). Se asignan PSA total y PSA libre solo a los pacientes que coincidan por nombre y cédula (orden en el archivo: primero PSA total, luego PSA libre).
+        Elige el archivo .txt de la base HDL (una línea por persona). Se asignan PSA total y PSA libre solo si nombre y cédula coinciden de forma única (se omiten duplicados y valores inconsistentes) (orden en el archivo: primero PSA total, luego PSA libre).
       </p>
 
       <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-        <button
-          type="button"
-          onClick={handleCargarDesdeServidor}
-          disabled={loading}
-          style={{ padding: "0.6rem 1.2rem", background: "#2563eb", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
-        >
-          {loading ? "Cargando..." : "Cargar desde app (public/datos-psa.txt)"}
-        </button>
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
           <input type="file" accept=".txt,text/plain" onChange={handleTxtFile} disabled={loading} style={{ maxWidth: "260px" }} />
-          <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>O elegir archivo</span>
+          <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Elegir archivo local</span>
         </label>
         <button
           type="button"

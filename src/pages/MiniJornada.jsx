@@ -1,6 +1,6 @@
 // src/pages/MiniJornada.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, Timestamp } from "../utils/backendJornada";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -26,30 +26,15 @@ export default function MiniJornada() {
     planosClivaje: "", // si / no
   });
 
-  // Cargar pacientes una vez, solo los de la mini jornada (desde medianoche hoy)
+  const [errorLista,setErrorLista]=useState("");
   useEffect(() => {
-    const cargarPacientes = async () => {
-      try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Medianoche del día actual
-
-        const q = collection(db, "pacientes");
-        const snapshot = await getDocs(q);
-        const allDatos = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        // Filtrar en cliente por createdAt >= today
-        const datos = allDatos.filter((p) => {
-          if (!p.createdAt || !p.createdAt.toDate) return false;
-          const createdAtDate = p.createdAt.toDate();
-          return createdAtDate >= today;
-        });
-        setPacientes(datos);
-      } catch (error) {
-        console.error("Error al cargar pacientes:", error);
-      }
-    };
-
-    cargarPacientes();
-  }, []);
+    return onSnapshot(collection(db,"pacientes"),snap=>{
+      if(snap.metadata?.fromCache||snap.metadata?.hasPendingWrites){setErrorLista("Conexión sin confirmar.");return;}
+      const today=new Date();today.setHours(0,0,0,0);
+      setPacientes(snap.docs.map(d=>({...d.data(),id:d.id})).filter(p=>p.createdAt?.toDate?.()>=today));
+      setErrorLista("");
+    },()=>{setPacientes([]);setErrorLista("No se pudieron consultar los pacientes.");});
+  },[user?.uid]);
 
   // Filtrar por nombre o cédula
   const pacientesFiltrados = useMemo(() => {
@@ -233,6 +218,7 @@ export default function MiniJornada() {
 
   return (
     <div className="page-container">
+      {errorLista&&<p role="alert">{errorLista}</p>}
       <div className="page-header">
         <h1 className="page-header-title">Mini Jornada Urológica</h1>
         <p className="page-header-subtitle">

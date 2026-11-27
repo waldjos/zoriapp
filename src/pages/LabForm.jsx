@@ -2,13 +2,14 @@
 import { useEffect, useState } from "react";
 import {
   collection,
-  getDocs,
+  onSnapshot,
   query,
   orderBy,
   updateDoc,
   doc,
-} from "firebase/firestore";
+} from "../utils/backendJornada";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {enContingencia} from "../utils/backendJornada";
 import { db, storage } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
@@ -22,22 +23,10 @@ export default function LabForm() {
   const [progreso, setProgreso] = useState(0);
   const [mensaje, setMensaje] = useState("");
 
-  // Cargar lista de pacientes
-  useEffect(() => {
-    const cargarPacientes = async () => {
-      try {
-        const q = query(collection(db, "pacientes"), orderBy("createdAt", "desc"));
-        const snap = await getDocs(q);
-        const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setPacientes(lista);
-      } catch (error) {
-        console.error("Error cargando pacientes:", error);
-        setMensaje("No se pudieron cargar los pacientes.");
-      }
-    };
-
-    cargarPacientes();
-  }, []);
+  useEffect(() => onSnapshot(collection(db,"pacientes"),snap=>{
+    if(snap.metadata?.fromCache||snap.metadata?.hasPendingWrites){setMensaje("Conexión sin confirmar.");return;}
+    setPacientes(snap.docs.map(d=>({...d.data(),id:d.id})));
+  },()=>{setPacientes([]);setMensaje("No se pudieron cargar los pacientes.");}),[]);
 
   const pacientesFiltrados = pacientes.filter((p) => {
     const term = busqueda.trim();
@@ -66,6 +55,7 @@ export default function LabForm() {
   };
 
   const handleUpload = () => {
+    if(enContingencia()){setMensaje("Los PDF de laboratorio no se suben durante contingencia. Registra PSA en la ficha clínica.");return;}
     if (!pacienteSeleccionado) {
       setMensaje("Selecciona primero un paciente.");
       return;

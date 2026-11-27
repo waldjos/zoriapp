@@ -1,6 +1,6 @@
 /**
  * Parser de texto para importar datos HDL: cedula, nombre, psaTotal, psaLibre.
- * Uso: archivo .txt (una línea por persona) en public/datos-psa.txt o subido por el usuario.
+ * Uso: archivo .txt (una línea por persona) seleccionado localmente por el usuario.
  */
 
 /**
@@ -107,4 +107,19 @@ export function parseTxtToRows(text) {
   if (!text || typeof text !== "string") return [];
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   return parsePdfLinesToRows(lines);
+}
+
+/** Una asignación masiva no debe decidir entre personas homónimas ni jornadas duplicadas. */
+export function coincidenciaPSASegura(paciente, filas, pacientes) {
+  const cedula=normalizarCedula(String(paciente.cedula??""));
+  const nombre=normalizarNombre(paciente.nombreCompleto);
+  if(!cedula||!nombre) return null;
+  const mismaCedula=x=>normalizarCedula(String(x.cedula??""))===cedula;
+  if(pacientes.filter(mismaCedula).length!==1) return null;
+  const candidatas=filas.filter(mismaCedula);
+  if(candidatas.length!==1) return null;
+  const r=candidatas[0];
+  if(normalizarNombre(r.nombre)!==nombre) return null;
+  if(!Number.isFinite(r.psaTotal)||r.psaTotal<0||!Number.isFinite(r.psaLibre)||r.psaLibre<0||r.psaLibre>r.psaTotal) return null;
+  return r;
 }

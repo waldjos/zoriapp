@@ -36,7 +36,7 @@ async function reducirFotografia(archivo) {
   }
 }
 
-export default function CedulaOCR({ onExtract }) {
+export default function CedulaOCR({ onExtract, onBusyChange, disabled = false }) {
   const [leyendo, setLeyendo] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [progreso, setProgreso] = useState(0);
@@ -48,12 +48,13 @@ export default function CedulaOCR({ onExtract }) {
   }, []);
 
   const procesar = async (archivo) => {
-    if (!archivo || leyendo) return;
+    if (!archivo || leyendo || disabled) return;
     if (!archivo.type.startsWith("image/")) {
       setMensaje("Selecciona una fotografía de la cédula.");
       return;
     }
     setLeyendo(true);
+    onBusyChange?.(true);
     setProgreso(0);
     setMensaje("Preparando lector local. La primera lectura puede necesitar internet para cargar el idioma…");
     let trabajador;
@@ -166,7 +167,7 @@ export default function CedulaOCR({ onExtract }) {
       }
     } finally {
       if (trabajador) await trabajador.terminate().catch(() => {});
-      if (activo.current) setLeyendo(false);
+      if (activo.current) { setLeyendo(false); onBusyChange?.(false); }
     }
   };
 
@@ -178,7 +179,7 @@ export default function CedulaOCR({ onExtract }) {
       </div>
       <label className="zori-ocr-trigger">
         <span aria-hidden="true">▣</span> {leyendo ? "Procesando fotografía…" : "Abrir cámara o seleccionar foto"}
-        <input type="file" accept="image/*" capture="environment" disabled={leyendo}
+        <input type="file" accept="image/*" capture="environment" disabled={leyendo || disabled}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) procesar(f); e.target.value = ""; }} />
       </label>
       {leyendo && <progress className="zori-ocr-progress" value={progreso} max={100} aria-label="Avance de lectura de cédula" />}

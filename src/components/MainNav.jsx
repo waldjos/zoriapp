@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ZoriIcon from "./ZoriIcon";
+import {usePanelCentral} from "../utils/usePanelCentral";
 
 const PRINCIPALES = [
   { path: "/", label: "Inicio", icono: "inicio" },
@@ -21,7 +22,8 @@ export default function MainNav({ onLogout }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mostrarMas, setMostrarMas] = useState(false);
-  const enMas = SECUNDARIAS.some(({ path }) => pathname === path);
+  const { autorizado } = usePanelCentral();
+  const enMas = pathname === "/superadmin" || SECUNDARIAS.some(({ path }) => pathname === path);
 
   useEffect(() => setMostrarMas(false), [pathname]);
 
@@ -73,6 +75,7 @@ export default function MainNav({ onLogout }) {
               ))}
               <div className="main-nav-panel-group main-nav-session">
                 <p className="main-nav-panel-label">Cuenta</p>
+                {autorizado && <button type="button" className="main-nav-panel-link" onClick={()=>ir("/superadmin")}>Panel de Superadministrador</button>}
                 <button
                   type="button"
                   className="main-nav-panel-link main-nav-logout"

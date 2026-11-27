@@ -40,6 +40,18 @@
     {
       "source": "/importar-psa",
       "destination": "/index.html"
+    },
+    {
+      "source": "/superadmin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/catia",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contingencia",
+      "destination": "/index.html"
     }
   ]
 }

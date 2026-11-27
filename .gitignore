@@ -30,3 +30,10 @@ dist-ssr
 
 # Base HDL: usamos .txt, no subir el PDF
 public/*.pdf
+
+# Archivos clínicos y colas de mensajería: nunca versionar ni publicar.
+public/datos-psa.txt
+public/*.csv
+public/*.xlsx
+schedule.json
+send-log.json
