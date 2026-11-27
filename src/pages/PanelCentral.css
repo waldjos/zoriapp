@@ -11,3 +11,5 @@
 .zc-status{font-size:.8rem;color:#4c6664}.zc-site dl{display:grid;grid-template-columns:1fr 1.6fr;gap:.4rem;margin:.7rem 0}.zc-site dd{margin:0;font-weight:600}
 
 .zc-site textarea{display:block;width:100%;box-sizing:border-box;margin:.5rem 0;border:1px solid #bdceca;border-radius:8px;padding:.7rem;resize:vertical;font:inherit}
+
+.zc-institution-name{display:flex;align-items:center;gap:10px}.zc-institution-name img{width:48px;height:48px;flex:none;object-fit:contain;border-radius:50%}.zc-institution-name h3{min-width:0}
