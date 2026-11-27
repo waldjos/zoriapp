@@ -41,7 +41,7 @@ function AppShell() {
   const [acceso,setAcceso]=useState(null);
   const [emergencia,setEmergencia]=useState(null);
   useEffect(()=>{if(!uid){setEmergencia(null);return;}return observarMiembroContingencia(uid,p=>setEmergencia({uid,sede:p?.sedeId,estado:p===null?"normal":p.activo===true&&p.rol==="medico"&&["domingo_luciani","periferico_catia"].includes(p.sedeId)?"contingencia":"denegado"}),()=>setEmergencia({uid,estado:"error"}));},[uid]);
-  const modo=emergencia?.uid===uid?emergencia.estado:null;
+  const modo=uid && emergencia?.uid===uid ? emergencia.estado : null;
   configurarBackend(uid,modo==="contingencia"?emergencia.sede:null);
   useEffect(()=>{
     if(!uid||modo!=="normal"||pathname==="/contingencia"){setAcceso(null);return;}

@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
-      {!loading && children}
+      {loading ? <main className="page-container" role="status" style={{padding:"24px"}}><h2>ZoriApp</h2><p>Comprobando sesión…</p><button type="button" onClick={()=>window.location.reload()}>Volver a cargar</button></main> : children}
     </AuthContext.Provider>
   );
 }
