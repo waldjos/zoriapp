@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import PanelCentral from "./pages/PanelCentral";
 import Catia from "./pages/Catia";
 import Contingencia from "./pages/Contingencia";
+import {observarMiembroContingencia} from "./utils/accesoContingencia";
 import Home from "./pages/Home";
 import RegistroPaciente from "./pages/RegistroPaciente";
 import Pacientes from "./pages/Pacientes";
@@ -37,17 +38,20 @@ function AppShell() {
   const { pathname } = useLocation();
   const uid=user?.uid;
   const [acceso,setAcceso]=useState(null);
+  const [emergencia,setEmergencia]=useState(null);
+  useEffect(()=>{if(!uid){setEmergencia(null);return;}return observarMiembroContingencia(uid,p=>setEmergencia({uid,estado:p===null?"normal":p.activo===true&&p.rol==="medico"&&["domingo_luciani","periferico_catia"].includes(p.sedeId)?"contingencia":"denegado"}),()=>setEmergencia({uid,estado:"error"}));},[uid]);
+  const modo=emergencia?.uid===uid?emergencia.estado:null;
   useEffect(()=>{
-    if(!uid||pathname==="/contingencia"){setAcceso(null);return;}
+    if(!uid||modo!=="normal"||pathname==="/contingencia"){setAcceso(null);return;}
     return onSnapshot(doc(db,"usuarios",uid),{includeMetadataChanges:true},snap=>{
       if(snap.metadata.fromCache || snap.metadata.hasPendingWrites) return;
       setAcceso({uid,destino:destinoInstitucional(snap.data())});
     },()=>setAcceso({uid,destino:"denegado"}));
-  },[uid,pathname==="/contingencia"]);
+  },[uid,modo,pathname==="/contingencia"]);
   const salir = async () => {
     if (user?.uid) {
       try {
-        const sinSubir = acceso?.destino==="catia" ? await pendientesCatia(user.uid) : await pendientesLocales(user.uid);
+        const sinSubir = [...await pendientesCatia(user.uid),...await pendientesLocales(user.uid)];
         if (sinSubir.length && !window.confirm(
           "Hay " + sinSubir.length + " registros SIN SINCRONIZAR en este teléfono. Si cierras sesión no podrás verlos hasta entrar nuevamente con esta cuenta. ¿Cerrar sesión?"
         )) return;
@@ -57,6 +61,8 @@ function AppShell() {
     }
     await logout();
   };
+  if(user&&modo==="contingencia") return <div className="app-shell"><main className="app-main"><Contingencia key={uid} onLogout={salir}/></main></div>;
+  if(user&&modo!=="normal") return <div className="app-shell"><main className="app-main"><section className="page-container"><h1>{modo==="denegado"?"Acceso no habilitado":modo==="error"?"No se pudo verificar el acceso":"Verificando sede"}</h1><p>Comprueba la conexión. No se consulta Firestore hasta validar el modo de atención.</p><button type="button" onClick={salir}>Cerrar sesión</button></section></main></div>;
   if(pathname==="/contingencia") return <div className="app-shell"><main className="app-main">{user?<Contingencia key={uid} onLogout={salir}/>:<Login destino="/contingencia"/>}</main></div>;
   if(!user && pathname==="/catia") return <div className="app-shell"><main className="app-main"><Login destino="/catia"/></main></div>;
   if(user){
