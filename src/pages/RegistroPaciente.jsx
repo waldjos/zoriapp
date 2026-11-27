@@ -128,7 +128,7 @@ export default function RegistroPaciente() {
     } catch (err) {
       console.error("Error guardando paciente:", err);
       setError(/^(La cédula|Selecciona|El teléfono|Introduce|El correo|Escribe|La fecha|Paciente con|Este navegador|Debes iniciar|No se pudo abrir|Cierra las otras|Confirma que)/.test(err?.message || "")
-        ? err.message : "No se pudo guardar en el dispositivo. No cierres esta pantalla; copia los datos antes de reintentar.");
+        ? err.message : enContingencia()?"No se confirmó el registro. Conserva el formulario y comprueba conexión y permisos.":"No se pudo guardar en el dispositivo. No cierres esta pantalla; copia los datos antes de reintentar.");
     } finally {
       setSubmitting(false);
     }

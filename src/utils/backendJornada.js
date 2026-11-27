@@ -22,7 +22,7 @@ const orden=o=>Object.entries(o||{}).sort((a,b)=>(b[1].actualizadoEn||0)-(a[1].a
 function ficha(c,id,p,t,ps,en){
  if(!p)return null;
  const tacto=orden(t)[0]?.[1],psa=orden(ps)[0]?.[1];
- return {...p,jornadaId:c.sede.replaceAll("_","-")+"-2026",createdAt:timestamp(p.createdAt),...(en?{entregaResultados:en.estado,entregaResultadosAt:timestamp(en.actualizadoEn)}:{}),...(tacto?{tacto:{...tacto,actualizadoEn:timestamp(tacto.actualizadoEn)}}:{}),...(psa?{psaTotal:psa.total,psaLibre:psa.libre,psaActualizadoEn:timestamp(psa.actualizadoEn)}:{})};
+ return {...p,jornadaId:c.sede.replaceAll("_","-")+"-2026",createdAt:timestamp(p.createdAt),...(en?{entregaResultados:en.estado,entregaResultadosAt:timestamp(en.actualizadoEn)}:{}),...(tacto?{tacto:{...tacto,actualizadoEn:timestamp(tacto.actualizadoEn)}}:{}),...(psa?{psaTotal:String(psa.total),psaLibre:psa.libre===""?"":String(psa.libre),psaActualizadoEn:timestamp(psa.actualizadoEn)}:{})};
 }
 function clasificar(c,r){
  const raw=r.path??r._query?.path?.canonicalString?.();
@@ -74,7 +74,7 @@ export async function registrarContingencia(datos,uid){
  if(!r.committed)throw Error("Paciente con esta cédula ya registrado en contingencia.");
  return id;
 }
-function datosPSA(d){const a=valorPSA(d.psaTotal),b=valorPSA(d.psaLibre);if(a===null||b!==null&&b>a)throw Error("Introduce PSA total válido y PSA libre menor o igual.");return {total:String(a),libre:b===null?"":String(b)};}
+function datosPSA(d){const a=valorPSA(d.psaTotal),b=valorPSA(d.psaLibre);if(a===null||b!==null&&b>a)throw Error("Introduce PSA total válido y PSA libre menor o igual.");return {total:a,libre:b===null?"":b};}
 function prepararCambios(c,id,d){
  const cambios={};
  if(d.tacto){const t=validarTacto(d.tacto,c.uid);cambios[path(c,"tactos",id)+"/"+push(ref(rt,path(c,"tactos",id))).key]={...t,actualizadoEn:marca()};}
@@ -93,6 +93,6 @@ export async function addDoc(r,d){if(!enContingencia())return fs.addDoc(r,d);con
 export async function runTransaction(database,fn){
  if(!enContingencia())return fs.runTransaction(database,fn);
  // Las dos transacciones originales de Catia son creación única o anexo clínico.
- let op=null;const tx={get:r=>leer(r),set:(r,d)=>{if(op)throw Error("Transacción no soportada.");op={tipo:"crear",r,d};},update:(r,d)=>{if(op)throw Error("Transacción no soportada.");op={tipo:"actualizar",r,d};}};
- const out=await fn(tx);if(op?.tipo==="crear")await registrarContingencia(op.d,ctx().uid);else if(op?.tipo==="actualizar")await updateDoc(op.r,op.d);return out;
+ const c=ctx();let op=null;const tx={get:r=>leer(r),set:(r,d)=>{if(op)throw Error("Transacción no soportada.");op={tipo:"crear",r,d};},update:(r,d)=>{if(op)throw Error("Transacción no soportada.");op={tipo:"actualizar",r,d};}};
+ const out=await fn(tx);if(!activo(c))throw Error("Sesión cambió.");if(op?.tipo==="crear")await registrarContingencia(op.d,c.uid);else if(op?.tipo==="actualizar")await updateDoc(op.r,op.d);return out;
 }
