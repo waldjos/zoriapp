@@ -48,6 +48,10 @@
     {
       "source": "/catia",
       "destination": "/index.html"
+    },
+    {
+      "source": "/contingencia",
+      "destination": "/index.html"
     }
   ]
 }

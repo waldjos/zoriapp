@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import PanelCentral from "./pages/PanelCentral";
 import Catia from "./pages/Catia";
+import Contingencia from "./pages/Contingencia";
 import Home from "./pages/Home";
 import RegistroPaciente from "./pages/RegistroPaciente";
 import Pacientes from "./pages/Pacientes";
@@ -37,12 +38,12 @@ function AppShell() {
   const uid=user?.uid;
   const [acceso,setAcceso]=useState(null);
   useEffect(()=>{
-    if(!uid){setAcceso(null);return;}
+    if(!uid||pathname==="/contingencia"){setAcceso(null);return;}
     return onSnapshot(doc(db,"usuarios",uid),{includeMetadataChanges:true},snap=>{
       if(snap.metadata.fromCache || snap.metadata.hasPendingWrites) return;
       setAcceso({uid,destino:destinoInstitucional(snap.data())});
     },()=>setAcceso({uid,destino:"denegado"}));
-  },[uid]);
+  },[uid,pathname==="/contingencia"]);
   const salir = async () => {
     if (user?.uid) {
       try {
@@ -56,6 +57,7 @@ function AppShell() {
     }
     await logout();
   };
+  if(pathname==="/contingencia") return <div className="app-shell"><main className="app-main">{user?<Contingencia key={uid} onLogout={salir}/>:<Login destino="/contingencia"/>}</main></div>;
   if(!user && pathname==="/catia") return <div className="app-shell"><main className="app-main"><Login destino="/catia"/></main></div>;
   if(user){
     const destino=acceso?.uid===uid?acceso.destino:null;

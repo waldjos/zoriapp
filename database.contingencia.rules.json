@@ -1,0 +1,72 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "contingencia": {
+      "miembros": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "sedes": {
+        "$sede": {
+          ".read": "auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede"
+        }
+      },
+      "registros": {
+        "$sede": {
+          "$id": {
+            ".read": "(auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')",
+            ".write": "((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['sedeId','jornadaAnio','origen','tipoDocumento','cedula','nombreCompleto','telefono','email','fechaNacimiento','edad','localidad','notas','creadoPor','createdAt']) && $id === newData.child('tipoDocumento').val() + '-' + newData.child('cedula').val()",
+            "sedeId": {
+              ".validate": "newData.val() === $sede"
+            },
+            "jornadaAnio": {
+              ".validate": "newData.val() === 2026"
+            },
+            "origen": {
+              ".validate": "newData.val() === 'contingencia'"
+            },
+            "tipoDocumento": {
+              ".validate": "newData.val() === 'V' || newData.val() === 'E'"
+            },
+            "cedula": {
+              ".validate": "newData.isString() && newData.val().matches(/^[0-9]{5,9}$/)"
+            },
+            "nombreCompleto": {
+              ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 200"
+            },
+            "telefono": {
+              ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^\\+584[0-9]{9}$/))"
+            },
+            "email": {
+              ".validate": "newData.isString() && newData.val().length <= 254"
+            },
+            "fechaNacimiento": {
+              ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+            },
+            "edad": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 150"
+            },
+            "localidad": {
+              ".validate": "newData.isString() && newData.val().length <= 300"
+            },
+            "notas": {
+              ".validate": "newData.isString() && newData.val().length <= 2000"
+            },
+            "creadoPor": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "$otro": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

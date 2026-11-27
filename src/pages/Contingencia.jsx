@@ -1,0 +1,32 @@
+import {useEffect,useState} from "react";
+import {getDatabase,ref,onValue,get,runTransaction,serverTimestamp} from "firebase/database";
+import app,{auth} from "../firebase";
+import {useAuth} from "../context/AuthContext";
+import {PatrocinanteZoriak} from "../components/IdentidadJornada";
+import CedulaOCR from "../components/CedulaOCR";
+import {fichaDesdeOCR} from "../utils/catia";
+import {mascaraFechaRapida} from "../utils/registroExpress";
+import {SEDES,vacia,datosContingencia} from "../utils/contingencia";
+import "./Catia.css";
+const db=getDatabase(app,"https://zoriapp-23b52-default-rtdb.firebaseio.com");
+const root="contingencia";
+export default function Contingencia({onLogout}){
+ const {user}=useAuth(),uid=user.uid;
+ const [perfil,setPerfil]=useState(null),[sede,setSede]=useState(null),[online,setOnline]=useState(false),[form,setForm]=useState(vacia),[verificado,setVerificado]=useState(false),[busy,setBusy]=useState(false),[ocr,setOcr]=useState(false),[msg,setMsg]=useState(""),[acceso,setAcceso]=useState("Validando perfil de contingencia…"),[consulta,setConsulta]=useState(""),[hallado,setHallado]=useState(null),[tipo,setTipo]=useState("V");
+ const sedeId=perfil?.sedeId;
+ useEffect(()=>onValue(ref(db,".info/connected"),s=>setOnline(s.val()===true)),[]);
+ useEffect(()=>onValue(ref(db,root+"/miembros/"+uid),s=>{setPerfil(s.val());setAcceso(s.val()?.activo===true?"":"Cuenta no habilitada para contingencia.");},()=>{setPerfil(null);setAcceso("No se pudo validar la cuenta. Comprueba las normas de Realtime Database.");}),[uid]);
+ useEffect(()=>{setSede(null);setHallado(null);if(!perfil?.activo||!Object.hasOwn(SEDES,sedeId))return;return onValue(ref(db,root+"/sedes/"+sedeId),s=>setSede(s.val()),()=>setSede(null));},[sedeId,perfil?.activo]);
+ const permitido=online&&perfil?.activo===true&&perfil?.rol==="medico"&&Object.hasOwn(SEDES,sedeId)&&sede?.abierta===true;
+ const cambiar=(k,v)=>{setForm(x=>({...x,[k]:v}));setVerificado(false);};
+ async function guardar(e){e.preventDefault();if(!permitido||busy||ocr||!verificado||auth.currentUser?.uid!==uid)return;setBusy(true);setMsg("");try{
+ const {id,datos}=datosContingencia(form,sedeId,uid);
+ const result=await runTransaction(ref(db,root+"/registros/"+sedeId+"/"+id),old=>old===null?{...datos,createdAt:serverTimestamp()}:undefined,{applyLocally:false});
+ if(!result.committed){setMsg("Ya existe esa cédula en contingencia. No se sobrescribió.");return;}
+ setForm(vacia());setVerificado(false);setMsg("Ficha confirmada en Realtime Database. Conserva el control de conciliación.");
+ }catch(e){setMsg(e?.code?"No se confirmó la escritura. Código: "+String(e.code).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,60):e.message);}finally{setBusy(false);}}
+ async function buscar(e){e.preventDefault();setHallado(null);setMsg("");if(!permitido||busy||!/^\d{5,9}$/.test(consulta))return;setBusy(true);try{const s=await get(ref(db,root+"/registros/"+sedeId+"/"+tipo+"-"+consulta));if(s.exists())setHallado(s.val());else setMsg("No figura en contingencia. El histórico Firestore no está disponible aquí.");}catch{setMsg("No se pudo consultar.");}finally{setBusy(false);}}
+ return <section className="catia"><header className="cat-card cat-brand"><img src="/branding/zoriapp-2026.svg" alt="ZoriApp"/><PatrocinanteZoriak compact/></header><section className="cat-card"><h1>Registro de contingencia</h1><p>{SEDES[sedeId]||"Acceso institucional"}</p><p>{online?"Conexión disponible":"Sin conexión a Realtime Database"}</p><p>{acceso|| (permitido?"Jornada de contingencia abierta":"Registro de contingencia cerrado")}</p><button type="button" disabled={busy} onClick={onLogout}>Salir</button><p>Solo nuevos registros de contingencia. No consulta ni modifica los expedientes previos de Firestore. No garantiza detección de duplicados históricos. Requiere internet.</p></section>
+ {permitido&&<><form className="cat-card cat-registro zori-registro" onSubmit={guardar}><h2>Registrar paciente</h2><CedulaOCR disabled={busy} onExtract={r=>{setForm({...vacia(),...fichaDesdeOCR(r)});setVerificado(false);}} onBusyChange={v=>{setOcr(v);if(v)setVerificado(false);}}/><fieldset className="cat-form-fields" disabled={busy||ocr}><label>Nombre completo *<input required maxLength={200} value={form.nombreCompleto} onChange={e=>cambiar("nombreCompleto",e.target.value)}/></label><div className="cat-doc-row"><label>Tipo<select value={form.tipoDocumento} onChange={e=>cambiar("tipoDocumento",e.target.value)}><option>V</option><option>E</option></select></label><label>Cédula *<input required inputMode="numeric" maxLength={9} value={form.cedula} onChange={e=>cambiar("cedula",e.target.value.replace(/\D/g,""))}/></label></div><label>Fecha de nacimiento *<input required inputMode="numeric" placeholder="DD/MM/AAAA" value={form.fechaNacimiento} onChange={e=>cambiar("fechaNacimiento",mascaraFechaRapida(e.target.value))}/></label><label>Teléfono<input type="tel" value={form.telefono} onChange={e=>cambiar("telefono",e.target.value)}/></label><label>Correo<input type="email" value={form.email} onChange={e=>cambiar("email",e.target.value)}/></label><label>Localidad<input maxLength={300} value={form.localidad} onChange={e=>cambiar("localidad",e.target.value)}/></label><label>Notas<textarea maxLength={2000} value={form.notas} onChange={e=>cambiar("notas",e.target.value)}/></label><label className="zori-confirmacion-cedula"><input type="checkbox" required checked={verificado} onChange={e=>setVerificado(e.target.checked)}/>He revisado los datos y comprobado que corresponde a un nuevo registro de contingencia.</label></fieldset><button disabled={busy||ocr||!verificado||!permitido}>{busy?"Confirmando…":"Guardar ficha de contingencia"}</button></form><form className="cat-card" onSubmit={buscar}><h2>Buscar registro de contingencia</h2><label>Tipo<select value={tipo} onChange={e=>{setTipo(e.target.value);setHallado(null);}}><option>V</option><option>E</option></select></label><label>Cédula<input inputMode="numeric" maxLength={9} value={consulta} onChange={e=>{setConsulta(e.target.value.replace(/\D/g,""));setHallado(null);}}/></label><button disabled={busy}>Buscar</button>{hallado&&<p>{hallado.nombreCompleto} · {hallado.tipoDocumento}-{hallado.cedula}</p>}</form></>}
+ <p className="cat-card" role="status">{msg}</p><p>La evaluación de tacto y PSA debe conservarse por el circuito clínico autorizado hasta la conciliación; no se guardan en este módulo.</p></section>;
+}

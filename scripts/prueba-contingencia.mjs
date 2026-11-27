@@ -1,0 +1,28 @@
+import fs from "node:fs";
+import {initializeTestEnvironment,assertSucceeds,assertFails} from "@firebase/rules-unit-testing";
+if(!process.env.FIREBASE_DATABASE_EMULATOR_HOST)throw Error("Solo emulador");
+const env=await initializeTestEnvironment({projectId:"demo-zoriapp-contingencia",database:{rules:fs.readFileSync("database.contingencia.rules.json","utf8")}});
+try{
+ await env.withSecurityRulesDisabled(async c=>c.database().ref("contingencia").set({miembros:{cat:{sedeId:"periferico_catia",rol:"medico",activo:true},luc:{sedeId:"domingo_luciani",rol:"medico",activo:true},baja:{sedeId:"periferico_catia",rol:"medico",activo:false}},sedes:{periferico_catia:{abierta:true},domingo_luciani:{abierta:true}}}));
+ const cat=env.authenticatedContext("cat").database(),luc=env.authenticatedContext("luc").database(),baja=env.authenticatedContext("baja").database(),anon=env.unauthenticatedContext().database();
+ const path="contingencia/registros/periferico_catia/V-99999998";
+ const d={sedeId:"periferico_catia",jornadaAnio:2026,origen:"contingencia",tipoDocumento:"V",cedula:"99999998",nombreCompleto:"Paciente Ficticio",telefono:"+584121234567",email:"",fechaNacimiento:"1960-03-15",edad:66,localidad:"",notas:"",creadoPor:"cat",createdAt:{".sv":"timestamp"}};
+ await assertSucceeds(cat.ref("contingencia/miembros/cat").once("value"));
+ await assertFails(cat.ref("contingencia/miembros/luc").once("value"));
+ await assertFails(cat.ref("contingencia/miembros/cat").update({sedeId:"domingo_luciani"}));
+ await assertFails(cat.ref("contingencia/sedes/periferico_catia").update({abierta:false}));
+ await assertFails(anon.ref(path).once("value"));
+ await assertFails(luc.ref(path).once("value"));
+ await assertFails(baja.ref(path).once("value"));
+ await assertFails(luc.ref(path).set({...d,creadoPor:"luc"}));
+ await assertFails(cat.ref(path).set({...d,sedeId:"domingo_luciani"}));
+ await assertFails(cat.ref(path).set({...d,extra:"no"}));
+ await assertSucceeds(cat.ref(path).set(d));
+ await assertSucceeds(cat.ref(path).once("value"));
+ await assertFails(cat.ref(path).update({nombreCompleto:"Otro Nombre"}));
+ await assertFails(cat.ref(path).remove());
+ await assertFails(cat.ref("contingencia/registros/periferico_catia").once("value"));
+ await env.withSecurityRulesDisabled(async c=>c.database().ref("contingencia/sedes/periferico_catia/abierta").set(false));
+ await assertFails(cat.ref("contingencia/registros/periferico_catia/V-99999997").set({...d,cedula:"99999997"}));
+ console.log("CONTINGENCIA: 16/16 pruebas de reglas superadas");
+}finally{await env.cleanup();}
