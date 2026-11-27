@@ -1,5 +1,6 @@
 // src/pages/RegistroPaciente.jsx
 import { useRef, useState } from "react";
+import {enContingencia,registrarContingencia} from "../utils/backendJornada";
 import { guardarPacienteLocal } from "../utils/colaPacientesOffline";
 import { formatoNombre, formatoNombreEnEdicion } from "../utils/formatoPaciente";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -122,9 +123,7 @@ export default function RegistroPaciente() {
         notas: notas.trim(),
       };
 
-      await guardarPacienteLocal(datos, user.uid);
-
-      setSuccess("Ficha guardada en este dispositivo. Se sincronizará con Firebase al recuperar internet; revisa el contador de pendientes.");
+      if(enContingencia()){await registrarContingencia(datos,user.uid);setSuccess("Paciente registrado y confirmado en Firebase.");}else{await guardarPacienteLocal(datos,user.uid);setSuccess("Ficha guardada en este dispositivo. Se sincronizará con Firebase al recuperar internet; revisa el contador de pendientes.");}
       limpiarFormulario();
     } catch (err) {
       console.error("Error guardando paciente:", err);
@@ -139,7 +138,7 @@ export default function RegistroPaciente() {
     <div className="single-panel zori-registro">
       <h1>Registro de paciente</h1>
       <p>Completa los datos para registrar un nuevo paciente en la jornada.</p>
-      <p className="zori-offline-hint">Funciona sin internet tras preparar la app con conexión. Cada ficha queda cifrada en este teléfono hasta que Firebase confirme la sincronización.</p>
+      <p className="zori-offline-hint">{enContingencia()?"Registro de contingencia: requiere conexión. La ficha se confirma en Realtime Database.":"Funciona sin internet tras preparar la app con conexión. Cada ficha queda cifrada en este teléfono hasta que Firebase confirme la sincronización."}</p>
 
       <form onSubmit={handleSubmit} style={{ marginTop: "1.5rem" }}>
         <CedulaOCR onExtract={recibirLecturaOCR} />

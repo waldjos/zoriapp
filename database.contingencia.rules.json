@@ -17,7 +17,7 @@
         "$sede": {
           "$id": {
             ".read": "(auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')",
-            ".write": "((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && !data.exists() && newData.exists()",
+            ".write": "((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && newData.exists() && (!data.exists() || (newData.child('cedula').val() === data.child('cedula').val() && newData.child('tipoDocumento').val() === data.child('tipoDocumento').val() && newData.child('creadoPor').val() === data.child('creadoPor').val() && newData.child('createdAt').val() === data.child('createdAt').val()))",
             ".validate": "newData.hasChildren(['sedeId','jornadaAnio','origen','tipoDocumento','cedula','nombreCompleto','telefono','email','fechaNacimiento','edad','localidad','notas','creadoPor','createdAt']) && $id === newData.child('tipoDocumento').val() + '-' + newData.child('cedula').val()",
             "sedeId": {
               ".validate": "newData.val() === $sede"
@@ -56,15 +56,16 @@
               ".validate": "newData.isString() && newData.val().length <= 2000"
             },
             "creadoPor": {
-              ".validate": "newData.val() === auth.uid"
+              ".validate": "data.exists() ? newData.val() === data.val() : newData.val() === auth.uid"
             },
             "createdAt": {
-              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+              ".validate": "data.exists() ? newData.val() === data.val() : newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
             },
             "$otro": {
               ".validate": false
             }
-          }
+          },
+          ".read": "(auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')"
         }
       },
       "tactos": {
@@ -106,7 +107,58 @@
               },
               "$otro": {
                 ".validate": false
+              },
+              "comentarios": {
+                ".validate": "newData.isString() && newData.val().length <= 2000"
               }
+            }
+          },
+          ".read": "(auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')"
+        }
+      },
+      "psa": {
+        "$sede": {
+          ".read": "(auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')",
+          "$id": {
+            "$evaluacion": {
+              ".write": "(((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && root.child('contingencia/registros').child($sede).child($id).exists()) && !data.exists() && newData.exists()",
+              ".validate": "newData.hasChildren(['total','libre','medicoId','actualizadoEn'])",
+              "total": {
+                ".validate": "newData.isString() && newData.val().matches(/^[0-9]+([.][0-9]+)?$/) && newData.val().length <= 25"
+              },
+              "libre": {
+                ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[0-9]+([.][0-9]+)?$/)) && newData.val().length <= 25"
+              },
+              "medicoId": {
+                ".validate": "newData.val() === auth.uid"
+              },
+              "actualizadoEn": {
+                ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+              },
+              "$otro": {
+                ".validate": false
+              }
+            }
+          }
+        }
+      },
+      "entregas": {
+        "$sede": {
+          ".read": "(auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')",
+          "$id": {
+            ".write": "(((auth != null && root.child('contingencia/miembros').child(auth.uid).child('activo').val() === true && root.child('contingencia/miembros').child(auth.uid).child('rol').val() === 'medico' && root.child('contingencia/miembros').child(auth.uid).child('sedeId').val() === $sede) && root.child('contingencia/sedes').child($sede).child('abierta').val() === true && ($sede === 'domingo_luciani' || $sede === 'periferico_catia')) && root.child('contingencia/registros').child($sede).child($id).exists()) && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['estado','medicoId','actualizadoEn'])",
+            "estado": {
+              ".validate": "newData.val() === 'entregado'"
+            },
+            "medicoId": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "actualizadoEn": {
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "$otro": {
+              ".validate": false
             }
           }
         }

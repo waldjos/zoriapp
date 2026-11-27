@@ -1,6 +1,6 @@
 // src/pages/MiniJornada.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, query, where, onSnapshot, Timestamp } from "../utils/backendJornada";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";

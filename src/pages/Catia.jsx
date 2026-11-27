@@ -1,5 +1,6 @@
 import {useEffect,useState} from "react";
-import {collection,doc,onSnapshot,runTransaction,serverTimestamp} from "firebase/firestore";
+import {collection,doc,onSnapshot,runTransaction,serverTimestamp} from "../utils/backendJornada";
+import {enContingencia} from "../utils/backendJornada";
 import {db,auth} from "../firebase";
 import {useAuth} from "../context/AuthContext";
 import ZoriIcon from "../components/ZoriIcon";
@@ -56,7 +57,7 @@ export default function Catia({onLogout}){
  const enServidor=permitido&&perfilServidor&&sedeServidor&&rows!==null;
  const abierta=enServidor&&sede.jornadaAbierta===true;
  useEffect(()=>{if(abierta)setConfirmada(Date.now());},[abierta]);
- const capturaLocal=permitido&&sede.jornadaAbierta===true&&preparada&&capturaVigente(confirmada,reloj)&&!enServidor;
+ const capturaLocal=!enContingencia()&&permitido&&sede.jornadaAbierta===true&&preparada&&capturaVigente(confirmada,reloj)&&!enServidor;
  const puedeRegistrar=abierta||capturaLocal;
  const visibles=enServidor?rows:null;
  useEffect(()=>{if(!permitido||tab!=="registro")setOcrBusy(false);},[permitido,tab]);
@@ -82,8 +83,8 @@ export default function Catia({onLogout}){
  {(!permitido)?<div className="cat-card"><h2>{perfil===undefined||miembro&&sede===undefined?"Validando acceso…":"Acceso no habilitado"}</h2><p>Requiere cuenta médica afiliada, sede habilitada y conexión al servidor.</p></div>:<>
  <div className={"cat-state "+(abierta?"cat-open":"cat-closed")} role="status"><ZoriIcon name="seguridad" size={20}/>{abierta?"Jornada abierta · conexión confirmada":sede.jornadaAbierta!==true?"Jornada cerrada · modo consulta":capturaLocal?"Sin conexión · captura local pendiente de envío":"Sin conexión confirmada"}</div><nav className="cat-bottom" aria-label="Navegación Catia">{acciones.map(([k,l,ic])=><button key={k} type="button" aria-pressed={tab===k} onClick={()=>ir(k)}><ZoriIcon name={ic} size={24}/><span>{l}</span></button>)}</nav>
  {error&&<p role="alert">{error}</p>}
- <EstadoCatiaOffline uid={uid} abierta={abierta} preparada={preparada} habilitar={setPreparada}/>
- {tab==="inicio"&&<><div className="cat-card"><h2>Indicadores de la jornada</h2><div className="cat-metrics">{[["Meta",sede.metaPacientes??"—"],["Registrados",visibles?.length??"—"],["Con tacto",visibles?.filter(p=>p.tacto).length??"—"],["Con PSA",visibles?.filter(p=>p.psaTotal!==undefined&&p.psaTotal!==null&&p.psaTotal!=="").length??"—"]].map(([l,n])=><div key={l}><span>{l}</span><strong>{n}</strong></div>)}</div>{visibles&&sede.metaPacientes>0&&<><progress max={sede.metaPacientes} value={Math.min(visibles.length,sede.metaPacientes)}/><small>{visibles.length} de {sede.metaPacientes} pacientes</small></>}</div><div className="cat-card"><h2>Accesos rápidos</h2><div className="cat-actions">{acciones.filter(([k])=>k!=="inicio").map(([k,l,ic])=><button key={k} onClick={()=>ir(k)}><ZoriIcon name={ic}/>{l}</button>)}</div><p className="cat-note">La captura sin conexión requiere preparación y una jornada abierta confirmada en esta sesión. Consulta, tacto y PSA requieren internet.</p></div></>}
+ {enContingencia()?<p className="cat-card cat-note">Contingencia: datos confirmados en Realtime Database. Histórico no disponible; las fichas offline anteriores se conservan en el dispositivo.</p>:<EstadoCatiaOffline uid={uid} abierta={abierta} preparada={preparada} habilitar={setPreparada}/>}
+ {tab==="inicio"&&<><div className="cat-card"><h2>Indicadores de la jornada</h2><div className="cat-metrics">{[["Meta",sede.metaPacientes??"—"],["Registrados",visibles?.length??"—"],["Con tacto",visibles?.filter(p=>p.tacto).length??"—"],["Con PSA",visibles?.filter(p=>p.psaTotal!==undefined&&p.psaTotal!==null&&p.psaTotal!=="").length??"—"]].map(([l,n])=><div key={l}><span>{l}</span><strong>{n}</strong></div>)}</div>{visibles&&sede.metaPacientes>0&&<><progress max={sede.metaPacientes} value={Math.min(visibles.length,sede.metaPacientes)}/><small>{visibles.length} de {sede.metaPacientes} pacientes</small></>}</div><div className="cat-card"><h2>Accesos rápidos</h2><div className="cat-actions">{acciones.filter(([k])=>k!=="inicio").map(([k,l,ic])=><button key={k} onClick={()=>ir(k)}><ZoriIcon name={ic}/>{l}</button>)}</div><p className="cat-note">{enContingencia()?"Durante la contingencia se requiere conexión. Los indicadores corresponden únicamente a las fichas de contingencia.":"La captura sin conexión requiere preparación y una jornada abierta confirmada en esta sesión. Consulta, tacto y PSA requieren internet."}</p></div></>}
  {tab==="inicio"&&<IndicadoresCatia rows={visibles} uid={uid}/>}
  {tab==="registro"&&<form className="cat-card cat-registro zori-registro" onSubmit={registrar}><h2>Registro de paciente</h2><p>Escanea la cédula o completa los datos manualmente. Una nueva lectura sustituye la ficha en edición.</p>
  <CedulaOCR disabled={busy} onExtract={recibirOCR} onBusyChange={v=>{setOcrBusy(v);if(v)setVerificado(false);}}/>

@@ -1,6 +1,6 @@
 // src/pages/ImportarPSA.jsx
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "../utils/backendJornada";
 import { db } from "../firebase";
 import { parseTxtToRows, coincidenciaPSASegura } from "../utils/pdfParser";
 

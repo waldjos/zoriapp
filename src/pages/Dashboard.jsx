@@ -1,6 +1,6 @@
 // src/pages/Dashboard.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot } from "../utils/backendJornada";
 import { db } from "../firebase";
 import { getPSARiskCategory } from "../utils/psaUtils";
 import {

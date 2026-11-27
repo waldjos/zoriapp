@@ -7,8 +7,9 @@ import {
   orderBy,
   updateDoc,
   doc,
-} from "firebase/firestore";
+} from "../utils/backendJornada";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {enContingencia} from "../utils/backendJornada";
 import { db, storage } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { formatoNombre, formatoCedula, nombreParaBusqueda } from "../utils/formatoPaciente";
@@ -66,6 +67,7 @@ export default function LabForm() {
   };
 
   const handleUpload = () => {
+    if(enContingencia()){setMensaje("Los PDF de laboratorio no se suben durante contingencia. Registra PSA en la ficha clínica.");return;}
     if (!pacienteSeleccionado) {
       setMensaje("Selecciona primero un paciente.");
       return;

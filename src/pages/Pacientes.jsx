@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-} from "firebase/firestore";
+} from "../utils/backendJornada";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate, useSearchParams } from "react-router-dom";

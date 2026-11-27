@@ -11,7 +11,7 @@ import {
   onSnapshot,
   query,
   orderBy,
-} from "firebase/firestore";
+} from "../utils/backendJornada";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getPSALibrePercent, getPSALibreInterpretation, shouldShowPSALibreRelation } from "../utils/psaUtils";

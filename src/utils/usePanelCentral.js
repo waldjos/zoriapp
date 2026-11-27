@@ -1,5 +1,5 @@
 import {useEffect,useState} from "react";
-import {doc,onSnapshot} from "firebase/firestore";
+import {doc,onSnapshot} from "./backendJornada";
 import {db} from "../firebase";
 import {useAuth} from "../context/AuthContext";
 // Este control visual NO sustituye las reglas Firestore: la colección sedes

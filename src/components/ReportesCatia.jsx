@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {doc,collection,getDocFromServer,getDocsFromServer} from "firebase/firestore";
+import {doc,collection,getDocFromServer,getDocsFromServer} from "../utils/backendJornada";
 import {auth,db} from "../firebase";
 import {rutaCatia,SEDE_CATIA,perfilCatia,sedeCatia} from "../utils/catia";
 import {esFichaCatia,fichaFilas,resumenCatia} from "../utils/reportesCatia";

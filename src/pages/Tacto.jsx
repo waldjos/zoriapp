@@ -1,6 +1,6 @@
 // src/pages/Tacto.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "../utils/backendJornada";
 import { db } from "../firebase";
 import ProsilodBanner from "../components/ProsilodBanner";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -32,7 +32,7 @@ export default function Tacto() {
       try {
         const snap = await getDocs(collection(db, "pacientes"));
         const datos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        console.log("Pacientes cargados:", datos);
+
         setPacientes(datos);
       } catch (err) {
         console.error("Error cargando pacientes:", err);
@@ -62,7 +62,7 @@ export default function Tacto() {
 
 
   const seleccionarPaciente = (paciente) => {
-    console.log("Seleccionando paciente:", paciente);
+
     setSeleccionado(paciente);
     setMensaje("");
 
